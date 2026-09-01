@@ -52,8 +52,8 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
         unit,
         location,
         phoneContact: '024-3872xxxx',
-        primaryEngineer: 'Kỹ sư Trực Kỹ thuật',
-        supervisor: 'Trưởng Đài / Đội trưởng CNS'
+        primaryEngineer: 'Nhân Viên Trực Kỹ thuật',
+        supervisor: 'Đội trưởng Đội Thông Tin'
       },
       orgRows: [
         {
@@ -80,7 +80,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
         warrantyDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         nextCalDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'Đang khai thác',
-        priority: 'Hệ thống chính (Level 1)',
+        priority: 'Thiết Bị Nhóm 1 (Level 1)',
         estimatedLifespanYears: 10,
         notes: 'Thiết bị mới đưa vào khai thác.'
       },
