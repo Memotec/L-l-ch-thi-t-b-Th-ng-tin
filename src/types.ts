@@ -6,7 +6,8 @@ export type EquipmentCategory =
   | 'VOICE' 
   | 'POWER' 
   | 'IT'  
-  | 
+  | 'RADAR_ADS' 
+  | 'NAV' 
   | 'Thiết Bị Khác';
 
 export type EquipmentStatus = 
@@ -156,6 +157,8 @@ export interface EquipmentData {
   id: string;
   createdAt: string;
   updatedAt: string;
+  googleDocUrl?: string;
+  googleDocPdfUrl?: string;
   general: GeneralInfo;
   org: OrgInfo;
   orgRows: OrgTransferRow[];

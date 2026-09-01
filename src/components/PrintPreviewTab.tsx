@@ -5,7 +5,9 @@ import {
   Settings2,
   FileCheck,
   Eye,
-  QrCode
+  QrCode,
+  ExternalLink,
+  FileSpreadsheet
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -226,6 +228,17 @@ ${content}
               <option value={9}>9 dòng</option>
             </select>
           </div>
+
+          <a
+            href={data.googleDocUrl || `https://docs.google.com/document/create?title=${encodeURIComponent('Sổ_Lý_Lịch_' + (data.general.name || data.id))}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold border border-emerald-500/40 transition-colors cursor-pointer"
+            title="Mở tài liệu Google Docs trực tuyến"
+          >
+            <ExternalLink className="w-4 h-4 text-emerald-300" />
+            <span>Mở Google Docs</span>
+          </a>
 
           <button
             onClick={handleDownloadHtml}

@@ -80,7 +80,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
         warrantyDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         nextCalDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'Đang khai thác',
-        priority: 'Thiết Bị Nhóm 1 (Level 1)',
+        priority: 'Hệ thống chính (Level 1)',
         estimatedLifespanYears: 10,
         notes: 'Thiết bị mới đưa vào khai thác.'
       },

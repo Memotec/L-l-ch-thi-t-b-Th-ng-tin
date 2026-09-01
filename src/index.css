@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    background-color: #34bc5d;
+    background-color: #050c20;
     color: #e2e8f0;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
@@ -14,10 +14,10 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #16061f;
+  background: #060e24;
 }
 ::-webkit-scrollbar-thumb {
-  background: #0945ea;
+  background: #1e3a8a;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -26,7 +26,7 @@
 
 @media print {
   body {
-    background-color: #a83232 !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
   }
 
@@ -58,3 +58,4 @@
     page-break-after: auto !important;
   }
 }
+

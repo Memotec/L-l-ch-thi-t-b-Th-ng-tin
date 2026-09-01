@@ -14,6 +14,7 @@ import { PrintPreviewTab } from './components/PrintPreviewTab';
 import { QrCodeManagerTab } from './components/QrCodeManagerTab';
 import { GoogleWorkspaceTab } from './components/GoogleWorkspaceTab';
 import { NewEquipmentModal } from './components/NewEquipmentModal';
+import { PdfViewerModal } from './components/PdfViewerModal';
 
 const STORAGE_KEY = 'cns_multi_equipment_data_v2';
 
@@ -41,6 +42,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastSaved, setLastSaved] = useState<string>('Vừa lưu trữ tự động');
   const [isNewModalOpen, setIsNewModalOpen] = useState<boolean>(false);
+  const [pdfModalEquipment, setPdfModalEquipment] = useState<EquipmentData | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync to local storage
@@ -59,17 +61,36 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // QR Code Deep Link Listener (#eq=eq-xxx)
+  // QR Code Deep Link Listener (#eq=eq-xxx or #eq=eq-xxx&view=pdf)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash.startsWith('#eq=')) {
-        const targetId = decodeURIComponent(hash.replace('#eq=', ''));
-        const found = equipments.find(e => e.id === targetId || e.general.serial === targetId || e.general.assetNo === targetId);
+        const rawContent = hash.replace('#eq=', '');
+        const [targetIdPart, ...extraParts] = rawContent.split('&');
+        const targetId = decodeURIComponent(targetIdPart);
+        const isPdfView = extraParts.some(p => p.toLowerCase().includes('view=pdf') || p.toLowerCase().includes('mode=pdf'));
+        const isDocView = extraParts.some(p => p.toLowerCase().includes('view=doc'));
+        
+        const found = equipments.find(e => 
+          e.id === targetId || 
+          e.general.serial === targetId || 
+          e.general.assetNo === targetId ||
+          e.general.name.toLowerCase() === targetId.toLowerCase()
+        );
+
         if (found) {
           setCurrentId(found.id);
-          setActiveTab('general');
-          showToast(`✓ Đã quét mã QR: Mở hồ sơ ${found.general.name}`);
+          if (isPdfView) {
+            setPdfModalEquipment(found);
+            showToast(`✓ Đã quét mã QR: Hiển thị file PDF Sổ lý lịch ${found.general.name}`);
+          } else if (isDocView) {
+            setActiveTab('printPreview');
+            showToast(`✓ Đã quét mã QR: Mở tài liệu Sổ lý lịch ${found.general.name}`);
+          } else {
+            setActiveTab('general');
+            showToast(`✓ Đã quét mã QR: Mở hồ sơ ${found.general.name}`);
+          }
         }
       }
     };
@@ -340,6 +361,8 @@ export default function App() {
               onSelectEquipment={(id) => setCurrentId(id)}
               onShowToast={showToast}
               onNavigateTab={(tab) => setActiveTab(tab)}
+              onOpenPdfViewer={(eq) => setPdfModalEquipment(eq)}
+              onUpdateEquipment={handleUpdateCurrent}
             />
           )}
 
@@ -366,6 +389,16 @@ export default function App() {
         onClose={() => setIsNewModalOpen(false)}
         onCreate={handleCreateNew}
       />
+
+      {/* Full-Screen Aviation PDF Viewer Modal */}
+      {pdfModalEquipment && (
+        <PdfViewerModal
+          isOpen={!!pdfModalEquipment}
+          onClose={() => setPdfModalEquipment(null)}
+          equipment={pdfModalEquipment}
+          onShowToast={showToast}
+        />
+      )}
     </div>
   );
 }

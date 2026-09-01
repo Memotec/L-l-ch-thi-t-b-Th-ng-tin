@@ -19,10 +19,19 @@ import {
   User,
   MapPin,
   Tag,
-  Cpu
+  Cpu,
+  FileText,
+  FileSpreadsheet,
+  Link,
+  Edit3
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory } from '../types';
-import { generateEquipmentQrDataUrl, buildEquipmentQrData, QrRenderOptions } from '../utils/qrCodeService';
+import { 
+  generateEquipmentQrDataUrl, 
+  buildEquipmentQrData, 
+  QrRenderOptions, 
+  QrTargetMode 
+} from '../utils/qrCodeService';
 
 interface QrCodeManagerTabProps {
   currentEquipment: EquipmentData;
@@ -30,6 +39,8 @@ interface QrCodeManagerTabProps {
   onSelectEquipment: (id: string) => void;
   onShowToast: (msg: string) => void;
   onNavigateTab: (tab: string) => void;
+  onOpenPdfViewer?: (equipment: EquipmentData) => void;
+  onUpdateEquipment?: (equipment: EquipmentData) => void;
 }
 
 export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
@@ -37,19 +48,29 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   allEquipments,
   onSelectEquipment,
   onShowToast,
-  onNavigateTab
+  onNavigateTab,
+  onOpenPdfViewer,
+  onUpdateEquipment
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [allQrUrls, setAllQrUrls] = useState<Record<string, string>>({});
   const [activeSubTab, setActiveSubTab] = useState<'single' | 'batch' | 'scanner'>('single');
+  const [targetMode, setTargetMode] = useState<QrTargetMode>('pdf');
   const [copied, setCopied] = useState<boolean>(false);
-  const [darkColor, setDarkColor] = useState<string>('#0f172a');
+  const [darkColor, setDarkColor] = useState<string>('#091533');
   const [errorLevel, setErrorLevel] = useState<'L' | 'M' | 'Q' | 'H'>('M');
   const [scanInput, setScanInput] = useState<string>('');
   const [scanResult, setScanResult] = useState<EquipmentData | null>(null);
+  
+  // Custom Google Doc URL editor
+  const [customDocUrl, setCustomDocUrl] = useState<string>(currentEquipment.googleDocUrl || '');
+  const [isEditingDocUrl, setIsEditingDocUrl] = useState<boolean>(false);
 
   const printBatchRef = useRef<HTMLDivElement>(null);
-  const printSingleTagRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCustomDocUrl(currentEquipment.googleDocUrl || '');
+  }, [currentEquipment]);
 
   // Generate QR for current equipment
   useEffect(() => {
@@ -58,12 +79,13 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
       width: 400,
       margin: 2,
       color: { dark: darkColor, light: '#ffffff' },
-      errorCorrectionLevel: errorLevel
+      errorCorrectionLevel: errorLevel,
+      targetMode: targetMode
     }).then(url => {
       if (isMounted) setQrDataUrl(url);
     });
     return () => { isMounted = false; };
-  }, [currentEquipment, darkColor, errorLevel]);
+  }, [currentEquipment, darkColor, errorLevel, targetMode]);
 
   // Pre-generate QR for all equipments (for batch stickers)
   useEffect(() => {
@@ -74,22 +96,40 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
         urls[eq.id] = await generateEquipmentQrDataUrl(eq, {
           width: 250,
           margin: 1,
-          color: { dark: '#0f172a', light: '#ffffff' },
-          errorCorrectionLevel: 'M'
+          color: { dark: '#091533', light: '#ffffff' },
+          errorCorrectionLevel: 'M',
+          targetMode: targetMode
         });
       }
       if (isMounted) setAllQrUrls(urls);
     };
     generateAll();
     return () => { isMounted = false; };
-  }, [allEquipments]);
+  }, [allEquipments, targetMode]);
 
-  const { lookupUrl, summaryText } = buildEquipmentQrData(currentEquipment);
+  const { lookupUrl, targetUrl, googleDocUrl, pdfViewerUrl, summaryText } = buildEquipmentQrData(
+    currentEquipment, 
+    undefined, 
+    targetMode
+  );
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(lookupUrl);
+  const handleSaveDocUrl = () => {
+    if (onUpdateEquipment) {
+      const updated: EquipmentData = {
+        ...currentEquipment,
+        googleDocUrl: customDocUrl.trim() || undefined,
+        updatedAt: new Date().toISOString()
+      };
+      onUpdateEquipment(updated);
+      setIsEditingDocUrl(false);
+      onShowToast('✓ Đã lưu đường dẫn Google Doc cho cuốn sổ lý lịch này!');
+    }
+  };
+
+  const handleCopyLink = (urlToCopy: string = targetUrl) => {
+    navigator.clipboard.writeText(urlToCopy);
     setCopied(true);
-    onShowToast('✓ Đã sao chép liên kết tra cứu mã QR!');
+    onShowToast('✓ Đã sao chép liên kết mã QR!');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -97,7 +137,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
     if (!qrDataUrl) return;
     const a = document.createElement('a');
     a.href = qrDataUrl;
-    a.download = `QR_LyLich_${(currentEquipment.general.serial || currentEquipment.id).replace(/\W/g, '_')}.png`;
+    a.download = `QR_LyLich_${targetMode}_${(currentEquipment.general.serial || currentEquipment.id).replace(/\W/g, '_')}.png`;
     a.click();
     onShowToast('✓ Đã tải ảnh mã QR HD thành công!');
   };
@@ -145,7 +185,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
             </div>
           </div>
           <div class="footer">
-            QUÉT MÃ QR ĐỂ XEM SỔ LÝ LỊCH VÀ NHẬT KÝ BẢO DƯỠNG ĐIỆN TỬ
+            QUÉT MÃ QR ĐỂ HIỂN THỊ FILE PDF SỔ LÝ LỊCH VÀ GOOGLE DOCS
           </div>
         </div>
         <script>
@@ -182,20 +222,20 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-[#040a1c] via-[#091533] to-[#0c183a] text-white p-6 rounded-2xl shadow-md border border-[#182d5a] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-[#091533] text-white p-6 rounded-2xl shadow-md border border-[#182d5a] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-sky-500/20 rounded-xl text-sky-300 border border-sky-400/30 shrink-0">
+          <div className="p-3 bg-sky-500/20 rounded-xl text-sky-400 border border-sky-400/30 shrink-0">
             <QrCode className="w-8 h-8" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-bold tracking-tight text-white">Hệ Thống Quản Lý Mã QR Code Cho Từng Cuốn Sổ Lý Lịch</h2>
+              <h2 className="text-lg font-bold tracking-tight text-white">Mã QR In File Google Doc & Hiển Thị PDF Sổ Lý Lịch</h2>
               <span className="px-2 py-0.5 bg-sky-500/30 text-sky-200 rounded text-xs font-semibold border border-sky-400/40">
-                Nhãn QR Định Danh CNS
+                Aviation CNS QR Hub
               </span>
             </div>
             <p className="text-xs text-sky-200/80 mt-1 max-w-2xl leading-relaxed">
-              Mỗi thiết bị trong hệ thống được cấp một mã <b>QR Code kỹ thuật số độc nhất</b>. Kỹ sư và nhân viên đài/trạm có thể dán tem QR lên mặt máy, tủ Rack hoặc bìa sổ lý lịch giấy để quét và tra cứu tức thì toàn bộ thông số, linh kiện và nhật ký bảo dưỡng.
+              Quét mã QR để <b>hiển thị trực tiếp file PDF</b> chuẩn A4 của Sổ lý lịch thiết bị hoặc <b>mở nhanh file Google Docs</b> tương ứng để soạn thảo và lưu trữ trên Google Drive.
             </p>
           </div>
         </div>
@@ -232,7 +272,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Tra Cứu QR</span>
+            <span>Trình Quét & Xem PDF</span>
           </button>
         </div>
       </div>
@@ -243,11 +283,23 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
           {/* Left Column: QR Code Visual & Actions */}
           <div className="lg:col-span-5 bg-[#091533] p-6 rounded-2xl border border-[#182d5a] shadow-md flex flex-col items-center justify-between gap-5">
             <div className="w-full text-center border-b border-[#182d5a] pb-3">
-              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Mã QR Định Danh Chính Thức</span>
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">
+                Mã QR Sổ Lý Lịch Thiết Bị
+              </span>
               <h3 className="text-base font-bold text-white mt-0.5 truncate">{currentEquipment.general.name}</h3>
               <p className="text-xs text-sky-200/70">
                 Model: <b>{currentEquipment.general.model || 'N/A'}</b> | Serial: <span className="font-mono text-sky-300">{currentEquipment.general.serial || 'N/A'}</span>
               </p>
+            </div>
+
+            {/* QR Mode Indicator Badge */}
+            <div className="px-3 py-1 bg-sky-950/80 border border-sky-700/60 rounded-full text-xs font-semibold text-sky-200 flex items-center gap-1.5">
+              {targetMode === 'pdf' && <FileText className="w-3.5 h-3.5 text-sky-400" />}
+              {targetMode === 'google_doc' && <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />}
+              {targetMode === 'app' && <Radio className="w-3.5 h-3.5 text-indigo-400" />}
+              <span>
+                Đích quét: {targetMode === 'pdf' ? 'Hiển Thị File PDF Sổ Lý Lịch' : targetMode === 'google_doc' ? 'Mở File Google Docs' : 'Bảng Điều Khiển Web App'}
+              </span>
             </div>
 
             {/* QR Frame Container */}
@@ -273,81 +325,172 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
 
             {/* Action Buttons */}
             <div className="w-full space-y-2">
+              {/* Primary PDF & Google Doc Action Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onOpenPdfViewer && onOpenPdfViewer(currentEquipment)}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Xem File PDF Ngay</span>
+                </button>
+                <a
+                  href={googleDocUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Mở Google Doc</span>
+                </a>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={handleDownloadQrPng}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-[#060e24] hover:bg-[#12224d] text-sky-200 border border-[#1e3c7a] rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5 text-sky-400" />
                   <span>Tải ảnh QR (PNG)</span>
                 </button>
                 <button
                   onClick={handlePrintSingleTag}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#060e24] hover:bg-[#12224d] text-white border border-[#1e3c7a] rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-[#060e24] hover:bg-[#12224d] text-sky-200 border border-[#1e3c7a] rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                 >
-                  <Printer className="w-4 h-4 text-sky-400" />
+                  <Printer className="w-3.5 h-3.5 text-sky-400" />
                   <span>In Tem Nhãn Decal</span>
                 </button>
               </div>
 
               <button
-                onClick={handleCopyLink}
+                onClick={() => handleCopyLink(targetUrl)}
                 className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-[#060e24] hover:bg-[#12224d] text-sky-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-[#1e3c7a]"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-sky-400" />}
-                <span>{copied ? 'Đã sao chép liên kết!' : 'Sao chép đường dẫn tra cứu'}</span>
+                <span>{copied ? 'Đã sao chép liên kết!' : 'Sao chép đường dẫn khi quét QR'}</span>
               </button>
             </div>
           </div>
 
-          {/* Right Column: QR Info, Customization & Encoded Details */}
+          {/* Right Column: Target Mode Selection & Encoded Details */}
           <div className="lg:col-span-7 space-y-5">
-            {/* Customization Options */}
+            {/* Target Mode Selector */}
             <div className="bg-[#091533] p-5 rounded-2xl border border-[#182d5a] shadow-md space-y-4">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-sky-400" />
-                Tùy Chỉnh Hiển Thị Mã QR
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label className="block text-sky-200 font-medium mb-1">Màu sắc mã QR:</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setDarkColor('#0f172a')}
-                      className={`w-7 h-7 rounded-full bg-slate-900 border-2 transition-all cursor-pointer ${darkColor === '#0f172a' ? 'border-sky-400 scale-110' : 'border-slate-700'}`}
-                      title="Đen / Xanh đen (Chuẩn)"
-                    />
-                    <button
-                      onClick={() => setDarkColor('#0369a1')}
-                      className={`w-7 h-7 rounded-full bg-sky-700 border-2 transition-all cursor-pointer ${darkColor === '#0369a1' ? 'border-sky-400 scale-110' : 'border-slate-700'}`}
-                      title="Xanh Dương Hàng Không"
-                    />
-                    <button
-                      onClick={() => setDarkColor('#047857')}
-                      className={`w-7 h-7 rounded-full bg-emerald-700 border-2 transition-all cursor-pointer ${darkColor === '#047857' ? 'border-sky-400 scale-110' : 'border-slate-700'}`}
-                      title="Xanh Lá Cây Kỹ Thuật"
-                    />
-                    <button
-                      onClick={() => setDarkColor('#4338ca')}
-                      className={`w-7 h-7 rounded-full bg-indigo-700 border-2 transition-all cursor-pointer ${darkColor === '#4338ca' ? 'border-sky-400 scale-110' : 'border-slate-700'}`}
-                      title="Tím Than Đậm"
-                    />
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-sky-400" />
+                  Chọn Đích Đến Khi Người Dùng Quét Mã QR
+                </h4>
+                <span className="text-[10px] text-sky-300 font-bold bg-sky-950 px-2 py-0.5 rounded border border-sky-800">
+                  Tùy Chọn Tương Tác
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Mode 1: PDF Viewer */}
+                <button
+                  type="button"
+                  onClick={() => setTargetMode('pdf')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    targetMode === 'pdf'
+                      ? 'bg-sky-950/80 border-sky-500 text-white shadow-md ring-1 ring-sky-400'
+                      : 'bg-[#060e24] border-[#1e3c7a] text-sky-200 hover:border-sky-500/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <FileText className={`w-5 h-5 ${targetMode === 'pdf' ? 'text-sky-400' : 'text-slate-400'}`} />
+                    {targetMode === 'pdf' && <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>}
                   </div>
+                  <div className="mt-2">
+                    <div className="font-bold text-xs">Xem File PDF Sổ Lý Lịch</div>
+                    <div className="text-[10px] text-sky-200/70 mt-0.5 leading-snug">
+                      Hiển thị ngay tài liệu A4 chuẩn có Quốc hiệu, Bảng I-IV và 3 chữ ký.
+                    </div>
+                  </div>
+                </button>
+
+                {/* Mode 2: Google Docs Direct */}
+                <button
+                  type="button"
+                  onClick={() => setTargetMode('google_doc')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    targetMode === 'google_doc'
+                      ? 'bg-sky-950/80 border-emerald-500 text-white shadow-md ring-1 ring-emerald-400'
+                      : 'bg-[#060e24] border-[#1e3c7a] text-sky-200 hover:border-emerald-500/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <FileSpreadsheet className={`w-5 h-5 ${targetMode === 'google_doc' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                    {targetMode === 'google_doc' && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>}
+                  </div>
+                  <div className="mt-2">
+                    <div className="font-bold text-xs">Mở File Google Docs</div>
+                    <div className="text-[10px] text-sky-200/70 mt-0.5 leading-snug">
+                      Dẫn thẳng đến tài liệu Google Docs trực tuyến trên Drive.
+                    </div>
+                  </div>
+                </button>
+
+                {/* Mode 3: Web App Management */}
+                <button
+                  type="button"
+                  onClick={() => setTargetMode('app')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    targetMode === 'app'
+                      ? 'bg-sky-950/80 border-indigo-500 text-white shadow-md ring-1 ring-indigo-400'
+                      : 'bg-[#060e24] border-[#1e3c7a] text-sky-200 hover:border-indigo-500/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <Radio className={`w-5 h-5 ${targetMode === 'app' ? 'text-indigo-400' : 'text-slate-400'}`} />
+                    {targetMode === 'app' && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>}
+                  </div>
+                  <div className="mt-2">
+                    <div className="font-bold text-xs">Bảng Quản Lý Web</div>
+                    <div className="text-[10px] text-sky-200/70 mt-0.5 leading-snug">
+                      Mở giao diện điều khiển chi tiết thiết bị trên Web App.
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Google Doc URL linking box */}
+              <div className="p-3 bg-[#060e24] rounded-xl border border-[#1e3c7a] space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-sky-200 flex items-center gap-1.5">
+                    <Link className="w-3.5 h-3.5 text-sky-400" />
+                    Đường dẫn Google Doc của Sổ lý lịch thiết bị này:
+                  </span>
+                  <button
+                    onClick={() => setIsEditingDocUrl(!isEditingDocUrl)}
+                    className="text-sky-400 hover:text-sky-300 font-semibold cursor-pointer flex items-center gap-1"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>{isEditingDocUrl ? 'Thu gọn' : 'Chỉnh sửa liên kết'}</span>
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-sky-200 font-medium mb-1">Mức độ sửa lỗi (Error Correction):</label>
-                  <select
-                    value={errorLevel}
-                    onChange={(e) => setErrorLevel(e.target.value as any)}
-                    className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer"
-                  >
-                    <option value="L">Mức L (7% - Nhẹ, quét nhanh)</option>
-                    <option value="M">Mức M (15% - Tiêu chuẩn khuyến nghị)</option>
-                    <option value="Q">Mức Q (25% - Bền bỉ khi dán ngoài trời)</option>
-                    <option value="H">Mức H (30% - Chống trầy xước tem tốt nhất)</option>
-                  </select>
-                </div>
+                {isEditingDocUrl ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      value={customDocUrl}
+                      onChange={(e) => setCustomDocUrl(e.target.value)}
+                      placeholder="Dán link Google Doc tại đây (https://docs.google.com/document/d/...)"
+                      className="flex-1 px-3 py-1.5 bg-[#091533] border border-[#1e3c7a] rounded-lg text-xs text-white focus:outline-none focus:ring-1 focus:ring-sky-400"
+                    />
+                    <button
+                      onClick={handleSaveDocUrl}
+                      className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold cursor-pointer"
+                    >
+                      Lưu
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-[11px] font-mono text-sky-300 truncate bg-[#091533] p-2 rounded-lg border border-[#182d5a]">
+                    {currentEquipment.googleDocUrl || googleDocUrl}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -356,9 +499,9 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Dữ Liệu Được Tự Động Định Danh Khi Quét Mã
+                  Dữ Liệu Tự Động Định Danh Khi Quét Tem QR
                 </h4>
-                <span className="text-[11px] text-sky-300/70 font-mono">Payload v2.5</span>
+                <span className="text-[11px] text-sky-300/70 font-mono">Payload v3.0</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -389,20 +532,6 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                 <pre className="whitespace-pre-wrap">{summaryText}</pre>
               </div>
             </div>
-
-            {/* Quick Links */}
-            <div className="flex items-center justify-between text-xs text-sky-200 bg-[#060e24] p-4 rounded-xl border border-sky-500/30">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-sky-400 shrink-0" />
-                <span>Mã QR này cũng được tự động in trên <b>Trang Bìa A4</b> của Sổ Lý Lịch.</span>
-              </div>
-              <button
-                onClick={() => onNavigateTab('printPreview')}
-                className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-bold shadow-md transition-colors shrink-0 cursor-pointer"
-              >
-                Xem Trang Bìa A4
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -417,7 +546,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                 Bảng In Tem Decal Mã QR Toàn Bộ Thiết Bị ({allEquipments.length} tem)
               </h3>
               <p className="text-xs text-sky-200/70 mt-0.5">
-                Bố cục chuẩn A4 gồm nhiều tem nhãn dán kỹ thuật. Nhấn nút in để dán đồng loạt lên toàn bộ tủ máy trong đài/trạm.
+                Tem nhãn kỹ thuật kích thước chuẩn dán mặt máy, tủ Rack và trang bìa sổ lý lịch.
               </p>
             </div>
 
@@ -485,7 +614,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
 
                   {/* Tag Footer */}
                   <div className="border-t border-dashed border-slate-300 pt-1.5 text-center text-[9px] text-slate-500 uppercase font-medium flex items-center justify-between">
-                    <span>SỔ LÝ LỊCH CNS</span>
+                    <span>SỔ LÝ LỊCH CNS &bull; PDF / DOC</span>
                     <span className="font-mono font-bold text-sky-700">{eq.id}</span>
                   </div>
                 </div>
@@ -502,9 +631,9 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
             <div className="w-12 h-12 bg-sky-950 text-sky-400 border border-sky-800 rounded-2xl flex items-center justify-center mx-auto mb-2">
               <Camera className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-white">Trình Tra Cứu & Quét Mã QR Thiết Bị</h3>
+            <h3 className="text-base font-bold text-white">Trình Quét Mã QR & Hiển Thị File PDF Sổ Lý Lịch</h3>
             <p className="text-xs text-sky-200/70">
-              Nhập mã định danh, số Serial hoặc quét trực tiếp từ tem nhãn dán trên thiết bị để mở cuốn sổ lý lịch tương ứng.
+              Nhập mã định danh, số Serial hoặc quét trực tiếp từ tem nhãn trên thiết bị để mở file PDF Sổ lý lịch tương ứng.
             </p>
           </div>
 
@@ -516,7 +645,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                 type="text"
                 value={scanInput}
                 onChange={(e) => handleLookupQr(e.target.value)}
-                placeholder="Nhập mã thiết bị (ví dụ: eq-vhf-01), số Serial hoặc tên máy..."
+                placeholder="Nhập mã thiết bị (ví dụ: eq-vhf-t6t-01), số Serial hoặc tên máy..."
                 className="w-full pl-11 pr-4 py-3 bg-[#060e24] border border-[#1e3c7a] rounded-xl text-sm font-medium text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all"
                 autoFocus
               />
@@ -535,15 +664,15 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
             </div>
           </div>
 
-          {/* Match Result Display */}
+          {/* Match Result Display with Direct PDF View button */}
           {scanResult ? (
-            <div className="p-5 bg-emerald-950/60 border border-emerald-700/50 rounded-2xl space-y-4 animate-in fade-in">
+            <div className="p-5 bg-sky-950/70 border border-sky-600/50 rounded-2xl space-y-4 animate-in fade-in">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                <div className="flex items-center gap-2 text-sky-300 font-bold text-sm">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <span>Đã Tìm Thấy Cuốn Sổ Lý Lịch Tương Ứng:</span>
+                  <span>Đã Nhận Diện Cuốn Sổ Lý Lịch Tương Ứng:</span>
                 </div>
-                <span className="px-2.5 py-0.5 bg-emerald-900 text-emerald-200 rounded-full text-xs font-bold font-mono border border-emerald-600">
+                <span className="px-2.5 py-0.5 bg-sky-900 text-sky-200 rounded-full text-xs font-bold font-mono border border-sky-600">
                   {scanResult.general.category}
                 </span>
               </div>
@@ -567,26 +696,51 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center gap-3">
+              {/* Action buttons on scan */}
+              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  onClick={() => {
+                    if (onOpenPdfViewer) {
+                      onOpenPdfViewer(scanResult);
+                    }
+                  }}
+                  className="py-2.5 px-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Hiển Thị File PDF Sổ Lý Lịch</span>
+                </button>
+
+                <a
+                  href={scanResult.googleDocUrl || `https://docs.google.com/document/create?title=${encodeURIComponent('Sổ_Lý_Lịch_' + (scanResult.general.name || scanResult.id))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Mở File Google Docs</span>
+                </a>
+
                 <button
                   onClick={() => {
                     onSelectEquipment(scanResult.id);
                     onNavigateTab('general');
                     onShowToast(`✓ Đã chuyển tới hồ sơ: ${scanResult.general.name}`);
                   }}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-2 px-3 bg-[#060e24] hover:bg-[#12224d] text-sky-200 border border-[#1e3c7a] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Cpu className="w-4 h-4" />
-                  <span>Mở Xem Chi Tiết Cuốn Sổ Này</span>
+                  <Cpu className="w-4 h-4 text-sky-400" />
+                  <span>Hồ Sơ Thiết Bị</span>
                 </button>
+
                 <button
                   onClick={() => {
                     onSelectEquipment(scanResult.id);
                     onNavigateTab('printPreview');
                   }}
-                  className="py-2.5 px-4 bg-[#060e24] hover:bg-[#0e1d44] text-emerald-300 border border-emerald-600/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  className="py-2 px-3 bg-[#060e24] hover:bg-[#12224d] text-sky-200 border border-[#1e3c7a] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  Xem Bản In A4
+                  <Printer className="w-4 h-4 text-sky-400" />
+                  <span>In Sổ A4 Bản Giấy</span>
                 </button>
               </div>
             </div>
