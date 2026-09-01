@@ -2,32 +2,33 @@
 
 @layer base {
   body {
-    background-color: #050c20;
+    background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 40%, #f0f9ff 100%);
+    background-attachment: fixed;
     color: #e2e8f0;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Custom Deep Navy Blue Scrollbar */
+/* Custom Light Blue / Sky Blue Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #060e24;
+  background: #e0f2fe;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e3a8a;
+  background: #38bdf8;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
+  background: #C0C0C0;
 }
 
 @media print {
   body {
     background-color: #ffffff !important;
-    color: #000000 !important;
+    color: #c92548 !important;
   }
 
   /* Hide navigation, sidebar, topbar during printing */
@@ -51,7 +52,7 @@
     margin: 0 auto !important;
     box-sizing: border-box !important;
     page-break-after: always !important;
-    background: #ffffff !important;
+    background: #5b3e3e !important;
   }
 
   .paper:last-child {

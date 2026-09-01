@@ -311,10 +311,10 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#070d1e] text-slate-100 antialiased overflow-hidden font-sans">
+    <div className="flex h-screen bg-gradient-to-br from-[#dbeafe] via-[#e0f2fe] to-[#f0f9ff] text-slate-100 antialiased overflow-hidden font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0c1836] text-white px-4 py-3 rounded-xl shadow-2xl border border-blue-500/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0c1836] text-white px-4 py-3 rounded-xl shadow-2xl border border-sky-400/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
           <span>{toastMessage}</span>
         </div>
@@ -341,7 +341,7 @@ export default function App() {
       />
 
       {/* Main App Canvas */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto">
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-[#e2effa] via-[#ebf5fe] to-[#e0f2fe]">
         {/* Topbar Action Header */}
         <Topbar
           currentEquipment={currentEquipment}

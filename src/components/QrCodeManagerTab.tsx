@@ -231,7 +231,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-lg font-bold tracking-tight text-white">Mã QR In File Google Doc & Hiển Thị PDF Sổ Lý Lịch</h2>
               <span className="px-2 py-0.5 bg-sky-500/30 text-sky-200 rounded text-xs font-semibold border border-sky-400/40">
-                Aviation CNS QR Hub
+                QR
               </span>
             </div>
             <p className="text-xs text-sky-200/80 mt-1 max-w-2xl leading-relaxed">
