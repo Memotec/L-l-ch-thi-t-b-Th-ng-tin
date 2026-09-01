@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// import { sampleEquipments } from './sampleData';
+import { sampleEquipments } from './sampleData';
 import { EquipmentData, AppUser } from './types';
 import { authService } from './utils/authService';
 import { googleDriveDocsService } from './utils/googleDriveDocsService';
