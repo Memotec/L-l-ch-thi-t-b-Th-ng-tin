@@ -23,8 +23,8 @@ export const DocsTab: React.FC<DocsTabProps> = ({ data, onChange }) => {
       name: presetName || '',
       qty: 1,
       format: 'Bản in giấy',
-      lang: presetLang || 'English',
-      location: 'Tủ tài liệu kỹ thuật trạm',
+      lang: presetLang || '',
+      location: '',
       note: ''
     };
     onChange({

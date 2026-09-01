@@ -26,8 +26,8 @@ export const RepairTab: React.FC<RepairTabProps> = ({ data, onChange }) => {
       incidentDescription: '',
       rootCause: '',
       actionTaken: '',
-      replacedParts: 'Không',
-      person: data.org.primaryEngineer || 'Kỹ thuật viên trạm',
+      replacedParts: '',
+      person: data.org.primaryEngineer || '',
       status: 'Đã xử lý dứt điểm'
     };
     onChange({

@@ -7,9 +7,7 @@ import {
   PhoneCall, 
   Zap, 
   Server, 
-  HardDrive,
-  ShieldCheck,
-  Building2
+  HardDrive
 } from 'lucide-react';
 import { EquipmentCategory, EquipmentData } from '../types';
 
@@ -30,8 +28,8 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
   const [manufacturer, setManufacturer] = useState('');
   const [serial, setSerial] = useState('');
   const [assetNo, setAssetNo] = useState('');
-  const [unit, setUnit] = useState('Đài Kiểm soát Không lưu & Trạm Radar');
-  const [location, setLocation] = useState('Phòng Thiết bị Kỹ thuật CNS');
+  const [unit, setUnit] = useState('');
+  const [location, setLocation] = useState('');
 
   if (!isOpen) return null;
 
@@ -49,118 +47,63 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
       createdAt: nowIso,
       updatedAt: nowIso,
       org: {
-        unit,
-        location,
-        phoneContact: '024-3872xxxx',
-        primaryEngineer: 'Nhân Viên Trực Kỹ thuật',
-        supervisor: 'Đội trưởng Đội Thông Tin'
+        unit: unit.trim(),
+        location: location.trim(),
+        phoneContact: '',
+        primaryEngineer: '',
+        supervisor: ''
       },
-      orgRows: [
-        {
-          id: `or-${Date.now()}`,
-          date: new Date().toISOString().split('T')[0],
-          unit,
-          handoverDocNo: 'BB-NTBG/CNS',
-          status: 'Tiếp nhận mới 100%',
-          note: 'Bàn giao đưa vào khai thác'
-        }
-      ],
+      orgRows: [],
       general: {
-        name,
+        name: name.trim(),
         category,
-        model,
-        manufacturer,
-        serial: serial || `SN-${Math.floor(100000 + Math.random() * 900000)}`,
-        assetNo: assetNo || `TS-CNS-${Math.floor(1000 + Math.random() * 9000)}`,
-        assetCode: `EQ-${Date.now().toString().slice(-4)}`,
-        yearMade: new Date().getFullYear().toString(),
-        origin: 'Quốc tế',
-        commissioned: new Date().toISOString().split('T')[0],
-        acceptanceDate: new Date().toISOString().split('T')[0],
-        warrantyDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        nextCalDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        model: model.trim(),
+        manufacturer: manufacturer.trim(),
+        serial: serial.trim(),
+        assetNo: assetNo.trim(),
+        assetCode: '',
+        yearMade: '',
+        origin: '',
+        commissioned: '',
+        acceptanceDate: '',
+        warrantyDate: '',
+        nextCalDate: '',
         status: 'Đang khai thác',
         priority: 'Hệ thống chính (Level 1)',
         estimatedLifespanYears: 10,
-        notes: 'Thiết bị mới đưa vào khai thác.'
+        notes: ''
       },
       spec: {
-        text: `Hệ thống ${name} phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.`,
-        power: '220VAC ± 10% / -48VDC',
-        output: 'Chuẩn định mức',
-        range: 'Băng thông tiêu chuẩn',
-        interface: 'VoIP ED-137 / IP / RS232',
-        mgmtIp: '192.168.1.50',
-        subnetMask: '255.255.255.0',
-        gateway: '192.168.1.1',
-        vlanId: 'VLAN 100',
-        firmware: 'v1.0.0',
-        channelFreq: 'Kênh khai thác chính',
-        snmpCommunity: 'public'
+        text: '',
+        power: '',
+        output: '',
+        range: '',
+        interface: '',
+        mgmtIp: '',
+        subnetMask: '',
+        gateway: '',
+        vlanId: '',
+        firmware: '',
+        channelFreq: '',
+        snmpCommunity: ''
       },
-      licenses: [
-        {
-          id: `lic-${Date.now()}`,
-          startNo: 'GP-TS-CNS/2025',
-          startDate: new Date().toISOString().split('T')[0],
-          content: 'Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay',
-          endDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          active: true
-        }
-      ],
-      components: [
-        {
-          id: `cp-1`,
-          no: 1,
-          name: 'Khối xử lý trung tâm (Main Controller)',
-          partNo: 'MCU-01',
-          serial: `SN-MCU-${Math.floor(1000 + Math.random() * 9000)}`,
-          unit: 'Bo mạch',
-          qty: 1,
-          healthStatus: 'Tốt',
-          note: 'Slot 1'
-        },
-        {
-          id: `cp-2`,
-          no: 2,
-          name: 'Khối nguồn cung cấp (PSU Module)',
-          partNo: 'PSU-220/48',
-          serial: `SN-PSU-${Math.floor(1000 + Math.random() * 9000)}`,
-          unit: 'Bộ',
-          qty: 1,
-          healthStatus: 'Tốt',
-          note: 'Khe cắm nguồn'
-        }
-      ],
-      docs: [
-        {
-          id: `doc-1`,
-          no: 1,
-          name: 'User Operation Manual (Hướng dẫn vận hành thiết bị)',
-          qty: 1,
-          format: 'Bản in giấy',
-          lang: 'English / Tiếng Việt',
-          location: 'Tủ tài liệu trạm',
-          note: 'Kèm đĩa phần mềm'
-        }
-      ],
-      maintenance: [
-        {
-          id: `mt-1`,
-          date: new Date().toISOString().split('T')[0],
-          cycle: 'Hàng quý',
-          content: 'Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.',
-          measuredParams: 'Thông số kỹ thuật chuẩn đạt 100%',
-          result: 'Đạt yêu cầu kỹ thuật',
-          person: 'Kỹ sư Trực Kỹ thuật',
-          supervisor: 'Trưởng Đài CNS'
-        }
-      ],
+      licenses: [],
+      components: [],
+      docs: [],
+      maintenance: [],
       repair: []
     };
 
     onCreate(newEquipment);
     onClose();
+    // Reset fields
+    setName('');
+    setModel('');
+    setManufacturer('');
+    setSerial('');
+    setAssetNo('');
+    setUnit('');
+    setLocation('');
   };
 
   return (
@@ -219,7 +162,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
             <input
               type="text"
               required
-              placeholder="VD: Máy phát VHF T/R Kênh Chính 125.6 MHz"
+              placeholder="Nhập tên thiết bị"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2.5 font-semibold text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -231,7 +174,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <label className="font-bold text-sky-200 block">Kiểu loại (Model)</label>
               <input
                 type="text"
-                placeholder="VD: PAE T6TR / Garex 220"
+                placeholder="Nhập model thiết bị"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white font-mono placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -242,7 +185,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <label className="font-bold text-sky-200 block">Hãng sản xuất</label>
               <input
                 type="text"
-                placeholder="VD: Park Air Systems / Rohde & Schwarz"
+                placeholder="Nhập hãng sản xuất"
                 value={manufacturer}
                 onChange={(e) => setManufacturer(e.target.value)}
                 className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -255,7 +198,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <label className="font-bold text-sky-200 block">Số Serial</label>
               <input
                 type="text"
-                placeholder="VD: SN-2024-8899"
+                placeholder="Nhập số serial"
                 value={serial}
                 onChange={(e) => setSerial(e.target.value)}
                 className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white font-mono placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -266,7 +209,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <label className="font-bold text-sky-200 block">Mã Tài Sản Quản Lý</label>
               <input
                 type="text"
-                placeholder="VD: TS-VHF-009"
+                placeholder="Nhập mã tài sản"
                 value={assetNo}
                 onChange={(e) => setAssetNo(e.target.value)}
                 className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white font-mono placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -279,6 +222,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <label className="font-bold text-sky-200 block">Đơn vị quản lý</label>
               <input
                 type="text"
+                placeholder="Nhập đơn vị quản lý"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -289,6 +233,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <label className="font-bold text-sky-200 block">Vị trí lắp đặt</label>
               <input
                 type="text"
+                placeholder="Nhập vị trí lắp đặt"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"

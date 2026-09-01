@@ -22,26 +22,15 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   const addMaintenance = (presetCycle: MaintenanceCycle = 'Hàng quý') => {
-    let defaultContent = 'Kiểm tra hoạt động toàn diện, đo thông số nguồn điện, kiểm tra các kết nối cáp tín hiệu và vệ sinh bảo dưỡng định kỳ.';
-    let defaultParams = 'Các chỉ tiêu kỹ thuật đo được nằm trong giới hạn dung sai cho phép.';
-
-    if (data.general.category === 'VHF/UHF') {
-      defaultContent = 'Đo công suất phát RF, độ sâu điều chế AM, đo tỷ số sóng đứng SWR anten, đo độ nhạy máy thu và sao lưu cấu hình.';
-      defaultParams = 'RF Power: 50W; SWR: 1.15; Mod Depth: 85%; Nguồn DC: 28V';
-    } else if (data.general.category === 'POWER') {
-      defaultContent = 'Đo điện áp và nội trở từng bình acquy, kiểm tra tiếp xúc đầu cực, đo điện áp/dòng sạc và thử nghiệm chuyển mạch nguồn lưới.';
-      defaultParams = 'Điện áp DC Bus: 540V; Nhiệt độ phòng acquy: 22°C; Điện áp ra 3 pha: 230V cân bằng';
-    }
-
     const newRow: MaintenanceRow = {
       id: `mt-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
       cycle: presetCycle,
-      content: defaultContent,
-      measuredParams: defaultParams,
+      content: '',
+      measuredParams: '',
       result: 'Đạt yêu cầu kỹ thuật',
-      person: data.org.primaryEngineer || 'Kỹ thuật viên trạm',
-      supervisor: data.org.supervisor || 'Trưởng trạm'
+      person: data.org.primaryEngineer || '',
+      supervisor: data.org.supervisor || ''
     };
     onChange({
       ...data,
