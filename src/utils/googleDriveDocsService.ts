@@ -212,7 +212,7 @@ class GoogleDriveDocsService {
       body: JSON.stringify({
         name: FOLDER_NAME,
         mimeType: 'application/vnd.google-apps.folder',
-        description: 'Thư mục lưu trữ tập trung Sổ Lý Lịch Thiết Bị Kỹ Thuật CNS (Đội Thông Tin)'
+        description: 'Thư mục lưu trữ tập trung Sổ Lý Lịch Thiết Bị (Đội Thông Tin)'
       })
     });
 
@@ -267,7 +267,7 @@ class GoogleDriveDocsService {
     lines.push('Độc lập - Tự do - Hạnh phúc');
     lines.push('================================================================================\n');
 
-    lines.push('SỔ LÝ LỊCH THIẾT BỊ KỸ THUẬT');
+    lines.push('LÝ LỊCH THIẾT BỊ');
     lines.push(`Chủng loại: ${(g.category || 'VHF/UHF').toUpperCase()}  |  Tên thiết bị: ${(g.name || '').toUpperCase()}`);
     lines.push(`Model: ${g.model || '---'}  |  Serial No: ${g.serial || '---'}  |  Mã tài sản: ${g.assetNo || g.assetCode || '---'}`);
     lines.push(`Thời gian cập nhật đồng bộ: ${new Date().toLocaleString('vi-VN')}\n`);
@@ -285,7 +285,7 @@ class GoogleDriveDocsService {
     lines.push(`• Trạng thái vận hành: ${g.status || '---'}  -  Mức độ ưu tiên: ${g.priority || '---'}`);
     lines.push(`• Đơn vị quản lý: ${o.unit || '---'}`);
     lines.push(`• Vị trí lắp đặt: ${o.location || '---'}`);
-    lines.push(`• Kỹ sư phụ trách: ${o.primaryEngineer || '---'}  -  SĐT: ${o.phoneContact || '---'}`);
+    lines.push(`• Nhân Viên Thực Hiện: ${o.primaryEngineer || '---'}  -  SĐT: ${o.phoneContact || '---'}`);
     lines.push(`• Cán bộ phụ trách đài/trạm: ${o.supervisor || '---'}`);
     if (g.notes) lines.push(`• Ghi chú tổng quát: ${g.notes}`);
     lines.push('');
@@ -349,7 +349,7 @@ class GoogleDriveDocsService {
     lines.push('--------------------------------------------------------------------------------');
     lines.push('KHỐI CHỮ KÝ PHÊ DUYỆT HỒ SƠ');
     lines.push('--------------------------------------------------------------------------------');
-    lines.push(`NGƯỜI LẬP SỔ: ${o.primaryEngineer || 'Kỹ sư phụ trách'}`);
+    lines.push(`NGƯỜI LẬP SỔ: ${o.primaryEngineer || 'Nhân Viên Thực Hiện'}`);
     lines.push(`CÁN BỘ TRƯỞNG ĐÀI/TRẠM: ${o.supervisor || 'Trưởng đài/trạm'}`);
     lines.push('LÃNH ĐẠO ĐƠN VỊ DUYỆT: Trưởng phòng / Giám đốc\n');
     lines.push(`[Hồ sơ điện tử CNS Multi-Manager - Google Docs Cloud Sync - ${new Date().toISOString()}]`);
