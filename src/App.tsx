@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { sampleEquipments } from './sampleData';
-import { EquipmentData } from './types';
+// import { sampleEquipments } from './sampleData';
+import { EquipmentData, AppUser } from './types';
+import { authService } from './utils/authService';
+import { googleDriveDocsService } from './utils/googleDriveDocsService';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardTab } from './components/DashboardTab';
@@ -15,11 +17,16 @@ import { QrCodeManagerTab } from './components/QrCodeManagerTab';
 import { GoogleWorkspaceTab } from './components/GoogleWorkspaceTab';
 import { NewEquipmentModal } from './components/NewEquipmentModal';
 import { PdfViewerModal } from './components/PdfViewerModal';
+import { LoginModal } from './components/LoginModal';
 import { SectionNavRibbon } from './components/SectionNavRibbon';
 
 const STORAGE_KEY = 'cns_multi_equipment_data_v2';
 
 export default function App() {
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<AppUser>(() => authService.getCurrentUser());
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+
   const [equipments, setEquipments] = useState<EquipmentData[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -61,6 +68,12 @@ export default function App() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  const handleLoginSuccess = (user: AppUser, message: string) => {
+    setCurrentUser(user);
+    showToast(`✓ ${message}`);
+  };
+
 
   // QR Code Deep Link Listener (#eq=eq-xxx or #eq=eq-xxx&view=pdf)
   useEffect(() => {
@@ -122,9 +135,26 @@ export default function App() {
   };
 
   // Manual save trigger
-  const handleManualSave = () => {
+  const handleManualSave = async () => {
     saveToStorage(equipments);
     showToast('✓ Đã lưu toàn bộ cơ sở dữ liệu thành công!');
+
+    // Check if auto-sync to Google Docs on change is enabled
+    const autoSync = localStorage.getItem('cns_auto_sync_gdoc_on_change_v1') === 'true';
+    if (autoSync && googleDriveDocsService.isAuthorized()) {
+      try {
+        const result = await googleDriveDocsService.syncEquipmentToGoogleDoc(currentEquipment);
+        handleUpdateCurrent({
+          ...currentEquipment,
+          googleDocUrl: result.docUrl,
+          googleDocPdfUrl: result.pdfDownloadUrl,
+          updatedAt: new Date().toISOString()
+        });
+        showToast(`✓ Đã tự động chép đè & đồng bộ Google Doc: ${currentEquipment.general.name}`);
+      } catch (err: any) {
+        console.warn('Auto sync Google Doc error:', err);
+      }
+    }
   };
 
   // Create new equipment
@@ -139,6 +169,11 @@ export default function App() {
 
   // Clone equipment
   const handleCloneCurrent = () => {
+    if (!currentUser.permissions.canClone) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để nhân bản thiết bị.');
+      return;
+    }
     const cloned: EquipmentData = {
       ...JSON.parse(JSON.stringify(currentEquipment)),
       id: `eq-${Date.now()}`,
@@ -159,6 +194,11 @@ export default function App() {
 
   // Delete equipment
   const handleDeleteCurrent = () => {
+    if (!currentUser.permissions.canDelete) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để xóa hồ sơ thiết bị.');
+      return;
+    }
     if (equipments.length <= 1) {
       alert('Không thể xóa thiết bị duy nhất trong hệ thống.');
       return;
@@ -201,6 +241,12 @@ export default function App() {
 
   // Import JSON file
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser.permissions.canImportData) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để nhập dữ liệu sao lưu.');
+      e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -243,6 +289,11 @@ export default function App() {
 
   // Reset to default sample
   const handleResetDefaults = () => {
+    if (!currentUser.permissions.canResetDatabase) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để khôi phục dữ liệu mẫu ban đầu.');
+      return;
+    }
     const confirmReset = window.confirm('Khôi phục lại toàn bộ dữ liệu mẫu ban đầu? Các thay đổi chưa lưu có thể bị ghi đè.');
     if (!confirmReset) return;
     setEquipments(sampleEquipments);
@@ -274,6 +325,8 @@ export default function App() {
         equipments={equipments}
         currentEquipmentId={currentId}
         activeTab={activeTab}
+        currentUser={currentUser}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onSelectEquipment={(id) => setCurrentId(id)}
         onSelectTab={(tab) => setActiveTab(tab)}
         onNewEquipment={() => setIsNewModalOpen(true)}
@@ -292,6 +345,8 @@ export default function App() {
         {/* Topbar Action Header */}
         <Topbar
           currentEquipment={currentEquipment}
+          currentUser={currentUser}
+          onOpenLoginModal={() => setIsLoginModalOpen(true)}
           onSaveData={handleManualSave}
           onShowPrint={() => setActiveTab('printPreview')}
           onPrintDirect={handlePrintDirect}
@@ -380,6 +435,7 @@ export default function App() {
               currentEquipment={currentEquipment}
               allEquipments={equipments}
               onSyncFromGas={handleSyncFromGas}
+              onUpdateCurrentEquipment={handleUpdateCurrent}
               onShowToast={showToast}
             />
           )}
@@ -408,6 +464,14 @@ export default function App() {
           onShowToast={showToast}
         />
       )}
+
+      {/* Authentication & Role Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        currentUser={currentUser}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </div>
   );
 }

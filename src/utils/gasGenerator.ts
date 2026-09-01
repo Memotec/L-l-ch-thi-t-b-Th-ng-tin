@@ -542,22 +542,40 @@ function formatHeaderRow(sheet, bgColor) {
 
 /**
  * Tạo Google Document định dạng chuẩn văn bản kỹ thuật "SỔ LÝ LỊCH THIẾT BỊ" trên Google Drive
+ * - Tự động tìm kiếm file Sổ lý lịch đã có trong thư mục CNS_SoLyLich_GoogleDocs
+ * - Nếu đã tồn tại: Tự động CHÉP ĐÈ (Overwrite) toàn bộ nội dung mới nhất
+ * - Nếu chưa có: Tạo mới tài liệu Google Doc trong thư mục tập trung
  */
 function generateGoogleDocForEquipment(eq) {
   const g = eq.general || {};
   const o = eq.org || {};
   const cleanName = (g.name ? g.name.replace(/[^a-zA-Z0-9_-]/g, '_') : 'ThietBi');
-  const docName = 'So_Ly_Lich_' + cleanName + '_' + (g.serial || 'NoSerial');
+  const docName = 'So_Ly_Lich_' + cleanName + '_' + (g.serial || eq.id || 'NoSerial');
   
-  // Tìm hoặc tạo thư mục lưu trữ trên Drive
+  // Tìm hoặc tạo thư mục lưu trữ tập trung trên Drive
   const folder = getOrCreateFolder(DRIVE_FOLDER_DOCS);
   
-  // Tạo tài liệu Google Docs mới
-  const doc = DocumentApp.create(docName);
-  const file = DriveApp.getFileById(doc.getId());
-  file.moveTo(folder);
+  // Kiểm tra xem đã có file Doc cùng tên trong thư mục tập trung hay chưa
+  let doc;
+  let isOverwritten = false;
+  const existingFiles = folder.getFilesByName(docName);
+  
+  if (existingFiles.hasNext()) {
+    const existingFile = existingFiles.next();
+    doc = DocumentApp.openById(existingFile.getId());
+    isOverwritten = true;
+  } else {
+    // Tạo tài liệu Google Docs mới
+    doc = DocumentApp.create(docName);
+    const file = DriveApp.getFileById(doc.getId());
+    file.moveTo(folder);
+    isOverwritten = false;
+  }
   
   const body = doc.getBody();
+  // Xóa sạch nội dung cũ nếu là file ghi đè
+  body.clear();
+  
   body.setMarginTop(36);
   body.setMarginBottom(36);
   body.setMarginLeft(45);
@@ -566,8 +584,8 @@ function generateGoogleDocForEquipment(eq) {
   // --- HEADER QUỐC GIA & CƠ QUAN ---
   const headerTable = body.appendTable([
     [
-      (o.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM') + '\\n' + (o.unit || 'TRUNG TÂM BẢO ĐẢM KỸ THUẬT') + '\\n------------------',
-      'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\\nĐộc lập - Tự do - Hạnh phúc\\n-------------------------'
+      (o.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM') + '\n' + (o.unit || 'TRUNG TÂM BẢO ĐẢM KỸ THUẬT') + '\n------------------',
+      'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n-------------------------'
     ]
   ]);
   headerTable.setBorderWidth(0);
@@ -593,6 +611,12 @@ function generateGoogleDocForEquipment(eq) {
   subTitleP.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
   subTitleP.setFontSize(12);
   subTitleP.setBold(true);
+  
+  const updateP = body.appendParagraph('Đồng bộ tự động & Ghi đè mới nhất: ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm:ss'));
+  updateP.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  updateP.setFontSize(9);
+  updateP.setItalic(true);
+  updateP.setForegroundColor('#64748b');
   
   body.appendParagraph('');
   

@@ -14,12 +14,18 @@ import {
   Cloud,
   FileText,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  User,
+  Lock,
+  LogOut,
+  Sparkles
 } from 'lucide-react';
-import { EquipmentData, EquipmentCategory } from '../types';
+import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 
 interface TopbarProps {
   currentEquipment: EquipmentData;
+  currentUser: AppUser;
+  onOpenLoginModal: () => void;
   onSaveData: () => void;
   onShowPrint: () => void;
   onPrintDirect: () => void;
@@ -33,6 +39,8 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = ({
   currentEquipment,
+  currentUser,
+  onOpenLoginModal,
   onSaveData,
   onShowPrint,
   onPrintDirect,
@@ -43,6 +51,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   searchTerm,
   onSearchChange
 }) => {
+  const isAdmin = currentUser.role === 'admin';
+
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
       case 'VHF/UHF': return <Radio className="w-5 h-5 text-sky-400" />;
@@ -172,7 +182,7 @@ export const Topbar: React.FC<TopbarProps> = ({
           </button>
         </div>
 
-        {/* Group B: System & Synchronization */}
+        {/* Group B: System & Synchronization & Auth */}
         <div className="flex items-center gap-1.5">
           {onOpenGas && (
             <button
@@ -192,6 +202,31 @@ export const Topbar: React.FC<TopbarProps> = ({
           >
             <Save className="w-3.5 h-3.5" />
             <span>Lưu hồ sơ</span>
+          </button>
+
+          {/* User Account / Role Badge */}
+          <button
+            onClick={onOpenLoginModal}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer shadow-sm ${
+              isAdmin
+                ? 'bg-gradient-to-r from-rose-900/60 to-red-800/60 hover:from-rose-800/80 hover:to-red-700/80 text-rose-100 border-rose-500/50 shadow-rose-950/40'
+                : 'bg-[#0b1b3d] hover:bg-[#122b5e] text-sky-200 border-sky-500/40'
+            }`}
+            title={isAdmin ? 'Tài khoản Admin (Toàn quyền) - Nhấn để quản lý' : 'Tài khoản Mặc định (Xem & Thêm mới) - Nhấn để đăng nhập Admin'}
+          >
+            {isAdmin ? (
+              <>
+                <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Admin (Toàn quyền)</span>
+                <span className="sm:hidden">Admin</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline">Đăng nhập Admin</span>
+                <span className="sm:hidden">Đăng nhập</span>
+              </>
+            )}
           </button>
         </div>
       </div>

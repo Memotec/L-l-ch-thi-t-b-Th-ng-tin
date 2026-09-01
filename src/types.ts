@@ -171,3 +171,26 @@ export interface EquipmentData {
   maintenance: MaintenanceRow[];
   repair: RepairRow[];
 }
+
+export type UserRole = 'admin' | 'default';
+
+export interface UserPermissions {
+  canView: boolean;
+  canCreate: boolean;
+  canEditDetails: boolean;
+  canDelete: boolean;
+  canClone: boolean;
+  canImportData: boolean;
+  canExportData: boolean;
+  canResetDatabase: boolean;
+  canSyncGas: boolean;
+}
+
+export interface AppUser {
+  username: string;
+  displayName: string;
+  role: UserRole;
+  avatarColor?: string;
+  permissions: UserPermissions;
+}
+

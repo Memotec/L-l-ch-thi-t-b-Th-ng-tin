@@ -344,10 +344,10 @@ export const sampleEquipments: EquipmentData[] = [
     org: {
       companyName: 'CÔNG TY QUẢN LÝ BAY MIỀN NAM',
       unit: 'Đội Thông Tin',
-      location: 'Phòng Thiết bị Viễn thông Tầng 3 / Dãy Rack 04',
-      primaryEngineer: 'Kỹ sư Vũ Thành Trung',
+      location: 'Phòng Thiết bị Trung Tâm Tầng 2 / Dãy Rack 04',
+      primaryEngineer: 'Nguyễn Chí Thanh',
       phoneContact: '028-3844xxxx',
-      supervisor: 'Trưởng Đài Thông Tin',
+      supervisor: 'Đội Trưởng Thông Tin',
       coverNote: 'VCS - M800IP'
     },
     orgRows: [
