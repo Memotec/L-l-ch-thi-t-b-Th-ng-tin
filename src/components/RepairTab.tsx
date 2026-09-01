@@ -224,10 +224,10 @@ export const RepairTab: React.FC<RepairTabProps> = ({ data, onChange }) => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-sky-200">Kỹ thuật viên & Đơn vị phối hợp thực hiện</label>
+                    <label className="text-[11px] font-bold text-sky-200">Nhân Kỹ thuật & Đơn vị phối hợp thực hiện</label>
                     <input
                       type="text"
-                      placeholder="VD: KS. Nguyễn Văn Hùng, Tổ Kỹ thuật CNS..."
+                      placeholder="VD: KS. Nguyễn Chí Thanh, Nhân Viên Kỹ Thuật..."
                       value={rp.person}
                       onChange={(e) => updateRepair(idx, 'person', e.target.value)}
                       className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white font-medium"
