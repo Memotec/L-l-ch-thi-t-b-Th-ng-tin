@@ -15,6 +15,7 @@ import { QrCodeManagerTab } from './components/QrCodeManagerTab';
 import { GoogleWorkspaceTab } from './components/GoogleWorkspaceTab';
 import { NewEquipmentModal } from './components/NewEquipmentModal';
 import { PdfViewerModal } from './components/PdfViewerModal';
+import { SectionNavRibbon } from './components/SectionNavRibbon';
 
 const STORAGE_KEY = 'cns_multi_equipment_data_v2';
 
@@ -282,6 +283,7 @@ export default function App() {
         onExportAll={handleExportAll}
         onImportFile={handleImportFile}
         onSaveData={handleManualSave}
+        onResetDefaults={handleResetDefaults}
         lastSaved={lastSaved}
       />
 
@@ -295,6 +297,7 @@ export default function App() {
           onPrintDirect={handlePrintDirect}
           onOpenQr={() => setActiveTab('qrCode')}
           onOpenGas={() => setActiveTab('googleWorkspace')}
+          onOpenPdfModal={() => setPdfModalEquipment(currentEquipment)}
           onResetDefaults={handleResetDefaults}
           searchTerm={searchTerm}
           onSearchChange={(term) => setSearchTerm(term)}
@@ -302,6 +305,12 @@ export default function App() {
 
         {/* Tab Body Viewports */}
         <main className="p-6 flex-1 max-w-7xl w-full mx-auto">
+          {/* Quick Horizontal Section Switcher */}
+          <SectionNavRibbon
+            activeTab={activeTab}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+
           {activeTab === 'dashboard' && (
             <DashboardTab
               data={currentEquipment}
