@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #070d1e;
+    color: #e2e8f0;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom Deep Navy Blue Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #060d1f;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3a8a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Hide navigation, sidebar, topbar during printing */
+  aside, 
+  header, 
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .paper {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 12mm 15mm !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    page-break-after: always !important;
+    background: #ffffff !important;
+  }
+
+  .paper:last-child {
+    page-break-after: auto !important;
+  }
+}
