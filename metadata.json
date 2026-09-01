@@ -1,6 +1,6 @@
 {
-  "name": "CNS Multi-Equipment Lifecycle & History Management",
-  "description": "Hệ thống Quản lý Vòng đời & Sổ Lý Lịch Thiết Bị Kỹ Thuật Đa Chủng Loại CNS (Thông tin, Dẫn đường, Giám sát & Thiết bị phụ trợ)",
+  "name": "Sổ Lý Lịch Thiết Bị",
+  "description": "Sổ Lý Lịch Thiết Bị Đội THông tin (VHF, VCCS, Thiết bị truyền dẫn, tổng đài)",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

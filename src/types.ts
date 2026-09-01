@@ -1,12 +1,13 @@
 export type EquipmentCategory = 
-  | 'VHF/UHF' 
+  | 'VHF/UHF'
+  | 'Ghép Kênh'
   | 'VIBA' 
+  | 'VSAT' 
   | 'VOICE' 
   | 'POWER' 
-  | 'IT' 
-  | 'RADAR_ADS' 
-  | 'NAV' 
-  | 'OTHER';
+  | 'IT'  
+  | 
+  | 'Thiết Bị Khác';
 
 export type EquipmentStatus = 
   | 'Đang khai thác' 

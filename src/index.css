@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    background-color: #070d1e;
+    background-color: #34bc5d;
     color: #e2e8f0;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
@@ -14,10 +14,10 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #060d1f;
+  background: #16061f;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e3a8a;
+  background: #0945ea;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -26,7 +26,7 @@
 
 @media print {
   body {
-    background-color: #ffffff !important;
+    background-color: #a83232 !important;
     color: #000000 !important;
   }
 

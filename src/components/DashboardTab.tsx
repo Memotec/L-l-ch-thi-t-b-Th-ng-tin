@@ -312,15 +312,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ data, allEquipments 
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200">Mức độ ưu tiên / Cấp độ bảo đảm</label>
+            <label className="text-xs font-bold text-sky-200">Phân Nhóm Thiết Bị</label>
             <select
               value={data.general.priority}
               onChange={(e) => updateGeneral('priority', e.target.value as EquipmentPriority)}
               className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
             >
-              <option value="Hệ thống chính (Level 1)" className="bg-[#091533]">Hệ thống chính (Level 1 - Không được gián đoạn)</option>
-              <option value="Hệ thống dự phòng nóng (Level 2)" className="bg-[#091533]">Hệ thống dự phòng nóng (Level 2 - Hot Standby)</option>
-              <option value="Hệ thống phụ trợ (Level 3)" className="bg-[#091533]">Hệ thống phụ trợ (Level 3 - Hỗ trợ kỹ thuật)</option>
+              <option value="Hệ thống chính (Level 1)" className="bg-[#091533]">Thiết Bị Nhóm 1 (Level 1 - VHF, VCCS, ADS-B)</option>
+              <option value="Hệ thống dự phòng nóng (Level 2)" className="bg-[#091533]">Hệ thiết Bị Nhóm 2 (Level 2 - VSAT, VIBA, Cáp Quang)</option>
+              <option value="Hệ thống phụ trợ (Level 3)" className="bg-[#091533]">Thiết Bị Nhóm 3 (Level 3 - Hỗ trợ kỹ thuật)</option>
             </select>
           </div>
 

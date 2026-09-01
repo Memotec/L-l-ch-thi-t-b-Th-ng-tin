@@ -92,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="font-extrabold text-sm tracking-wide text-white flex items-center gap-1.5">
-              CNS ASSET MANAGER
+              Sổ Lý Lịch Thiết Bị
               <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">v2.5</span>
             </div>
             <p className="text-[11px] text-sky-300/70 leading-tight mt-0.5">Sổ Lý Lịch & Vòng Đời Thiết Bị</p>
