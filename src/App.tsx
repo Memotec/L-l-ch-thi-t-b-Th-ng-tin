@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { sampleEquipments } from './sampleData';
 import { EquipmentData, AppUser } from './types';
 import { authService } from './utils/authService';
 import { googleDriveDocsService } from './utils/googleDriveDocsService';
+import { storageService } from './utils/storageService';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardTab } from './components/DashboardTab';
@@ -12,131 +13,195 @@ import { ComponentsTab } from './components/ComponentsTab';
 import { DocsTab } from './components/DocsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
 import { RepairTab } from './components/RepairTab';
-import { PrintPreviewTab } from './components/PrintPreviewTab';
-import { QrCodeManagerTab } from './components/QrCodeManagerTab';
-import { GoogleWorkspaceTab } from './components/GoogleWorkspaceTab';
-import { NewEquipmentModal } from './components/NewEquipmentModal';
-import { PdfViewerModal } from './components/PdfViewerModal';
-import { LoginModal } from './components/LoginModal';
 import { SectionNavRibbon } from './components/SectionNavRibbon';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { LoadingFallback } from './components/LoadingFallback';
 
-const STORAGE_KEY = 'cns_multi_equipment_data_v2';
+// Lazy load heavy components and modals on demand
+const PrintPreviewTab = lazy(() => import('./components/PrintPreviewTab').then(m => ({ default: m.PrintPreviewTab })));
+const QrCodeManagerTab = lazy(() => import('./components/QrCodeManagerTab').then(m => ({ default: m.QrCodeManagerTab })));
+const GoogleWorkspaceTab = lazy(() => import('./components/GoogleWorkspaceTab').then(m => ({ default: m.GoogleWorkspaceTab })));
+const SettingsTab = lazy(() => import('./components/SettingsTab').then(m => ({ default: m.SettingsTab })));
+const NewEquipmentModal = lazy(() => import('./components/NewEquipmentModal').then(m => ({ default: m.NewEquipmentModal })));
+const PdfViewerModal = lazy(() => import('./components/PdfViewerModal').then(m => ({ default: m.PdfViewerModal })));
+const FullScreenPdfViewer = lazy(() => import('./components/FullScreenPdfViewer').then(m => ({ default: m.FullScreenPdfViewer })));
+const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
+const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ default: m.SearchModal })));
 
 export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState<AppUser>(() => authService.getCurrentUser());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
 
-  const [equipments, setEquipments] = useState<EquipmentData[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse saved equipment data:', e);
-    }
-    return sampleEquipments;
-  });
+  const isReadOnly = useMemo(() => authService.isReadOnly(currentUser), [currentUser]);
+
+  const [equipments, setEquipments] = useState<EquipmentData[]>(() => storageService.loadEquipments());
 
   const [currentId, setCurrentId] = useState<string>(() => {
     return equipments[0]?.id || 'eq-vhf-01';
   });
+
+  // Memoized current active equipment
+  const currentEquipment = useMemo(() => {
+    return equipments.find(e => e.id === currentId) || equipments[0] || sampleEquipments[0];
+  }, [equipments, currentId]);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastSaved, setLastSaved] = useState<string>('Vừa lưu trữ tự động');
   const [isNewModalOpen, setIsNewModalOpen] = useState<boolean>(false);
   const [pdfModalEquipment, setPdfModalEquipment] = useState<EquipmentData | null>(null);
+  
+  // Dedicated Full-Screen PDF Mode for QR Scans and Direct Inspection
+  const [isPdfFullscreen, setIsPdfFullscreen] = useState<boolean>(false);
+  const [pdfFullscreenEquipment, setPdfFullscreenEquipment] = useState<EquipmentData | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync to local storage
-  const saveToStorage = (data: EquipmentData[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      setLastSaved(`Đã lưu lúc ${timeStr}`);
-    } catch (e) {
-      console.error('Failed to save to localStorage:', e);
-    }
-  };
-
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
-  };
+  }, []);
 
-  const handleLoginSuccess = (user: AppUser, message: string) => {
+  const handleLoginSuccess = useCallback((user: AppUser, message: string) => {
     setCurrentUser(user);
     showToast(`✓ ${message}`);
-  };
+  }, [showToast]);
 
+  // Handler to enter Full-Screen PDF Viewer for any equipment
+  const handleOpenPdfFullScreen = useCallback((eq?: EquipmentData) => {
+    const target = eq || currentEquipment;
+    setPdfFullscreenEquipment(target);
+    setIsPdfFullscreen(true);
+    window.location.hash = `#eq=${encodeURIComponent(target.id)}&view=pdf`;
+  }, [currentEquipment]);
 
-  // QR Code Deep Link Listener (#eq=eq-xxx or #eq=eq-xxx&view=pdf)
+  // Deep Link Listener for QR Codes (#eq=eq-xxx&view=pdf, ?eq=xxx&view=pdf)
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash.startsWith('#eq=')) {
-        const rawContent = hash.replace('#eq=', '');
-        const [targetIdPart, ...extraParts] = rawContent.split('&');
-        const targetId = decodeURIComponent(targetIdPart);
-        const isPdfView = extraParts.some(p => p.toLowerCase().includes('view=pdf') || p.toLowerCase().includes('mode=pdf'));
-        const isDocView = extraParts.some(p => p.toLowerCase().includes('view=doc'));
+    const handleUrlChange = () => {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      
+      let targetId: string | null = null;
+      let isPdfView = false;
+      let isDocView = false;
+
+      // 1. Check Search Query params (?eq=xxx&view=pdf)
+      if (search) {
+        const params = new URLSearchParams(search);
+        if (params.has('eq') || params.has('id')) {
+          targetId = params.get('eq') || params.get('id');
+        }
+        if (params.get('view') === 'pdf' || params.get('mode') === 'pdf') {
+          isPdfView = true;
+        }
+        if (params.get('view') === 'doc') {
+          isDocView = true;
+        }
+      }
+
+      // 2. Check Hash fragment (#eq=xxx&view=pdf or #view=pdf&eq=xxx)
+      if (hash) {
+        const cleanHash = hash.replace(/^#/, '');
+        const hashParams = new URLSearchParams(cleanHash.includes('=') ? cleanHash : `eq=${cleanHash}`);
         
+        if (hashParams.has('eq') || hashParams.has('id')) {
+          targetId = hashParams.get('eq') || hashParams.get('id');
+        } else if (cleanHash.startsWith('eq-') || cleanHash.startsWith('cns-')) {
+          targetId = cleanHash.split('&')[0];
+        }
+
+        if (hashParams.get('view') === 'pdf' || hashParams.get('mode') === 'pdf' || cleanHash.includes('view=pdf')) {
+          isPdfView = true;
+        }
+        if (hashParams.get('view') === 'doc' || cleanHash.includes('view=doc')) {
+          isDocView = true;
+        }
+      }
+
+      if (targetId) {
+        const decoded = decodeURIComponent(targetId).trim();
         const found = equipments.find(e => 
-          e.id === targetId || 
-          e.general.serial === targetId || 
-          e.general.assetNo === targetId ||
-          e.general.name.toLowerCase() === targetId.toLowerCase()
+          e.id.toLowerCase() === decoded.toLowerCase() || 
+          (e.general.serial && e.general.serial.toLowerCase() === decoded.toLowerCase()) || 
+          (e.general.assetNo && e.general.assetNo.toLowerCase() === decoded.toLowerCase()) ||
+          e.general.name.toLowerCase() === decoded.toLowerCase()
         );
 
         if (found) {
           setCurrentId(found.id);
           if (isPdfView) {
-            setPdfModalEquipment(found);
-            showToast(`✓ Đã quét mã QR: Hiển thị file PDF Sổ lý lịch ${found.general.name}`);
+            setPdfFullscreenEquipment(found);
+            setIsPdfFullscreen(true);
+            showToast(`✓ Quét mã QR thành công: Đang hiển thị toàn màn hình PDF Sổ lý lịch ${found.general.name}`);
           } else if (isDocView) {
             setActiveTab('printPreview');
+            setIsPdfFullscreen(false);
             showToast(`✓ Đã quét mã QR: Mở tài liệu Sổ lý lịch ${found.general.name}`);
           } else {
             setActiveTab('general');
+            setIsPdfFullscreen(false);
             showToast(`✓ Đã quét mã QR: Mở hồ sơ ${found.general.name}`);
           }
+        }
+      } else if (isPdfView) {
+        const target = equipments.find(e => e.id === currentId) || equipments[0];
+        if (target) {
+          setPdfFullscreenEquipment(target);
+          setIsPdfFullscreen(true);
         }
       }
     };
 
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [equipments]);
+    handleUrlChange();
+    window.addEventListener('hashchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, [equipments, currentId, showToast]);
 
-  // Get active equipment
-  const currentEquipment = equipments.find(e => e.id === currentId) || equipments[0] || sampleEquipments[0];
+  // Global Keyboard Shortcut Listener (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-  // Update current equipment
-  const handleUpdateCurrent = (updated: EquipmentData) => {
-    const updatedList = equipments.map(e => e.id === updated.id ? updated : e);
-    setEquipments(updatedList);
-    saveToStorage(updatedList);
-  };
+  // Update current equipment with debounced saving for smooth typing
+  const handleUpdateCurrent = useCallback((updated: EquipmentData) => {
+    setEquipments(prev => {
+      const updatedList = prev.map(e => e.id === updated.id ? updated : e);
+      storageService.saveDebounced(updatedList, 300, (timeStr) => {
+        setLastSaved(`Đã lưu lúc ${timeStr}`);
+      });
+      return updatedList;
+    });
+  }, []);
 
   // Sync down from Google Apps Script / Google Sheets
-  const handleSyncFromGas = (gasEquipments: EquipmentData[]) => {
+  const handleSyncFromGas = useCallback((gasEquipments: EquipmentData[]) => {
     if (!Array.isArray(gasEquipments) || gasEquipments.length === 0) return;
     setEquipments(gasEquipments);
     if (!gasEquipments.some(e => e.id === currentId)) {
       setCurrentId(gasEquipments[0].id);
     }
-    saveToStorage(gasEquipments);
-  };
+    storageService.saveImmediate(gasEquipments);
+    const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLastSaved(`Đã lưu lúc ${timeStr}`);
+  }, [currentId]);
 
   // Manual save trigger
-  const handleManualSave = async () => {
-    saveToStorage(equipments);
+  const handleManualSave = useCallback(async () => {
+    storageService.saveImmediate(equipments);
+    const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLastSaved(`Đã lưu lúc ${timeStr}`);
     showToast('✓ Đã lưu toàn bộ cơ sở dữ liệu thành công!');
 
     // Check if auto-sync to Google Docs on change is enabled
@@ -155,20 +220,22 @@ export default function App() {
         console.warn('Auto sync Google Doc error:', err);
       }
     }
-  };
+  }, [equipments, currentEquipment, handleUpdateCurrent, showToast]);
 
   // Create new equipment
-  const handleCreateNew = (newEq: EquipmentData) => {
-    const updatedList = [...equipments, newEq];
-    setEquipments(updatedList);
+  const handleCreateNew = useCallback((newEq: EquipmentData) => {
+    setEquipments(prev => {
+      const updatedList = [...prev, newEq];
+      storageService.saveImmediate(updatedList);
+      return updatedList;
+    });
     setCurrentId(newEq.id);
     setActiveTab('general');
-    saveToStorage(updatedList);
     showToast(`✓ Đã tạo hồ sơ cho thiết bị: ${newEq.general.name}`);
-  };
+  }, [showToast]);
 
   // Clone equipment
-  const handleCloneCurrent = () => {
+  const handleCloneCurrent = useCallback(() => {
     if (!currentUser.permissions.canClone) {
       setIsLoginModalOpen(true);
       showToast('Cần quyền Quản trị viên (Admin) để nhân bản thiết bị.');
@@ -185,15 +252,17 @@ export default function App() {
         status: 'Dự phòng sẵn sàng'
       }
     };
-    const updatedList = [...equipments, cloned];
-    setEquipments(updatedList);
+    setEquipments(prev => {
+      const updatedList = [...prev, cloned];
+      storageService.saveImmediate(updatedList);
+      return updatedList;
+    });
     setCurrentId(cloned.id);
-    saveToStorage(updatedList);
     showToast(`✓ Đã sao chép hồ sơ mới thành công!`);
-  };
+  }, [currentUser, currentEquipment, showToast]);
 
   // Delete equipment
-  const handleDeleteCurrent = () => {
+  const handleDeleteCurrent = useCallback(() => {
     if (!currentUser.permissions.canDelete) {
       setIsLoginModalOpen(true);
       showToast('Cần quyền Quản trị viên (Admin) để xóa hồ sơ thiết bị.');
@@ -209,12 +278,12 @@ export default function App() {
     const remaining = equipments.filter(e => e.id !== currentEquipment.id);
     setEquipments(remaining);
     setCurrentId(remaining[0].id);
-    saveToStorage(remaining);
+    storageService.saveImmediate(remaining);
     showToast(`✓ Đã xóa hồ sơ thiết bị.`);
-  };
+  }, [currentUser, equipments, currentEquipment, showToast]);
 
   // Export current equipment JSON
-  const handleExportCurrent = () => {
+  const handleExportCurrent = useCallback(() => {
     const jsonStr = JSON.stringify(currentEquipment, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -224,10 +293,10 @@ export default function App() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('✓ Đã xuất file JSON hồ sơ thiết bị!');
-  };
+  }, [currentEquipment, showToast]);
 
   // Export all equipments JSON
-  const handleExportAll = () => {
+  const handleExportAll = useCallback(() => {
     const jsonStr = JSON.stringify(equipments, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -237,10 +306,10 @@ export default function App() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('✓ Đã xuất toàn bộ cơ sở dữ liệu CNS!');
-  };
+  }, [equipments, showToast]);
 
   // Import JSON file
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!currentUser.permissions.canImportData) {
       setIsLoginModalOpen(true);
       showToast('Cần quyền Quản trị viên (Admin) để nhập dữ liệu sao lưu.');
@@ -257,23 +326,23 @@ export default function App() {
         const parsed = JSON.parse(content);
 
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].general) {
-          // Imported full array
           setEquipments(parsed);
           setCurrentId(parsed[0].id);
-          saveToStorage(parsed);
+          storageService.saveImmediate(parsed);
           showToast(`✓ Đã nhập thành công ${parsed.length} thiết bị từ file backup!`);
         } else if (parsed && parsed.general && parsed.org) {
-          // Imported single equipment
-          const existingIdx = equipments.findIndex(eq => eq.id === parsed.id);
-          let updatedList: EquipmentData[];
-          if (existingIdx >= 0) {
-            updatedList = equipments.map(eq => eq.id === parsed.id ? parsed : eq);
-          } else {
-            updatedList = [...equipments, parsed];
-          }
-          setEquipments(updatedList);
+          setEquipments(prev => {
+            const existingIdx = prev.findIndex(eq => eq.id === parsed.id);
+            let updatedList: EquipmentData[];
+            if (existingIdx >= 0) {
+              updatedList = prev.map(eq => eq.id === parsed.id ? parsed : eq);
+            } else {
+              updatedList = [...prev, parsed];
+            }
+            storageService.saveImmediate(updatedList);
+            return updatedList;
+          });
           setCurrentId(parsed.id);
-          saveToStorage(updatedList);
           showToast(`✓ Đã nhập hồ sơ thiết bị: ${parsed.general.name}`);
         } else {
           alert('Định dạng file JSON không hợp lệ với cấu trúc Sổ Lý Lịch CNS.');
@@ -285,10 +354,10 @@ export default function App() {
     };
     reader.readAsText(file);
     e.target.value = '';
-  };
+  }, [currentUser, showToast]);
 
   // Reset to default sample
-  const handleResetDefaults = () => {
+  const handleResetDefaults = useCallback(() => {
     if (!currentUser.permissions.canResetDatabase) {
       setIsLoginModalOpen(true);
       showToast('Cần quyền Quản trị viên (Admin) để khôi phục dữ liệu mẫu ban đầu.');
@@ -298,23 +367,50 @@ export default function App() {
     if (!confirmReset) return;
     setEquipments(sampleEquipments);
     setCurrentId(sampleEquipments[0].id);
-    saveToStorage(sampleEquipments);
+    storageService.saveImmediate(sampleEquipments);
     showToast('✓ Đã khôi phục dữ liệu mẫu ban đầu!');
-  };
+  }, [currentUser, showToast]);
 
   // Handle direct print
-  const handlePrintDirect = () => {
+  const handlePrintDirect = useCallback(() => {
     setActiveTab('printPreview');
     setTimeout(() => {
       window.print();
     }, 400);
-  };
+  }, []);
+
+  // If Full-Screen PDF Mode is active (e.g. from scanning QR Code or direct link)
+  if (isPdfFullscreen && (pdfFullscreenEquipment || currentEquipment)) {
+    const targetEquipment = pdfFullscreenEquipment || currentEquipment;
+    return (
+      <Suspense fallback={<LoadingFallback message="Đang tải tệp PDF Sổ lý lịch toàn màn hình..." />}>
+        <FullScreenPdfViewer
+          equipment={targetEquipment}
+          allEquipments={equipments}
+          onSelectEquipment={(id) => {
+            const found = equipments.find(e => e.id === id);
+            if (found) {
+              setPdfFullscreenEquipment(found);
+              setCurrentId(id);
+              window.location.hash = `#eq=${encodeURIComponent(id)}&view=pdf`;
+            }
+          }}
+          onExitToAdmin={() => {
+            setIsPdfFullscreen(false);
+            window.location.hash = `#eq=${encodeURIComponent(targetEquipment.id)}`;
+            showToast(`✓ Đã vào Hệ thống Quản trị: ${targetEquipment.general.name}`);
+          }}
+          onShowToast={showToast}
+        />
+      </Suspense>
+    );
+  }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-[#dbeafe] via-[#e0f2fe] to-[#f0f9ff] text-slate-100 antialiased overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#152238] text-slate-100 antialiased overflow-hidden font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0c1836] text-white px-4 py-3 rounded-xl shadow-2xl border border-sky-400/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#5F6471] text-white px-4 py-3 rounded-xl shadow-2xl border border-sky-400/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
           <span>{toastMessage}</span>
         </div>
@@ -337,11 +433,12 @@ export default function App() {
         onImportFile={handleImportFile}
         onSaveData={handleManualSave}
         onResetDefaults={handleResetDefaults}
+        onOpenSearchModal={() => setIsSearchModalOpen(true)}
         lastSaved={lastSaved}
       />
 
-      {/* Main App Canvas */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-[#e2effa] via-[#ebf5fe] to-[#e0f2fe]">
+      {/* Main App Canvas with Deep Sky Blue + Gray Slate Background */}
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-[#16273f] via-[#1c304d] to-[#253549]">
         {/* Topbar Action Header */}
         <Topbar
           currentEquipment={currentEquipment}
@@ -351,14 +448,16 @@ export default function App() {
           onShowPrint={() => setActiveTab('printPreview')}
           onPrintDirect={handlePrintDirect}
           onOpenQr={() => setActiveTab('qrCode')}
-          onOpenGas={() => setActiveTab('googleWorkspace')}
-          onOpenPdfModal={() => setPdfModalEquipment(currentEquipment)}
+          onOpenGas={() => setActiveTab('settings')}
+          onOpenSettings={() => setActiveTab('settings')}
+          onOpenPdfModal={() => handleOpenPdfFullScreen(currentEquipment)}
           onResetDefaults={handleResetDefaults}
           searchTerm={searchTerm}
           onSearchChange={(term) => setSearchTerm(term)}
+          onOpenSearchModal={() => setIsSearchModalOpen(true)}
         />
 
-        {/* Tab Body Viewports */}
+        {/* Tab Body Viewports with ErrorBoundary and Suspense */}
         <main className="p-6 flex-1 max-w-7xl w-full mx-auto">
           {/* Quick Horizontal Section Switcher */}
           <SectionNavRibbon
@@ -366,112 +465,177 @@ export default function App() {
             onNavigateTab={(tab) => setActiveTab(tab)}
           />
 
-          {activeTab === 'dashboard' && (
-            <DashboardTab
-              data={currentEquipment}
-              allEquipments={equipments}
-              onChange={handleUpdateCurrent}
-              onNavigateTab={(tab) => setActiveTab(tab)}
-              onSelectEquipment={(id) => setCurrentId(id)}
-            />
-          )}
+          <ErrorBoundary fallbackTitle="Không thể tải nội dung phần này">
+            {activeTab === 'dashboard' && (
+              <DashboardTab
+                data={currentEquipment}
+                allEquipments={equipments}
+                onChange={handleUpdateCurrent}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onSelectEquipment={(id) => setCurrentId(id)}
+                onNewEquipment={() => setIsNewModalOpen(true)}
+                onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
+              />
+            )}
 
-          {activeTab === 'general' && (
-            <GeneralTab
-              data={currentEquipment}
-              onChange={handleUpdateCurrent}
-            />
-          )}
+            {activeTab === 'general' && (
+              <GeneralTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
 
-          {activeTab === 'spec' && (
-            <SpecTab
-              data={currentEquipment}
-              onChange={handleUpdateCurrent}
-            />
-          )}
+            {activeTab === 'spec' && (
+              <SpecTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
 
-          {activeTab === 'components' && (
-            <ComponentsTab
-              data={currentEquipment}
-              onChange={handleUpdateCurrent}
-            />
-          )}
+            {activeTab === 'components' && (
+              <ComponentsTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
 
-          {activeTab === 'docs' && (
-            <DocsTab
-              data={currentEquipment}
-              onChange={handleUpdateCurrent}
-            />
-          )}
+            {activeTab === 'docs' && (
+              <DocsTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
 
-          {activeTab === 'maintenance' && (
-            <MaintenanceTab
-              data={currentEquipment}
-              onChange={handleUpdateCurrent}
-            />
-          )}
+            {activeTab === 'maintenance' && (
+              <MaintenanceTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
 
-          {activeTab === 'repair' && (
-            <RepairTab
-              data={currentEquipment}
-              onChange={handleUpdateCurrent}
-            />
-          )}
+            {activeTab === 'repair' && (
+              <RepairTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
 
-          {activeTab === 'qrCode' && (
-            <QrCodeManagerTab
-              currentEquipment={currentEquipment}
-              allEquipments={equipments}
-              onSelectEquipment={(id) => setCurrentId(id)}
-              onShowToast={showToast}
-              onNavigateTab={(tab) => setActiveTab(tab)}
-              onOpenPdfViewer={(eq) => setPdfModalEquipment(eq)}
-              onUpdateEquipment={handleUpdateCurrent}
-            />
-          )}
+            <Suspense fallback={<LoadingFallback message="Đang tải cấu hình..." />}>
+              {activeTab === 'qrCode' && (
+                <QrCodeManagerTab
+                  currentEquipment={currentEquipment}
+                  allEquipments={equipments}
+                  onSelectEquipment={(id) => setCurrentId(id)}
+                  onShowToast={showToast}
+                  onNavigateTab={(tab) => setActiveTab(tab)}
+                  onOpenPdfViewer={(eq) => handleOpenPdfFullScreen(eq)}
+                  onUpdateEquipment={handleUpdateCurrent}
+                  isReadOnly={isReadOnly}
+                  onOpenLoginModal={() => setIsLoginModalOpen(true)}
+                />
+              )}
 
-          {activeTab === 'googleWorkspace' && (
-            <GoogleWorkspaceTab
-              currentEquipment={currentEquipment}
-              allEquipments={equipments}
-              onSyncFromGas={handleSyncFromGas}
-              onUpdateCurrentEquipment={handleUpdateCurrent}
-              onShowToast={showToast}
-            />
-          )}
+              {activeTab === 'googleWorkspace' && (
+                <GoogleWorkspaceTab
+                  currentEquipment={currentEquipment}
+                  allEquipments={equipments}
+                  onSyncFromGas={handleSyncFromGas}
+                  onUpdateCurrentEquipment={handleUpdateCurrent}
+                  onShowToast={showToast}
+                />
+              )}
 
-          {activeTab === 'printPreview' && (
-            <PrintPreviewTab
-              data={currentEquipment}
-            />
-          )}
+              {activeTab === 'settings' && (
+                <SettingsTab
+                  currentEquipment={currentEquipment}
+                  allEquipments={equipments}
+                  currentUser={currentUser}
+                  lastSaved={lastSaved}
+                  onOpenLoginModal={() => setIsLoginModalOpen(true)}
+                  onSaveData={handleManualSave}
+                  onCloneEquipment={handleCloneCurrent}
+                  onDeleteEquipment={handleDeleteCurrent}
+                  onExportCurrent={handleExportCurrent}
+                  onExportAll={handleExportAll}
+                  onImportFile={handleImportFile}
+                  onResetDefaults={handleResetDefaults}
+                  onUpdateEquipment={handleUpdateCurrent}
+                  onSyncFromGas={handleSyncFromGas}
+                  onShowToast={showToast}
+                  onNavigateTab={(tab) => setActiveTab(tab)}
+                />
+              )}
+
+              {activeTab === 'printPreview' && (
+                <PrintPreviewTab
+                  data={currentEquipment}
+                />
+              )}
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
 
-      {/* New Equipment Modal Dialog */}
-      <NewEquipmentModal
-        isOpen={isNewModalOpen}
-        onClose={() => setIsNewModalOpen(false)}
-        onCreate={handleCreateNew}
-      />
+      {/* Lazy Modals loaded with Suspense */}
+      <Suspense fallback={null}>
+        {/* New Equipment Modal Dialog */}
+        {isNewModalOpen && (
+          <NewEquipmentModal
+            isOpen={isNewModalOpen}
+            onClose={() => setIsNewModalOpen(false)}
+            onCreate={handleCreateNew}
+          />
+        )}
 
-      {/* Full-Screen Aviation PDF Viewer Modal */}
-      {pdfModalEquipment && (
-        <PdfViewerModal
-          isOpen={!!pdfModalEquipment}
-          onClose={() => setPdfModalEquipment(null)}
-          equipment={pdfModalEquipment}
-          onShowToast={showToast}
-        />
-      )}
+        {/* Full-Screen Aviation PDF Viewer Modal */}
+        {pdfModalEquipment && (
+          <PdfViewerModal
+            isOpen={!!pdfModalEquipment}
+            onClose={() => setPdfModalEquipment(null)}
+            equipment={pdfModalEquipment}
+            onShowToast={showToast}
+          />
+        )}
 
-      {/* Authentication & Role Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        currentUser={currentUser}
-        onLoginSuccess={handleLoginSuccess}
-      />
+        {/* Authentication & Role Modal */}
+        {isLoginModalOpen && (
+          <LoginModal
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            currentUser={currentUser}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        )}
+
+        {/* Comprehensive Full-System Search & Lookup Window */}
+        {isSearchModalOpen && (
+          <SearchModal
+            isOpen={isSearchModalOpen}
+            onClose={() => setIsSearchModalOpen(false)}
+            equipments={equipments}
+            initialQuery={searchTerm}
+            onSelectResult={(equipmentId, targetTab) => {
+              setCurrentId(equipmentId);
+              setActiveTab(targetTab);
+              showToast(`✓ Đã chuyển đến hồ sơ: ${equipments.find(e => e.id === equipmentId)?.general.name || equipmentId}`);
+            }}
+            onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
+

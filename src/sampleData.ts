@@ -408,6 +408,10 @@ export const sampleEquipments: EquipmentData[] = [
 
 export function createEmptyEquipment(): EquipmentData {
   const newId = `eq-${Date.now()}`;
+  const savedCompanyName = (typeof window !== 'undefined' && localStorage.getItem('cns_default_company_name')) || '';
+  const savedUnitName = (typeof window !== 'undefined' && localStorage.getItem('cns_default_unit_name')) || '';
+  const savedSupervisor = (typeof window !== 'undefined' && localStorage.getItem('cns_default_supervisor')) || '';
+
   return {
     id: newId,
     createdAt: new Date().toISOString(),
@@ -428,16 +432,16 @@ export function createEmptyEquipment(): EquipmentData {
       nextCalDate: '',
       status: 'Đang khai thác',
       priority: 'Hệ thống chính (Level 1)',
-      estimatedLifespanYears: 15,
+      estimatedLifespanYears: '',
       notes: ''
     },
     org: {
-      companyName: 'CÔNG TY QUẢN LÝ BAY MIỀN NAM',
-      unit: '',
+      companyName: savedCompanyName,
+      unit: savedUnitName,
       location: '',
       primaryEngineer: '',
       phoneContact: '',
-      supervisor: '',
+      supervisor: savedSupervisor,
       coverNote: ''
     },
     orgRows: [],

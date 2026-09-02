@@ -94,15 +94,25 @@ export interface QrRenderOptions {
   targetMode?: QrTargetMode;
 }
 
+// In-memory cache for QR code generation
+const qrDataUrlCache = new Map<string, string>();
+const qrSvgCache = new Map<string, string>();
+
 /**
- * Generates a Base64 Data URL (PNG) of the QR code
+ * Generates a Base64 Data URL (PNG) of the QR code with LRU memory caching
  */
 export async function generateEquipmentQrDataUrl(
   equipment: EquipmentData,
   options?: QrRenderOptions
 ): Promise<string> {
   const { targetUrl } = buildEquipmentQrData(equipment, undefined, options?.targetMode || 'pdf');
-  return await QRCode.toDataURL(targetUrl, {
+  const cacheKey = `${targetUrl}_${options?.width || 320}_${options?.margin ?? 2}_${options?.errorCorrectionLevel || 'M'}_${options?.color?.dark || '#0f172a'}_${options?.color?.light || '#ffffff'}`;
+
+  if (qrDataUrlCache.has(cacheKey)) {
+    return qrDataUrlCache.get(cacheKey)!;
+  }
+
+  const result = await QRCode.toDataURL(targetUrl, {
     width: options?.width || 320,
     margin: options?.margin ?? 2,
     errorCorrectionLevel: options?.errorCorrectionLevel || 'M',
@@ -111,17 +121,32 @@ export async function generateEquipmentQrDataUrl(
       light: options?.color?.light || '#ffffff'
     }
   });
+
+  // Keep cache size bounded
+  if (qrDataUrlCache.size > 200) {
+    const firstKey = qrDataUrlCache.keys().next().value;
+    if (firstKey) qrDataUrlCache.delete(firstKey);
+  }
+
+  qrDataUrlCache.set(cacheKey, result);
+  return result;
 }
 
 /**
- * Generates SVG string of the QR code
+ * Generates SVG string of the QR code with memory caching
  */
 export async function generateEquipmentQrSvg(
   equipment: EquipmentData,
   options?: QrRenderOptions
 ): Promise<string> {
   const { targetUrl } = buildEquipmentQrData(equipment, undefined, options?.targetMode || 'pdf');
-  return await QRCode.toString(targetUrl, {
+  const cacheKey = `${targetUrl}_${options?.width || 320}_${options?.margin ?? 2}_${options?.errorCorrectionLevel || 'M'}_${options?.color?.dark || '#0f172a'}_${options?.color?.light || '#ffffff'}`;
+
+  if (qrSvgCache.has(cacheKey)) {
+    return qrSvgCache.get(cacheKey)!;
+  }
+
+  const result = await QRCode.toString(targetUrl, {
     type: 'svg',
     width: options?.width || 320,
     margin: options?.margin ?? 2,
@@ -131,5 +156,13 @@ export async function generateEquipmentQrSvg(
       light: options?.color?.light || '#ffffff'
     }
   });
+
+  if (qrSvgCache.size > 200) {
+    const firstKey = qrSvgCache.keys().next().value;
+    if (firstKey) qrSvgCache.delete(firstKey);
+  }
+
+  qrSvgCache.set(cacheKey, result);
+  return result;
 }
 

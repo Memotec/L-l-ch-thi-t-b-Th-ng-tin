@@ -172,11 +172,13 @@ export interface EquipmentData {
   repair: RepairRow[];
 }
 
-export type UserRole = 'admin' | 'default';
+export type UserRole = 'admin' | 'viewer' | 'default';
 
 export interface UserPermissions {
   canView: boolean;
+  canScanQr: boolean;
   canCreate: boolean;
+  canCreateEquipment?: boolean;
   canEditDetails: boolean;
   canDelete: boolean;
   canClone: boolean;

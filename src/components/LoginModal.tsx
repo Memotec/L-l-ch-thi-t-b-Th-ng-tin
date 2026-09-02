@@ -61,7 +61,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl text-slate-100 flex flex-col">
         {/* Simple Header */}
-        <div className="bg-[#0d1f4a] px-5 py-4 border-b border-[#1b356b] flex items-center justify-between">
+        <div className="bg-gradient-to-r from-[#1e40af] to-[#1d4ed8] px-5 py-4 border-b border-[#2563eb]/40 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-sky-500/20 text-sky-400 rounded-lg border border-sky-400/30">
               <ShieldCheck className="w-4 h-4" />

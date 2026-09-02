@@ -145,8 +145,8 @@ ${content}
   const org = data.org;
 
   // Company Name
-  const companyName = org.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM';
-  const coverNote = org.coverNote || '120.9 TxM';
+  const companyName = org.companyName || (typeof window !== 'undefined' ? localStorage.getItem('cns_default_company_name') || '' : '');
+  const coverNote = org.coverNote || '';
 
   // Prepare Licenses for dual table on Page 3
   const freqList: SimpleLicenseRow[] = (data.freqLicenses && data.freqLicenses.length > 0) 
@@ -358,35 +358,35 @@ ${content}
                 <div className="flex items-baseline">
                   <span className="font-semibold whitespace-nowrap">Tên thiết bị:</span>
                   <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.name || 'VHF PARK AIR T6T'}
+                    {g.name || ''}
                   </span>
                 </div>
 
                 <div className="flex items-baseline">
                   <span className="font-semibold whitespace-nowrap">Hãng sản xuất:</span>
                   <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.manufacturer || 'PARK AIR'}
+                    {g.manufacturer || ''}
                   </span>
                 </div>
 
                 <div className="flex items-baseline">
                   <span className="font-semibold whitespace-nowrap">Số hiệu:</span>
                   <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.model || 'T6T'}
+                    {g.model || ''}
                   </span>
                 </div>
 
                 <div className="flex items-baseline">
                   <span className="font-semibold whitespace-nowrap">Mã số:</span>
                   <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.serial || '6U11654'}
+                    {g.serial || ''}
                   </span>
                 </div>
 
                 <div className="flex items-baseline">
                   <span className="font-semibold whitespace-nowrap">Mã TS:</span>
                   <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.assetNo || '10314082501470'}
+                    {g.assetNo || ''}
                   </span>
                 </div>
               </div>
@@ -535,49 +535,49 @@ ${content}
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Tên thiết bị:</span>
                 <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.name || 'Máy phát VHF liên lạc không địa T6T'}
+                  {g.name || ''}
                 </span>
               </div>
 
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Hãng sản xuất:</span>
                 <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.manufacturer || 'PARK AIR'}
+                  {g.manufacturer || ''}
                 </span>
               </div>
 
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Ký hiệu (Model):</span>
                 <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.model || 'T6T'}
+                  {g.model || ''}
                 </span>
               </div>
 
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Mã số (S/N):</span>
                 <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.serial || '6U11654'}
+                  {g.serial || ''}
                 </span>
               </div>
 
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Năm sản xuất:</span>
                 <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.yearMade || '2014'}
+                  {g.yearMade || ''}
                 </span>
               </div>
 
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Nước sản xuất:</span>
                 <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.origin || 'ENGLAND'}
+                  {g.origin || ''}
                 </span>
               </div>
 
               <div className="flex items-baseline">
                 <span className="font-semibold whitespace-nowrap">Thời gian sử dụng:</span>
                 <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.commissioned ? `Sử dụng từ ${g.commissioned}` : 'Sử dụng từ 11/2014'}
+                  {g.commissioned ? `Sử dụng từ ${g.commissioned}` : ''}
                 </span>
               </div>
 
@@ -654,9 +654,11 @@ ${content}
               className="w-full space-y-0 text-black leading-relaxed"
               style={{ fontSize: '12pt', lineHeight: '30px' }}
             >
-              <div className="border-b border-dotted border-black pb-0.5 font-medium">
-                {s.text || 'Liên lạc thoại không địa; điều chế AM; Tần số: VHF; Dải tần 118 – 136.975 MHz; Phân cực đứng; Công suất 50W; Công nghệ bán dẫn; Nguồn điện: AC 220 / 50Hz; DC: 24 – 31V.'}
-              </div>
+              {s.text && (
+                <div className="border-b border-dotted border-black pb-0.5 font-medium">
+                  {s.text}
+                </div>
+              )}
 
               {/* Extra spec lines if available */}
               {s.power && (

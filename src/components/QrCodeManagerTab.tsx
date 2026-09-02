@@ -41,6 +41,8 @@ interface QrCodeManagerTabProps {
   onNavigateTab: (tab: string) => void;
   onOpenPdfViewer?: (equipment: EquipmentData) => void;
   onUpdateEquipment?: (equipment: EquipmentData) => void;
+  isReadOnly?: boolean;
+  onOpenLoginModal?: () => void;
 }
 
 export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
@@ -50,7 +52,9 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   onShowToast,
   onNavigateTab,
   onOpenPdfViewer,
-  onUpdateEquipment
+  onUpdateEquipment,
+  isReadOnly = false,
+  onOpenLoginModal
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [allQrUrls, setAllQrUrls] = useState<Record<string, string>>({});
@@ -87,25 +91,34 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
     return () => { isMounted = false; };
   }, [currentEquipment, darkColor, errorLevel, targetMode]);
 
-  // Pre-generate QR for all equipments (for batch stickers)
+  // Pre-generate QR for all equipments (only when batch tab is opened)
   useEffect(() => {
+    if (activeSubTab !== 'batch') return;
     let isMounted = true;
     const generateAll = async () => {
-      const urls: Record<string, string> = {};
-      for (const eq of allEquipments) {
-        urls[eq.id] = await generateEquipmentQrDataUrl(eq, {
-          width: 250,
-          margin: 1,
-          color: { dark: '#091533', light: '#ffffff' },
-          errorCorrectionLevel: 'M',
-          targetMode: targetMode
-        });
+      const results = await Promise.all(
+        allEquipments.map(async (eq) => {
+          const url = await generateEquipmentQrDataUrl(eq, {
+            width: 250,
+            margin: 1,
+            color: { dark: '#091533', light: '#ffffff' },
+            errorCorrectionLevel: 'M',
+            targetMode: targetMode
+          });
+          return { id: eq.id, url };
+        })
+      );
+      if (isMounted) {
+        const urls: Record<string, string> = {};
+        for (const item of results) {
+          urls[item.id] = item.url;
+        }
+        setAllQrUrls(urls);
       }
-      if (isMounted) setAllQrUrls(urls);
     };
     generateAll();
     return () => { isMounted = false; };
-  }, [allEquipments, targetMode]);
+  }, [allEquipments, targetMode, activeSubTab]);
 
   const { lookupUrl, targetUrl, googleDocUrl, pdfViewerUrl, summaryText } = buildEquipmentQrData(
     currentEquipment, 
@@ -114,6 +127,14 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   );
 
   const handleSaveDocUrl = () => {
+    if (isReadOnly) {
+      if (onOpenLoginModal) {
+        onOpenLoginModal();
+      } else {
+        onShowToast('Tài khoản quyền Viewer chỉ có quyền quét và xem.');
+      }
+      return;
+    }
     if (onUpdateEquipment) {
       const updated: EquipmentData = {
         ...currentEquipment,
@@ -539,7 +560,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
       {/* SUB-TAB 2: BATCH PRINTING SHEET FOR ALL EQUIPMENTS */}
       {activeSubTab === 'batch' && (
         <div className="space-y-6">
-          <div className="bg-[#091533] p-5 rounded-2xl border border-[#182d5a] shadow-md flex items-center justify-between flex-wrap gap-4 no-print">
+          <div className="cns-glass-card p-5 rounded-2xl flex items-center justify-between flex-wrap gap-4 no-print">
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Printer className="w-4 h-4 text-sky-400" />
@@ -626,7 +647,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
 
       {/* SUB-TAB 3: QR SCANNER & LOOKUP SIMULATOR */}
       {activeSubTab === 'scanner' && (
-        <div className="max-w-2xl mx-auto bg-[#091533] p-6 rounded-2xl border border-[#182d5a] shadow-md space-y-6">
+        <div className="max-w-2xl mx-auto cns-glass-card p-6 rounded-2xl space-y-6">
           <div className="text-center space-y-1">
             <div className="w-12 h-12 bg-sky-950 text-sky-400 border border-sky-800 rounded-2xl flex items-center justify-center mx-auto mb-2">
               <Camera className="w-6 h-6" />

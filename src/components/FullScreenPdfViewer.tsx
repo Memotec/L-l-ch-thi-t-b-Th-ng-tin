@@ -1,6 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { 
-  X, 
   Printer, 
   Download, 
   ExternalLink, 
@@ -8,7 +7,14 @@ import {
   ZoomIn, 
   ZoomOut, 
   Check, 
-  Copy
+  Copy,
+  Maximize2,
+  ArrowLeft,
+  LayoutDashboard,
+  Sparkles,
+  QrCode,
+  ShieldCheck,
+  Share2
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -21,28 +27,58 @@ import {
 } from '../types';
 import { generateEquipmentQrDataUrl, buildEquipmentQrData } from '../utils/qrCodeService';
 
-interface PdfViewerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface FullScreenPdfViewerProps {
   equipment: EquipmentData;
+  allEquipments?: EquipmentData[];
+  onSelectEquipment?: (id: string) => void;
+  onExitToAdmin?: () => void;
   onShowToast: (msg: string) => void;
-  onOpenGoogleDoc?: () => void;
 }
 
-export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
-  isOpen,
-  onClose,
+export const FullScreenPdfViewer: React.FC<FullScreenPdfViewerProps> = ({
   equipment,
-  onShowToast,
-  onOpenGoogleDoc
+  allEquipments,
+  onSelectEquipment,
+  onExitToAdmin,
+  onShowToast
 }) => {
-  const [zoom, setZoom] = useState<number>(85);
+  // Compute initial zoom based on screen width for mobile auto-fit
+  const getOptimalZoom = useCallback(() => {
+    if (typeof window === 'undefined') return 85;
+    const width = window.innerWidth;
+    if (width < 500) {
+      // Mobile screen: ~360px - 450px -> fit 794px A4 (210mm)
+      return Math.min(Math.max(Math.floor((width - 32) / 7.94), 40), 60);
+    } else if (width < 800) {
+      // Tablet screen
+      return Math.min(Math.floor((width - 48) / 7.94), 85);
+    } else if (width < 1200) {
+      return 85;
+    } else {
+      return 100;
+    }
+  }, []);
+
+  const [zoom, setZoom] = useState<number>(getOptimalZoom);
   const [qrUrl, setQrUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const docPrintRef = useRef<HTMLDivElement>(null);
 
+  // Auto-adjust zoom on window resize
   useEffect(() => {
-    if (!isOpen || !equipment) return;
+    const handleResize = () => {
+      // only auto-adjust if on mobile
+      if (window.innerWidth < 640) {
+        setZoom(getOptimalZoom());
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [getOptimalZoom]);
+
+  // Generate QR for embedding in PDF Page 1
+  useEffect(() => {
+    if (!equipment) return;
     let isMounted = true;
     generateEquipmentQrDataUrl(equipment, {
       width: 250,
@@ -54,9 +90,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       if (isMounted) setQrUrl(url);
     });
     return () => { isMounted = false; };
-  }, [isOpen, equipment]);
-
-  if (!isOpen || !equipment) return null;
+  }, [equipment]);
 
   const { googleDocUrl, pdfViewerUrl } = buildEquipmentQrData(equipment);
 
@@ -78,7 +112,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Sổ Lý Lịch Thiết Bị - ${equipment.general.name || equipment.id}</title>
+<title>Sổ Lý Lịch Thiết Bị - ${equipment.general?.name || equipment.id}</title>
 <style>
 @page { size: A4 portrait; margin: 0; }
 * { box-sizing: border-box; }
@@ -122,7 +156,7 @@ body {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `So_Ly_Lich_${(equipment.general.name || equipment.id).replace(/\W/g, '_')}.html`;
+    a.download = `So_Ly_Lich_${(equipment.general?.name || equipment.id).replace(/\W/g, '_')}.html`;
     a.click();
     onShowToast('✓ Đã tải tệp tài liệu Sổ lý lịch (Chuẩn A4) thành công!');
   };
@@ -164,96 +198,120 @@ body {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200">
-      {/* Top Header Bar */}
-      <div className="bg-[#08132f] border-b border-[#182d5a] px-5 py-3 flex items-center justify-between text-white shrink-0 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-sky-500/20 text-sky-400 rounded-xl border border-sky-400/30">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#060b18] text-slate-100 overflow-hidden select-none">
+      {/* ========================================================================= */}
+      {/* SLICK FULLSCREEN CONTROL HEADER */}
+      {/* ========================================================================= */}
+      <header className="no-print bg-[#08132f]/95 backdrop-blur-md border-b border-[#182d5a] px-3 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-2xl z-20">
+        {/* Left: Identification Branding */}
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          <div className="p-2 bg-gradient-to-br from-sky-500/20 to-blue-600/20 text-sky-400 rounded-xl border border-sky-400/30 shrink-0">
             <FileText className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm text-white">Xem File PDF Sổ Lý Lịch Thiết Bị</h3>
-              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[10px] font-bold border border-emerald-400/40 uppercase">
-                Chuẩn Form 100% Scan
+              <h1 className="font-bold text-xs sm:text-sm text-white truncate max-w-[180px] sm:max-w-md">
+                {g.name || 'Sổ Lý Lịch Thiết Bị CNS'}
+              </h1>
+              <span className="hidden sm:inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[10px] font-bold border border-emerald-400/40 uppercase shrink-0">
+                Chuẩn A4 Toàn Màn Hình
               </span>
             </div>
-            <p className="text-xs text-sky-200/70">
-              {g.name} &bull; Model: <b>{g.model || 'N/A'}</b> &bull; Serial: <span className="font-mono text-sky-300 font-bold">{g.serial || 'N/A'}</span> &bull; Mã TS: <span className="font-mono text-sky-300">{g.assetNo || 'N/A'}</span>
+            <p className="text-[11px] text-sky-200/70 truncate">
+              Model: <b className="text-white">{g.model || 'N/A'}</b> &bull; SN: <span className="font-mono text-sky-300 font-bold">{g.serial || 'N/A'}</span> &bull; Mã TS: <span className="font-mono text-sky-300">{g.assetNo || 'N/A'}</span>
             </p>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        {/* Center/Right: Action Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Zoom controls */}
-          <div className="hidden sm:flex items-center bg-[#050c1e] rounded-xl border border-[#1e3c7a] p-1 text-xs">
+          <div className="flex items-center bg-[#050c1e] rounded-xl border border-[#1e3c7a] p-0.5 sm:p-1 text-xs">
             <button
-              onClick={() => setZoom(prev => Math.max(prev - 10, 50))}
-              className="p-1.5 hover:bg-[#10224d] rounded text-slate-300 hover:text-white transition-colors"
+              onClick={() => setZoom(prev => Math.max(prev - 10, 35))}
+              className="p-1 sm:p-1.5 hover:bg-[#10224d] rounded text-slate-300 hover:text-white transition-colors"
               title="Thu nhỏ"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="px-2 font-mono text-[11px] text-sky-200 font-bold">{zoom}%</span>
             <button
-              onClick={() => setZoom(prev => Math.min(prev + 10, 150))}
-              className="p-1.5 hover:bg-[#10224d] rounded text-slate-300 hover:text-white transition-colors"
+              onClick={() => setZoom(getOptimalZoom())}
+              className="px-1.5 sm:px-2 font-mono text-[11px] text-sky-200 font-bold hover:text-white"
+              title="Nhấp để vừa màn hình"
+            >
+              {zoom}%
+            </button>
+            <button
+              onClick={() => setZoom(prev => Math.min(prev + 10, 160))}
+              className="p-1 sm:p-1.5 hover:bg-[#10224d] rounded text-slate-300 hover:text-white transition-colors"
               title="Phóng to"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <a
-            href={googleDocUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#082218] hover:bg-[#0c3324] text-emerald-300 hover:text-emerald-100 rounded-lg text-xs font-semibold border border-emerald-600/40 transition-all cursor-pointer"
-            title="Mở tài liệu Google Docs trực tuyến"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Google Docs</span>
-          </a>
+          {/* Direct Google Docs link if available */}
+          {googleDocUrl && (
+            <a
+              href={googleDocUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[#082218] hover:bg-[#0c3324] text-emerald-300 hover:text-emerald-100 rounded-lg text-xs font-semibold border border-emerald-600/40 transition-all cursor-pointer"
+              title="Mở tài liệu Google Docs trực tuyến"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Google Docs</span>
+            </a>
+          )}
 
+          {/* Copy Link */}
           <button
             onClick={handleCopyPdfLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
             title="Sao chép link xem PDF trực tuyến"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedLink ? 'Đã sao chép!' : 'Copy Link PDF'}</span>
+            <span className="hidden xl:inline">{copiedLink ? 'Đã sao chép!' : 'Copy Link PDF'}</span>
           </button>
 
+          {/* Download HTML/PDF */}
           <button
             onClick={handleDownloadPdfHtml}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
             title="Tải về file HTML Sổ chuẩn A4"
           >
             <Download className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Tải File</span>
+            <span className="hidden lg:inline">Tải File</span>
           </button>
 
+          {/* Primary Print / Save as PDF Button */}
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow-md border border-sky-400/40 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow-lg border border-sky-400/40 transition-all cursor-pointer"
+            title="In ấn hoặc Lưu thành PDF chuẩn A4"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>In A4 (Ctrl+P)</span>
+            <span>In PDF</span>
           </button>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 bg-[#0e1d44] hover:bg-rose-950/60 hover:text-rose-300 text-slate-400 rounded-lg border border-[#1e3c7a] transition-colors ml-1 cursor-pointer"
-            title="Đóng cửa sổ"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {/* Switch to Full Management Dashboard */}
+          {onExitToAdmin && (
+            <button
+              onClick={onExitToAdmin}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg text-xs font-semibold border border-slate-600 transition-all cursor-pointer ml-1"
+              title="Truy cập Bảng điều khiển quản lý CNS Multi-Manager"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden md:inline">Vào Hệ thống Quản trị</span>
+            </button>
+          )}
         </div>
-      </div>
+      </header>
 
-      {/* Main PDF Viewport with zoom */}
-      <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center bg-[#040817]">
+      {/* ========================================================================= */}
+      {/* MAIN FULLSCREEN PDF SCROLL VIEWPORT */}
+      {/* ========================================================================= */}
+      <div className="flex-1 overflow-auto p-2 sm:p-6 lg:p-8 flex justify-center bg-[#040817] custom-scrollbar">
         <div 
           ref={docPrintRef}
           style={{ 
@@ -261,13 +319,13 @@ body {
             transformOrigin: 'top center',
             fontFamily: '"Times New Roman", Times, "Liberation Serif", serif'
           }}
-          className="transition-transform duration-150 ease-out text-black space-y-8 select-text"
+          className="transition-transform duration-150 ease-out text-black space-y-8 select-text pb-16"
         >
           {/* ========================================================================= */}
-          {/* TRANG 1: BÌA SỔ LÝ LỊCH (EXACT SCAN PAGE 1) */}
+          {/* TRANG 1: BÌA SỔ LÝ LỊCH (EXACT AVIATION PASSPORT COVER) */}
           {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text relative"
           >
             <div 
               className="h-full flex flex-col justify-between"
@@ -380,7 +438,7 @@ body {
           </div>
 
           {/* ========================================================================= */}
-          {/* TRANG 2: MỤC LỤC & 1- CƠ QUAN, ĐƠN VỊ QUẢN LÝ */}
+          {/* TRANG 2: MỤC LỤC & 1 - CƠ QUAN, ĐƠN VỊ QUẢN LÝ */}
           {/* ========================================================================= */}
           <div 
             className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
@@ -465,7 +523,7 @@ body {
           </div>
 
           {/* ========================================================================= */}
-          {/* TRANG 3: 2 - SƠ LƯỢC THIẾT BỊ */}
+          {/* TRANG 3: 2 - SƠ LƯỢC THIẾT BỊ & GIẤY PHÉP */}
           {/* ========================================================================= */}
           <div 
             className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
@@ -559,13 +617,13 @@ body {
                     return (
                       <tr key={i} style={{ height: '30px' }}>
                         <td className="font-mono font-semibold text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                          {freqItem ? freqItem.no : '\u00A0'}
+                          {freqItem ? (freqItem.no || (freqItem as any).licenseNo) : '\u00A0'}
                         </td>
                         <td className="font-mono text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
                           {freqItem ? freqItem.expiryDate : '\u00A0'}
                         </td>
                         <td className="font-mono font-semibold text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                          {expItem ? expItem.no : '\u00A0'}
+                          {expItem ? (expItem.no || (expItem as any).licenseNo) : '\u00A0'}
                         </td>
                         <td className="font-mono text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
                           {expItem ? expItem.expiryDate : '\u00A0'}
@@ -748,7 +806,7 @@ body {
 
             return (
               <div 
-                key={`modal-maint-page-${pageIdx}`}
+                key={`fullscreen-maint-page-${pageIdx}`}
                 className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
               >
                 <div>

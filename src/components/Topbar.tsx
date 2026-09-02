@@ -18,7 +18,8 @@ import {
   User,
   Lock,
   LogOut,
-  Sparkles
+  Sparkles,
+  Settings
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 
@@ -31,10 +32,12 @@ interface TopbarProps {
   onPrintDirect: () => void;
   onOpenQr?: () => void;
   onOpenGas?: () => void;
+  onOpenSettings?: () => void;
   onOpenPdfModal?: () => void;
   onResetDefaults: () => void;
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
+  onOpenSearchModal?: () => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -46,10 +49,12 @@ export const Topbar: React.FC<TopbarProps> = ({
   onPrintDirect,
   onOpenQr,
   onOpenGas,
+  onOpenSettings,
   onOpenPdfModal,
   onResetDefaults,
-  searchTerm,
-  onSearchChange
+  searchTerm = '',
+  onSearchChange,
+  onOpenSearchModal
 }) => {
   const isAdmin = currentUser.role === 'admin';
 
@@ -82,14 +87,14 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="bg-[#08132f] border-b border-[#162d5a] px-5 py-3 sticky top-0 z-10 shadow-lg flex flex-col xl:flex-row xl:items-center justify-between gap-3 shrink-0">
+    <header className="bg-[#091533]/95 backdrop-blur-md border-b border-[#182d5a]/90 px-5 py-3 sticky top-0 z-10 shadow-lg flex flex-col xl:flex-row xl:items-center justify-between gap-3 shrink-0">
       {/* Left: Current Equipment Profile Badge */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="p-2.5 bg-[#0d1f4a] rounded-xl border border-[#1e3c7a] shrink-0 shadow-inner">
+        <div className="p-2.5 bg-gradient-to-br from-[#12285a] to-[#0d1d42] rounded-xl border border-sky-400/30 shrink-0 shadow-inner">
           {getCategoryIcon(currentEquipment.general.category)}
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap bg-[#0c1c45]/90 border border-[#1e3c7a]/60 px-2.5 py-1 rounded-lg">
             <h1 className="text-base font-extrabold text-white truncate tracking-tight">
               {currentEquipment.general.name || 'Hồ sơ Thiết bị Kỹ thuật'}
             </h1>
@@ -116,16 +121,22 @@ export const Topbar: React.FC<TopbarProps> = ({
 
       {/* Right: Organized Action Clusters */}
       <div className="flex items-center gap-2 flex-wrap xl:justify-end">
-        {/* Search Field */}
-        <div className="relative hidden md:block">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-sky-400/60" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm mục sổ..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8 pr-3 py-1.5 text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg w-40 focus:w-56 focus:bg-[#0c1a3b] text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all shadow-inner"
-          />
+        {/* Search Field & Modal Trigger */}
+        <div className="relative">
+          <button
+            onClick={onOpenSearchModal}
+            className="flex items-center gap-2 pl-3 pr-3.5 py-1.5 bg-[#071128] hover:bg-[#0c1c45] text-slate-200 border border-[#1e3c7a] hover:border-sky-400/60 rounded-xl text-xs transition-all shadow-inner cursor-pointer group"
+            title="Mở cửa sổ tìm kiếm & tra cứu toàn diện (Phím tắt: Ctrl + K)"
+          >
+            <Search className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+            <span className="text-slate-300 font-medium hidden sm:inline">
+              {searchTerm ? `Tìm: "${searchTerm}"` : "Tìm kiếm toàn bộ sổ..."}
+            </span>
+            <span className="text-slate-300 font-medium sm:hidden">Tìm kiếm</span>
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#030917] border border-[#1e3c7a] text-[10px] font-mono text-sky-300 font-bold ml-1">
+              Ctrl K
+            </kbd>
+          </button>
         </div>
 
         {/* Group A: Electronic & Document Outputs */}
@@ -184,6 +195,17 @@ export const Topbar: React.FC<TopbarProps> = ({
 
         {/* Group B: System & Synchronization & Auth */}
         <div className="flex items-center gap-1.5">
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
+              title="Mở Trung tâm Cài đặt & Quản trị hệ thống"
+            >
+              <Settings className="w-3.5 h-3.5 text-sky-400" />
+              <span>Cài đặt</span>
+            </button>
+          )}
+
           {onOpenGas && (
             <button
               onClick={onOpenGas}

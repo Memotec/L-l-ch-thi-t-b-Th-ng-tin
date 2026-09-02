@@ -17,13 +17,21 @@ import { EquipmentData } from '../types';
 interface SpecTabProps {
   data: EquipmentData;
   onChange: (updated: EquipmentData) => void;
+  isReadOnly?: boolean;
+  onOpenLoginModal?: () => void;
 }
 
-export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
+export const SpecTab: React.FC<SpecTabProps> = ({ 
+  data, 
+  onChange,
+  isReadOnly = false,
+  onOpenLoginModal
+}) => {
   const [loadingAi, setLoadingAi] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 
   const updateSpec = (field: string, value: string) => {
+    if (isReadOnly) return;
     onChange({
       ...data,
       spec: {
@@ -34,6 +42,7 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
   };
 
   const handleFetchAiSpecs = async () => {
+    if (isReadOnly) return;
     setLoadingAi(true);
     setAiSuggestion(null);
     try {
@@ -60,9 +69,29 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-6">
+      {/* Read-Only Notice for Viewer */}
+      {isReadOnly && (
+        <div className="p-3.5 rounded-xl bg-[#0b1b3d]/90 border border-sky-400/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2.5 text-xs text-sky-200">
+            <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-400/40 text-[10px]">
+              CHỈ XEM (VIEWER)
+            </span>
+            <span>Bạn đang ở chế độ xem thông số kỹ thuật. Để chỉnh sửa tham số, vui lòng đăng nhập Quản trị viên.</span>
+          </div>
+          {onOpenLoginModal && (
+            <button
+              onClick={onOpenLoginModal}
+              className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg transition-all shrink-0 cursor-pointer shadow-sm"
+            >
+              Đăng nhập Admin
+            </button>
+          )}
+        </div>
+      )}
+
       {/* 2. System Architecture & Core Specs */}
-      <div className="bg-[#091533] rounded-xl border border-[#182d5a] shadow-md p-6">
-        <div className="flex items-center justify-between border-b border-[#182d5a] pb-3 mb-5">
+      <div className="cns-glass-card p-6">
+        <div className="flex items-center justify-between border-b border-[#182d5a]/80 pb-3 mb-5">
           <div>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Cpu className="w-5 h-5 text-sky-400" />
@@ -70,6 +99,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
             </h2>
             <p className="text-xs text-sky-200/70 mt-0.5">Kiến trúc hệ thống, thông số nguồn điện, RF, mạng và giao thức điều khiển</p>
           </div>
+          {isReadOnly && (
+            <span className="text-[11px] font-semibold text-slate-400 px-2.5 py-1 bg-slate-900/60 rounded-md border border-slate-700/50">
+              Khóa chỉnh sửa
+            </span>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -79,10 +113,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
             </label>
             <textarea
               rows={3}
+              disabled={isReadOnly}
               placeholder="Nhập kiến trúc hệ thống, nguyên lý hoạt động, chế độ dự phòng 1+1, công nghệ xử lý DSP..."
               value={data.spec.text}
               onChange={(e) => updateSpec('text', e.target.value)}
-              className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85 disabled:cursor-default"
             />
           </div>
 
@@ -94,10 +129,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               </label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: 220VAC ± 10% / -48VDC"
                 value={data.spec.power}
                 onChange={(e) => updateSpec('power', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -108,10 +144,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               </label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: RF 50W AM / Tiêu thụ 180VA"
                 value={data.spec.output}
                 onChange={(e) => updateSpec('output', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -122,10 +159,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               </label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: 118.000 - 136.975 MHz / 350 Mbps"
                 value={data.spec.range}
                 onChange={(e) => updateSpec('range', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -136,17 +174,18 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               </label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: 125.600 MHz / Kênh 7.150 GHz"
                 value={data.spec.channelFreq || ''}
                 onChange={(e) => updateSpec('channelFreq', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono font-bold text-sky-300 focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono font-bold text-sky-300 focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
           </div>
         </div>
 
         {/* Network and Remote Management Configuration */}
-        <div className="mt-6 pt-5 border-t border-[#182d5a]">
+        <div className="mt-6 pt-5 border-t border-[#182d5a]/80">
           <h3 className="text-sm font-bold text-white flex items-center gap-1.5 mb-4">
             <Network className="w-4 h-4 text-sky-400" />
             Cấu hình Mạng, Địa chỉ IP & Giao thức Giám sát (NMS)
@@ -157,10 +196,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">Chuẩn giao tiếp / Giao thức kết nối</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: VoIP ED-137B/C, E1 G.703, RS232, Audio 600 Ohm Balanced, E&M"
                 value={data.spec.interface}
                 onChange={(e) => updateSpec('interface', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -168,10 +208,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">Địa chỉ IP Quản lý (Management IP)</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: 192.168.10.15"
                 value={data.spec.mgmtIp}
                 onChange={(e) => updateSpec('mgmtIp', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono font-bold text-sky-300 focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono font-bold text-sky-300 focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -179,10 +220,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">VLAN ID / Phân đoạn mạng</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: VLAN 200 (VHF-DATA)"
                 value={data.spec.vlanId || ''}
                 onChange={(e) => updateSpec('vlanId', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -190,10 +232,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">Subnet Mask</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: 255.255.255.0"
                 value={data.spec.subnetMask || ''}
                 onChange={(e) => updateSpec('subnetMask', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -201,10 +244,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">Default Gateway</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: 192.168.10.1"
                 value={data.spec.gateway || ''}
                 onChange={(e) => updateSpec('gateway', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -212,10 +256,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">Phiên bản Firmware / DSP</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: v4.32.08-DSP2.1"
                 value={data.spec.firmware}
                 onChange={(e) => updateSpec('firmware', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
 
@@ -223,10 +268,11 @@ export const SpecTab: React.FC<SpecTabProps> = ({ data, onChange }) => {
               <label className="text-xs font-bold text-sky-200">SNMP Community / Port</label>
               <input
                 type="text"
+                disabled={isReadOnly}
                 placeholder="VD: cns_snmp_v2 / Port 161"
                 value={data.spec.snmpCommunity || ''}
                 onChange={(e) => updateSpec('snmpCommunity', e.target.value)}
-                className="w-full text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-85"
               />
             </div>
           </div>

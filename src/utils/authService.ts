@@ -4,7 +4,9 @@ const AUTH_STORAGE_KEY = 'cns_equipment_auth_user_v1';
 
 export const ADMIN_PERMISSIONS: UserPermissions = {
   canView: true,
+  canScanQr: true,
   canCreate: true,
+  canCreateEquipment: true,
   canEditDetails: true,
   canDelete: true,
   canClone: true,
@@ -16,7 +18,9 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
   canView: true,
-  canCreate: true,
+  canScanQr: true,
+  canCreate: false,
+  canCreateEquipment: false,
   canEditDetails: false,
   canDelete: false,
   canClone: false,
@@ -35,10 +39,10 @@ export const ADMIN_USER: AppUser = {
 };
 
 export const DEFAULT_USER: AppUser = {
-  username: 'nhanvien',
-  displayName: 'Kỹ Thuật Viên (Mặc Định)',
+  username: 'viewer',
+  displayName: 'Khách / Kỹ Thuật Viên (Chỉ Xem & Quét QR)',
   role: 'default',
-  avatarColor: 'bg-sky-600',
+  avatarColor: 'bg-slate-600',
   permissions: DEFAULT_PERMISSIONS
 };
 
@@ -123,5 +127,9 @@ export const authService = {
 
   isAdmin(user: AppUser): boolean {
     return user.role === 'admin';
+  },
+
+  isReadOnly(user: AppUser): boolean {
+    return user.role !== 'admin' || !user.permissions.canEditDetails;
   }
 };

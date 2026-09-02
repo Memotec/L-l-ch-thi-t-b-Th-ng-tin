@@ -15,13 +15,21 @@ import { EquipmentData, MaintenanceRow, MaintenanceCycle, MaintenanceResult } fr
 interface MaintenanceTabProps {
   data: EquipmentData;
   onChange: (updated: EquipmentData) => void;
+  isReadOnly?: boolean;
+  onOpenLoginModal?: () => void;
 }
 
-export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }) => {
+export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ 
+  data, 
+  onChange,
+  isReadOnly = false,
+  onOpenLoginModal
+}) => {
   const [filterCycle, setFilterCycle] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   const addMaintenance = (presetCycle: MaintenanceCycle = 'Hàng quý') => {
+    if (isReadOnly) return;
     const newRow: MaintenanceRow = {
       id: `mt-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
@@ -39,17 +47,19 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
   };
 
   const updateMaintenance = (index: number, field: keyof MaintenanceRow, value: any) => {
+    if (isReadOnly) return;
     const newMaintenance = [...data.maintenance];
     newMaintenance[index] = { ...newMaintenance[index], [field]: value };
     onChange({ ...data, maintenance: newMaintenance });
   };
 
   const removeMaintenance = (index: number) => {
+    if (isReadOnly) return;
     const newMaintenance = data.maintenance.filter((_, i) => i !== index);
     onChange({ ...data, maintenance: newMaintenance });
   };
 
-  const getResultBadge = (result: MaintenanceResult) => {
+  const getResultBadge = (result?: MaintenanceResult | string) => {
     switch (result) {
       case 'Đạt yêu cầu kỹ thuật':
         return 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40';
@@ -74,8 +84,28 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
 
   return (
     <div className="space-y-6">
-      <div className="bg-[#091533] rounded-xl border border-[#182d5a] shadow-md p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#182d5a] pb-4 mb-5 gap-3">
+      {/* Read-Only Notice for Viewer */}
+      {isReadOnly && (
+        <div className="p-3.5 rounded-xl bg-[#0b1b3d]/90 border border-sky-400/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2.5 text-xs text-sky-200">
+            <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-400/40 text-[10px]">
+              CHỈ XEM (VIEWER)
+            </span>
+            <span>Bạn đang ở chế độ xem lịch sử bảo dưỡng. Để ghi nhật ký bảo dưỡng mới, vui lòng đăng nhập Quản trị viên.</span>
+          </div>
+          {onOpenLoginModal && (
+            <button
+              onClick={onOpenLoginModal}
+              className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg transition-all shrink-0 cursor-pointer shadow-sm"
+            >
+              Đăng nhập Admin
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="cns-glass-card p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#182d5a]/80 pb-4 mb-5 gap-3">
           <div>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Wrench className="w-5 h-5 text-sky-400" />
@@ -86,33 +116,35 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => addMaintenance('Hàng tháng')}
-              className="px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
-            >
-              + Bảo dưỡng Tháng
-            </button>
-            <button
-              onClick={() => addMaintenance('Hàng quý')}
-              className="px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
-            >
-              + Bảo dưỡng Quý
-            </button>
-            <button
-              onClick={() => addMaintenance('Hàng năm')}
-              className="px-2.5 py-1.5 bg-[#12224d] hover:bg-[#1b3475] text-indigo-200 rounded-lg text-xs font-semibold border border-[#2b448a] transition-colors cursor-pointer"
-            >
-              + Bảo dưỡng Năm
-            </button>
-            <button
-              onClick={() => addMaintenance('Đột xuất')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold shadow-md transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Thêm kỳ bảo dưỡng</span>
-            </button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => addMaintenance('Hàng tháng')}
+                className="px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
+              >
+                + Bảo dưỡng Tháng
+              </button>
+              <button
+                onClick={() => addMaintenance('Hàng quý')}
+                className="px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
+              >
+                + Bảo dưỡng Quý
+              </button>
+              <button
+                onClick={() => addMaintenance('Hàng năm')}
+                className="px-2.5 py-1.5 bg-[#12224d] hover:bg-[#1b3475] text-indigo-200 rounded-lg text-xs font-semibold border border-[#2b448a] transition-colors cursor-pointer"
+              >
+                + Bảo dưỡng Năm
+              </button>
+              <button
+                onClick={() => addMaintenance('Đột xuất')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold shadow-md transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Thêm kỳ bảo dưỡng</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filter bar */}
@@ -159,13 +191,13 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
                 <th className="p-2.5 w-44">Kết luận / Đánh giá</th>
                 <th className="p-2.5 w-36">Người thực hiện</th>
                 <th className="p-2.5 w-32">Người kiểm tra</th>
-                <th className="p-2.5 w-12 text-center">Xóa</th>
+                {!isReadOnly && <th className="p-2.5 w-12 text-center">Xóa</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#182d5a]">
               {filteredMaintenance.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-slate-400 italic bg-[#050c1e]">
+                  <td colSpan={isReadOnly ? 7 : 8} className="p-6 text-center text-slate-400 italic bg-[#050c1e]/60">
                     Chưa có nhật ký bảo dưỡng định kỳ nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -173,20 +205,22 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
                 filteredMaintenance.map((mt) => {
                   const actualIdx = data.maintenance.findIndex(item => item.id === mt.id);
                   return (
-                    <tr key={mt.id || actualIdx} className="hover:bg-[#0c183a] bg-[#060e24]">
+                    <tr key={mt.id || actualIdx} className="hover:bg-[#0c183a] bg-[#060e24]/60">
                       <td className="p-2">
                         <input
                           type="date"
+                          disabled={isReadOnly}
                           value={mt.date}
                           onChange={(e) => updateMaintenance(actualIdx, 'date', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white"
+                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
                         />
                       </td>
                       <td className="p-2">
                         <select
+                          disabled={isReadOnly}
                           value={mt.cycle}
                           onChange={(e) => updateMaintenance(actualIdx, 'cycle', e.target.value as MaintenanceCycle)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-semibold text-white"
+                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-semibold text-white disabled:opacity-85"
                         >
                           <option value="Hàng tuần" className="bg-[#091533] text-white">Hàng tuần</option>
                           <option value="Hàng tháng" className="bg-[#091533] text-white">Hàng tháng</option>
@@ -199,26 +233,29 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
                       <td className="p-2">
                         <textarea
                           rows={2}
+                          disabled={isReadOnly}
                           placeholder="Chi tiết công việc..."
                           value={mt.content}
                           onChange={(e) => updateMaintenance(actualIdx, 'content', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white font-medium"
+                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white font-medium disabled:opacity-85"
                         />
                       </td>
                       <td className="p-2">
                         <textarea
                           rows={2}
+                          disabled={isReadOnly}
                           placeholder="Thông số đo đạc RF/nguồn..."
                           value={mt.measuredParams}
                           onChange={(e) => updateMaintenance(actualIdx, 'measuredParams', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-mono text-sky-300"
+                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-mono text-sky-300 disabled:opacity-85"
                         />
                       </td>
                       <td className="p-2">
                         <select
+                          disabled={isReadOnly}
                           value={mt.result}
                           onChange={(e) => updateMaintenance(actualIdx, 'result', e.target.value as MaintenanceResult)}
-                          className={`w-full border rounded p-1.5 text-xs font-semibold focus:outline-none ${getResultBadge(mt.result)}`}
+                          className={`w-full border rounded p-1.5 text-xs font-semibold focus:outline-none disabled:opacity-85 ${getResultBadge(mt.result)}`}
                         >
                           <option value="Đạt yêu cầu kỹ thuật" className="bg-[#091533] text-white">Đạt yêu cầu kỹ thuật</option>
                           <option value="Cần hiệu chỉnh/theo dõi" className="bg-[#091533] text-white">Cần hiệu chỉnh / theo dõi</option>
@@ -228,30 +265,34 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ data, onChange }
                       <td className="p-2">
                         <input
                           type="text"
+                          disabled={isReadOnly}
                           placeholder="KTV thực hiện..."
                           value={mt.person}
                           onChange={(e) => updateMaintenance(actualIdx, 'person', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white"
+                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
                         />
                       </td>
                       <td className="p-2">
                         <input
                           type="text"
+                          disabled={isReadOnly}
                           placeholder="Người giám sát..."
                           value={mt.supervisor || ''}
                           onChange={(e) => updateMaintenance(actualIdx, 'supervisor', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white"
+                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
                         />
                       </td>
-                      <td className="p-2 text-center">
-                        <button
-                          onClick={() => removeMaintenance(actualIdx)}
-                          className="p-1 text-slate-400 hover:text-rose-400 rounded transition-colors cursor-pointer"
-                          title="Xóa kỳ bảo dưỡng này"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
+                      {!isReadOnly && (
+                        <td className="p-2 text-center">
+                          <button
+                            onClick={() => removeMaintenance(actualIdx)}
+                            className="p-1 text-slate-400 hover:text-rose-400 rounded transition-colors cursor-pointer"
+                            title="Xóa kỳ bảo dưỡng này"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
