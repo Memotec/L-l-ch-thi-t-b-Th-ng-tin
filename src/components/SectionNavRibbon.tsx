@@ -35,7 +35,7 @@ export const SectionNavRibbon: React.FC<SectionNavRibbonProps> = ({
   ];
 
   return (
-    <div className="bg-[#08132f] border border-[#162d5a] rounded-xl p-1.5 shadow-md mb-5 overflow-x-auto select-none">
+    <div className="bg-white border border-slate-200 rounded-xl p-1.5 shadow-xs mb-5 overflow-x-auto select-none">
       <div className="flex items-center gap-1 min-w-max">
         {sections.map((sec) => {
           const Icon = sec.icon;
@@ -44,15 +44,15 @@ export const SectionNavRibbon: React.FC<SectionNavRibbonProps> = ({
             <button
               key={sec.id}
               onClick={() => onNavigateTab(sec.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                 isActive
-                  ? 'bg-gradient-to-r from-blue-600 to-sky-600 text-white shadow-md border border-sky-400/40'
+                  ? 'bg-blue-600 text-white font-semibold shadow-xs'
                   : sec.isSpecial
-                  ? 'text-sky-300 hover:bg-[#0f214d] hover:text-white border border-sky-500/20'
-                  : 'text-slate-300 hover:bg-[#0d1c42] hover:text-white'
+                  ? 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : sec.isSpecial ? 'text-sky-300' : 'text-sky-400/70'}`} />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : sec.isSpecial ? 'text-blue-600' : 'text-slate-400'}`} />
               <span>{sec.label}</span>
             </button>
           );

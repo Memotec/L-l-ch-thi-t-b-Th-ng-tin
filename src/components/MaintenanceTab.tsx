@@ -3,12 +3,8 @@ import {
   Wrench, 
   Plus, 
   Trash2, 
-  Calendar, 
-  CheckCircle2, 
-  AlertCircle, 
   Search, 
-  Filter,
-  Check
+  Filter
 } from 'lucide-react';
 import { EquipmentData, MaintenanceRow, MaintenanceCycle, MaintenanceResult } from '../types';
 
@@ -62,13 +58,13 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
   const getResultBadge = (result?: MaintenanceResult | string) => {
     switch (result) {
       case 'Đạt yêu cầu kỹ thuật':
-        return 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'Cần hiệu chỉnh/theo dõi':
-        return 'bg-amber-950/80 text-amber-300 border-amber-500/40';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Không đạt':
-        return 'bg-rose-950/80 text-rose-300 border-rose-500/40';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
       default:
-        return 'bg-[#091533] text-slate-300 border-[#1e3c7a]';
+        return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
@@ -86,9 +82,9 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
     <div className="space-y-6">
       {/* Read-Only Notice for Viewer */}
       {isReadOnly && (
-        <div className="p-3.5 rounded-xl bg-[#0b1b3d]/90 border border-sky-400/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-2.5 text-xs text-sky-200">
-            <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-400/40 text-[10px]">
+        <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 text-xs text-blue-900">
+            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">
               CHỈ XEM (VIEWER)
             </span>
             <span>Bạn đang ở chế độ xem lịch sử bảo dưỡng. Để ghi nhật ký bảo dưỡng mới, vui lòng đăng nhập Quản trị viên.</span>
@@ -96,7 +92,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
           {onOpenLoginModal && (
             <button
               onClick={onOpenLoginModal}
-              className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg transition-all shrink-0 cursor-pointer shadow-sm"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-all shrink-0 cursor-pointer shadow-xs"
             >
               Đăng nhập Admin
             </button>
@@ -104,14 +100,14 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
         </div>
       )}
 
-      <div className="cns-glass-card p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#182d5a]/80 pb-4 mb-5 gap-3">
+      <div className="enterprise-card p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 mb-5 gap-3">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-sky-400" />
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-blue-600" />
               5. Lịch sử Bảo dưỡng định kỳ (Tuần / Tháng / Quý / 6 Tháng / Năm)
             </h2>
-            <p className="text-xs text-sky-200/70 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Ghi nhận toàn bộ quá trình bảo dưỡng kỹ thuật, đo kiểm chỉ tiêu theo quy trình tiêu chuẩn
             </p>
           </div>
@@ -120,25 +116,25 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => addMaintenance('Hàng tháng')}
-                className="px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
               >
                 + Bảo dưỡng Tháng
               </button>
               <button
                 onClick={() => addMaintenance('Hàng quý')}
-                className="px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
               >
                 + Bảo dưỡng Quý
               </button>
               <button
                 onClick={() => addMaintenance('Hàng năm')}
-                className="px-2.5 py-1.5 bg-[#12224d] hover:bg-[#1b3475] text-indigo-200 rounded-lg text-xs font-semibold border border-[#2b448a] transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
               >
                 + Bảo dưỡng Năm
               </button>
               <button
                 onClick={() => addMaintenance('Đột xuất')}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold shadow-md transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Thêm kỳ bảo dưỡng</span>
@@ -150,7 +146,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
         {/* Filter bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-sky-300 font-semibold flex items-center gap-1 mr-1">
+            <span className="text-xs text-slate-700 font-medium flex items-center gap-1 mr-1">
               <Filter className="w-3.5 h-3.5" /> Lọc chu kỳ:
             </span>
             {['ALL', 'Hàng tuần', 'Hàng tháng', 'Hàng quý', '6 tháng', 'Hàng năm', 'Đột xuất'].map(cyc => (
@@ -159,8 +155,8 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                 onClick={() => setFilterCycle(cyc)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                   filterCycle === cyc
-                    ? 'bg-sky-600 text-white font-semibold shadow'
-                    : 'bg-[#050c1e] text-slate-300 hover:bg-[#0c183a] border border-[#182d5a]'
+                    ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 {cyc === 'ALL' ? 'Tất cả' : cyc}
@@ -175,14 +171,14 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
               placeholder="Tìm kiếm nội dung, người thực hiện..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1 text-xs bg-[#050c1e] border border-[#1e3c7a] rounded-lg w-full sm:w-60 text-white placeholder-slate-400 focus:bg-[#0c1a3b] focus:outline-none focus:ring-2 focus:ring-sky-400"
+              className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg w-full sm:w-60 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
-        <div className="border border-[#182d5a] rounded-lg overflow-x-auto">
+        <div className="border border-slate-200 rounded-lg overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse min-w-[950px]">
-            <thead className="bg-[#071128] text-sky-200 border-b border-[#182d5a] font-semibold">
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
               <tr>
                 <th className="p-2.5 w-32">Thời gian thực hiện *</th>
                 <th className="p-2.5 w-32">Cấp bảo dưỡng</th>
@@ -194,10 +190,10 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                 {!isReadOnly && <th className="p-2.5 w-12 text-center">Xóa</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#182d5a]">
+            <tbody className="divide-y divide-slate-200">
               {filteredMaintenance.length === 0 ? (
                 <tr>
-                  <td colSpan={isReadOnly ? 7 : 8} className="p-6 text-center text-slate-400 italic bg-[#050c1e]/60">
+                  <td colSpan={isReadOnly ? 7 : 8} className="p-6 text-center text-slate-500 italic bg-white">
                     Chưa có nhật ký bảo dưỡng định kỳ nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -205,14 +201,14 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                 filteredMaintenance.map((mt) => {
                   const actualIdx = data.maintenance.findIndex(item => item.id === mt.id);
                   return (
-                    <tr key={mt.id || actualIdx} className="hover:bg-[#0c183a] bg-[#060e24]/60">
+                    <tr key={mt.id || actualIdx} className="hover:bg-slate-50 bg-white">
                       <td className="p-2">
                         <input
                           type="date"
                           disabled={isReadOnly}
                           value={mt.date}
                           onChange={(e) => updateMaintenance(actualIdx, 'date', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
+                          className="form-input-standard"
                         />
                       </td>
                       <td className="p-2">
@@ -220,14 +216,14 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           disabled={isReadOnly}
                           value={mt.cycle}
                           onChange={(e) => updateMaintenance(actualIdx, 'cycle', e.target.value as MaintenanceCycle)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-semibold text-white disabled:opacity-85"
+                          className="form-input-standard font-semibold"
                         >
-                          <option value="Hàng tuần" className="bg-[#091533] text-white">Hàng tuần</option>
-                          <option value="Hàng tháng" className="bg-[#091533] text-white">Hàng tháng</option>
-                          <option value="Hàng quý" className="bg-[#091533] text-white">Hàng quý</option>
-                          <option value="6 tháng" className="bg-[#091533] text-white">6 tháng</option>
-                          <option value="Hàng năm" className="bg-[#091533] text-white">Hàng năm</option>
-                          <option value="Đột xuất" className="bg-[#091533] text-white">Đột xuất</option>
+                          <option value="Hàng tuần">Hàng tuần</option>
+                          <option value="Hàng tháng">Hàng tháng</option>
+                          <option value="Hàng quý">Hàng quý</option>
+                          <option value="6 tháng">6 tháng</option>
+                          <option value="Hàng năm">Hàng năm</option>
+                          <option value="Đột xuất">Đột xuất</option>
                         </select>
                       </td>
                       <td className="p-2">
@@ -237,7 +233,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           placeholder="Chi tiết công việc..."
                           value={mt.content}
                           onChange={(e) => updateMaintenance(actualIdx, 'content', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white font-medium disabled:opacity-85"
+                          className="form-input-standard font-medium"
                         />
                       </td>
                       <td className="p-2">
@@ -247,7 +243,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           placeholder="Thông số đo đạc RF/nguồn..."
                           value={mt.measuredParams}
                           onChange={(e) => updateMaintenance(actualIdx, 'measuredParams', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-mono text-sky-300 disabled:opacity-85"
+                          className="form-input-standard font-mono text-blue-600"
                         />
                       </td>
                       <td className="p-2">
@@ -255,11 +251,11 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           disabled={isReadOnly}
                           value={mt.result}
                           onChange={(e) => updateMaintenance(actualIdx, 'result', e.target.value as MaintenanceResult)}
-                          className={`w-full border rounded p-1.5 text-xs font-semibold focus:outline-none disabled:opacity-85 ${getResultBadge(mt.result)}`}
+                          className={`w-full border rounded p-1.5 text-xs font-semibold focus:outline-none ${getResultBadge(mt.result)}`}
                         >
-                          <option value="Đạt yêu cầu kỹ thuật" className="bg-[#091533] text-white">Đạt yêu cầu kỹ thuật</option>
-                          <option value="Cần hiệu chỉnh/theo dõi" className="bg-[#091533] text-white">Cần hiệu chỉnh / theo dõi</option>
-                          <option value="Không đạt" className="bg-[#091533] text-white">Không đạt</option>
+                          <option value="Đạt yêu cầu kỹ thuật">Đạt yêu cầu kỹ thuật</option>
+                          <option value="Cần hiệu chỉnh/theo dõi">Cần hiệu chỉnh / theo dõi</option>
+                          <option value="Không đạt">Không đạt</option>
                         </select>
                       </td>
                       <td className="p-2">
@@ -269,7 +265,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           placeholder="KTV thực hiện..."
                           value={mt.person}
                           onChange={(e) => updateMaintenance(actualIdx, 'person', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
+                          className="form-input-standard"
                         />
                       </td>
                       <td className="p-2">
@@ -279,14 +275,14 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           placeholder="Người giám sát..."
                           value={mt.supervisor || ''}
                           onChange={(e) => updateMaintenance(actualIdx, 'supervisor', e.target.value)}
-                          className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
+                          className="form-input-standard"
                         />
                       </td>
                       {!isReadOnly && (
                         <td className="p-2 text-center">
                           <button
                             onClick={() => removeMaintenance(actualIdx)}
-                            className="p-1 text-slate-400 hover:text-rose-400 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
                             title="Xóa kỳ bảo dưỡng này"
                           >
                             <Trash2 className="w-4 h-4" />

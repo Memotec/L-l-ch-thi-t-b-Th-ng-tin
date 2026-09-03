@@ -164,11 +164,11 @@ body {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-900/80 backdrop-blur-xs animate-in fade-in duration-150">
       {/* Top Header Bar */}
-      <div className="bg-[#08132f] border-b border-[#182d5a] px-5 py-3 flex items-center justify-between text-white shrink-0 shadow-lg">
+      <div className="bg-slate-900 border-b border-slate-800 px-5 py-3 flex items-center justify-between text-white shrink-0 shadow-md">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-sky-500/20 text-sky-400 rounded-xl border border-sky-400/30">
+          <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-400/30">
             <FileText className="w-5 h-5" />
           </div>
           <div>
@@ -178,8 +178,8 @@ body {
                 Chuẩn Form 100% Scan
               </span>
             </div>
-            <p className="text-xs text-sky-200/70">
-              {g.name} &bull; Model: <b>{g.model || 'N/A'}</b> &bull; Serial: <span className="font-mono text-sky-300 font-bold">{g.serial || 'N/A'}</span> &bull; Mã TS: <span className="font-mono text-sky-300">{g.assetNo || 'N/A'}</span>
+            <p className="text-xs text-slate-300">
+              {g.name} &bull; Model: <b>{g.model || 'N/A'}</b> &bull; Serial: <span className="font-mono text-blue-400 font-bold">{g.serial || 'N/A'}</span> &bull; Mã TS: <span className="font-mono text-blue-400">{g.assetNo || 'N/A'}</span>
             </p>
           </div>
         </div>
@@ -187,18 +187,18 @@ body {
         {/* Action Controls */}
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
-          <div className="hidden sm:flex items-center bg-[#050c1e] rounded-xl border border-[#1e3c7a] p-1 text-xs">
+          <div className="hidden sm:flex items-center bg-slate-800 rounded-lg border border-slate-700 p-1 text-xs">
             <button
               onClick={() => setZoom(prev => Math.max(prev - 10, 50))}
-              className="p-1.5 hover:bg-[#10224d] rounded text-slate-300 hover:text-white transition-colors"
+              className="p-1.5 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
               title="Thu nhỏ"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="px-2 font-mono text-[11px] text-sky-200 font-bold">{zoom}%</span>
+            <span className="px-2 font-mono text-[11px] text-slate-200 font-bold">{zoom}%</span>
             <button
               onClick={() => setZoom(prev => Math.min(prev + 10, 150))}
-              className="p-1.5 hover:bg-[#10224d] rounded text-slate-300 hover:text-white transition-colors"
+              className="p-1.5 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
               title="Phóng to"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -209,7 +209,7 @@ body {
             href={googleDocUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#082218] hover:bg-[#0c3324] text-emerald-300 hover:text-emerald-100 rounded-lg text-xs font-semibold border border-emerald-600/40 transition-all cursor-pointer"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800/40 hover:bg-emerald-800/60 text-emerald-300 hover:text-emerald-100 rounded-lg text-xs font-semibold border border-emerald-700/50 transition-all cursor-pointer"
             title="Mở tài liệu Google Docs trực tuyến"
           >
             <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
@@ -218,7 +218,7 @@ body {
 
           <button
             onClick={handleCopyPdfLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
             title="Sao chép link xem PDF trực tuyến"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -227,16 +227,16 @@ body {
 
           <button
             onClick={handleDownloadPdfHtml}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
             title="Tải về file HTML Sổ chuẩn A4"
           >
-            <Download className="w-3.5 h-3.5 text-sky-400" />
+            <Download className="w-3.5 h-3.5 text-blue-400" />
             <span className="hidden sm:inline">Tải File</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow-md border border-sky-400/40 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>In A4 (Ctrl+P)</span>
@@ -244,7 +244,7 @@ body {
 
           <button
             onClick={onClose}
-            className="p-1.5 bg-[#0e1d44] hover:bg-rose-950/60 hover:text-rose-300 text-slate-400 rounded-lg border border-[#1e3c7a] transition-colors ml-1 cursor-pointer"
+            className="p-1.5 bg-slate-800 hover:bg-rose-900/60 hover:text-rose-300 text-slate-400 rounded-lg border border-slate-700 transition-colors ml-1 cursor-pointer"
             title="Đóng cửa sổ"
           >
             <X className="w-4 h-4" />
@@ -253,7 +253,7 @@ body {
       </div>
 
       {/* Main PDF Viewport with zoom */}
-      <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center bg-[#040817]">
+      <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center bg-slate-900/90">
         <div 
           ref={docPrintRef}
           style={{ 
@@ -263,11 +263,9 @@ body {
           }}
           className="transition-transform duration-150 ease-out text-black space-y-8 select-text"
         >
-          {/* ========================================================================= */}
-          {/* TRANG 1: BÌA SỔ LÝ LỊCH (EXACT SCAN PAGE 1) */}
-          {/* ========================================================================= */}
+          {/* TRANG 1: BÌA SỔ LÝ LỊCH */}
           <div 
-            className="w-[210mm] min-h-[297mm] h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div 
               className="h-full flex flex-col justify-between"
@@ -379,11 +377,9 @@ body {
             </div>
           </div>
 
-          {/* ========================================================================= */}
           {/* TRANG 2: MỤC LỤC & 1- CƠ QUAN, ĐƠN VỊ QUẢN LÝ */}
-          {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div>
               <div className="text-center mb-8">
@@ -464,11 +460,9 @@ body {
             <div className="page-num">2</div>
           </div>
 
-          {/* ========================================================================= */}
           {/* TRANG 3: 2 - SƠ LƯỢC THIẾT BỊ */}
-          {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div>
               <div className="text-center mb-6">
@@ -580,11 +574,9 @@ body {
             <div className="page-num">3</div>
           </div>
 
-          {/* ========================================================================= */}
           {/* TRANG 4: 2.1 - ĐẶC TÍNH KỸ THUẬT */}
-          {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div>
               <div className="text-center mb-6">
@@ -643,11 +635,9 @@ body {
             <div className="page-num">4</div>
           </div>
 
-          {/* ========================================================================= */}
           {/* TRANG 5: 2.2 - THÀNH PHẦN THIẾT BỊ */}
-          {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div>
               <div className="text-center mb-6">
@@ -693,11 +683,9 @@ body {
             <div className="page-num">5</div>
           </div>
 
-          {/* ========================================================================= */}
           {/* TRANG 6: 2.3 - TÀI LIỆU KỸ THUẬT KÈM THEO */}
-          {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div>
               <div className="text-center mb-6">
@@ -739,9 +727,7 @@ body {
             <div className="page-num">6</div>
           </div>
 
-          {/* ========================================================================= */}
           {/* TRANG 7, 8, 9...: 3 - BẢO DƯỠNG */}
-          {/* ========================================================================= */}
           {maintPages.map((pageRows, pageIdx) => {
             const paddedMaint = padList<MaintenanceRow>(pageRows, itemsPerPageMaint);
             const pageNum = 7 + pageIdx;
@@ -749,7 +735,7 @@ body {
             return (
               <div 
                 key={`modal-maint-page-${pageIdx}`}
-                className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+                className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
               >
                 <div>
                   <div className="text-center mb-6">
@@ -804,11 +790,9 @@ body {
             );
           })}
 
-          {/* ========================================================================= */}
           {/* TRANG CUỐI: 4 - KIỂM TRA - SỬA CHỮA - THAY THẾ - THAY ĐỔI */}
-          {/* ========================================================================= */}
           <div 
-            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-2xl flex flex-col justify-between select-text"
+            className="w-[210mm] min-h-[297mm] bg-white p-[14mm_15mm_12mm_18mm] shadow-xl flex flex-col justify-between select-text"
           >
             <div>
               <div className="text-center mb-6">

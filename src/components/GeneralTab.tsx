@@ -4,27 +4,28 @@ import {
   Award, 
   Calendar, 
   Globe2, 
-  ShieldAlert, 
-  ShieldCheck, 
   Plus, 
   Trash2,
-  CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
-import { EquipmentData, LicenseRow } from '../types';
+import { EquipmentData, LicenseRow, AppUser } from '../types';
 
 interface GeneralTabProps {
   data: EquipmentData;
   onChange: (updated: EquipmentData) => void;
   isReadOnly?: boolean;
   onOpenLoginModal?: () => void;
+  onDeleteEquipment?: () => void;
+  currentUser?: AppUser;
 }
 
 export const GeneralTab: React.FC<GeneralTabProps> = ({ 
   data, 
   onChange,
   isReadOnly = false,
-  onOpenLoginModal
+  onOpenLoginModal,
+  onDeleteEquipment,
+  currentUser
 }) => {
   const updateGeneral = (field: string, value: any) => {
     if (isReadOnly) return;
@@ -75,9 +76,9 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     <div className="space-y-6">
       {/* Read-Only Notice for Viewer */}
       {isReadOnly && (
-        <div className="p-3.5 rounded-xl bg-[#0b1b3d]/90 border border-sky-400/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-2.5 text-xs text-sky-200">
-            <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-400/40 text-[10px]">
+        <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 text-xs text-blue-900">
+            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">
               CHỈ XEM (VIEWER)
             </span>
             <span>Bạn đang ở chế độ xem và tra cứu. Để chỉnh sửa dữ liệu, vui lòng đăng nhập tài khoản Quản trị viên (Admin).</span>
@@ -85,7 +86,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           {onOpenLoginModal && (
             <button
               onClick={onOpenLoginModal}
-              className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg transition-all shrink-0 cursor-pointer shadow-sm"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-all shrink-0 cursor-pointer shadow-xs"
             >
               Đăng nhập Admin
             </button>
@@ -95,12 +96,12 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
 
       {/* Expiry / Calibration Notice Banner if upcoming */}
       {daysUntilCal !== null && daysUntilCal <= 60 && (
-        <div className={`p-4 rounded-xl border flex items-center gap-3 backdrop-blur-md shadow-lg ${
+        <div className={`p-4 rounded-xl border flex items-center gap-3 ${
           daysUntilCal < 0 
-            ? 'bg-rose-950/70 border-rose-500/40 text-rose-200'
-            : 'bg-amber-950/70 border-amber-500/40 text-amber-200'
+            ? 'bg-rose-50 border-rose-200 text-rose-800'
+            : 'bg-amber-50 border-amber-200 text-amber-800'
         }`}>
-          <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+          <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600" />
           <div className="text-xs">
             <b>{daysUntilCal < 0 ? 'CẢNH BÁO QUÁ HẠN KIỂM ĐỊNH!' : 'LƯU Ý KỲ KIỂM ĐỊNH SẮP TỚI!'}</b> Thiết bị có hạn kiểm định / hiệu chuẩn tiếp theo vào ngày <b>{data.general.nextCalDate}</b> ({daysUntilCal < 0 ? `Đã quá hạn ${Math.abs(daysUntilCal)} ngày` : `Còn ${daysUntilCal} ngày`}). Cần liên hệ đơn vị đo lường lập kế hoạch kiểm định.
           </div>
@@ -108,82 +109,94 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
       )}
 
       {/* 1. Technical Origin & Timelines */}
-      <div className="cns-glass-card p-6">
-        <div className="border-b border-[#182d5a]/80 pb-3 mb-5 flex items-center justify-between">
+      <div className="enterprise-card p-6">
+        <div className="border-b border-slate-200 pb-3 mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-sky-400" />
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
               1. Chi tiết Sơ lược Thiết bị & Các mốc thời gian pháp lý
             </h2>
-            <p className="text-xs text-sky-200/70 mt-0.5">Thông tin xuất xứ, năm sản xuất và các mốc thời gian nghiệm thu đưa vào khai thác</p>
+            <p className="text-xs text-slate-500 mt-0.5">Thông tin xuất xứ, năm sản xuất và các mốc thời gian nghiệm thu đưa vào khai thác</p>
           </div>
-          {isReadOnly && (
-            <span className="text-[11px] font-semibold text-slate-400 px-2.5 py-1 bg-slate-900/60 rounded-md border border-slate-700/50">
-              Khóa chỉnh sửa
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {onDeleteEquipment && (
+              <button
+                onClick={onDeleteEquipment}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 transition-all cursor-pointer shadow-xs"
+                title="Xóa vĩnh viễn sổ lý lịch thiết bị này (Admin)"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Xóa Sổ Lý Lịch</span>
+              </button>
+            )}
+            {isReadOnly && (
+              <span className="text-xs font-medium text-slate-500 px-2.5 py-1 bg-slate-100 rounded-md border border-slate-200">
+                Khóa chỉnh sửa
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200">Tên thiết bị</label>
+            <label className="text-xs font-medium text-slate-700">Tên thiết bị</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.general.name}
               onChange={(e) => updateGeneral('name', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-semibold text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard font-semibold"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200">Hãng sản xuất</label>
+            <label className="text-xs font-medium text-slate-700">Hãng sản xuất</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.general.manufacturer}
               onChange={(e) => updateGeneral('manufacturer', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200">Kiểu loại (Model)</label>
+            <label className="text-xs font-medium text-slate-700">Kiểu loại (Model)</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.general.model}
               onChange={(e) => updateGeneral('model', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard font-mono"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200">Năm sản xuất</label>
+            <label className="text-xs font-medium text-slate-700">Năm sản xuất</label>
             <input
               type="text"
               disabled={isReadOnly}
               placeholder="VD: 2020"
               value={data.general.yearMade || ''}
               onChange={(e) => updateGeneral('yearMade', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200">Số Serial / Part No</label>
+            <label className="text-xs font-medium text-slate-700">Số Serial / Part No</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.general.serial}
               onChange={(e) => updateGeneral('serial', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 font-mono text-sky-300 font-bold focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard font-mono font-semibold text-blue-600"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200 flex items-center gap-1.5">
-              <Globe2 className="w-3.5 h-3.5 text-sky-400" />
+            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+              <Globe2 className="w-3.5 h-3.5 text-blue-600" />
               Xuất xứ (Country of Origin)
             </label>
             <input
@@ -192,13 +205,13 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               placeholder="UK / France / USA / Japan / Italy / Israel..."
               value={data.general.origin || ''}
               onChange={(e) => updateGeneral('origin', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-sky-400" />
+            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
               Ngày đưa vào khai thác chính thức
             </label>
             <input
@@ -206,13 +219,13 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               disabled={isReadOnly}
               value={data.general.commissioned || ''}
               onChange={(e) => updateGeneral('commissioned', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-sky-400" />
+            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
               Ngày nghiệm thu bàn giao
             </label>
             <input
@@ -220,13 +233,13 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               disabled={isReadOnly}
               value={data.general.acceptanceDate || ''}
               onChange={(e) => updateGeneral('acceptanceDate', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-sky-200 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-sky-400" />
+            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
               Thời hạn bảo hành của hãng đến
             </label>
             <input
@@ -234,13 +247,13 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               disabled={isReadOnly}
               value={data.general.warrantyDate || ''}
               onChange={(e) => updateGeneral('warrantyDate', e.target.value)}
-              className="w-full text-xs bg-[#050c1e]/80 border border-[#1e3c7a] rounded-lg p-2.5 text-white focus:bg-[#0c1a3b] focus:ring-2 focus:ring-sky-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard"
             />
           </div>
 
-          <div className="space-y-1.5 md:col-span-3">
-            <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-amber-400" />
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-amber-600" />
               Kỳ hạn kiểm định / Hiệu chuẩn tiếp theo
             </label>
             <input
@@ -248,36 +261,36 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               disabled={isReadOnly}
               value={data.general.nextCalDate || ''}
               onChange={(e) => updateGeneral('nextCalDate', e.target.value)}
-              className="w-full md:w-1/3 text-xs bg-[#0b1b40]/80 border border-amber-500/50 rounded-lg p-2.5 font-semibold text-amber-200 focus:bg-[#0f2454] focus:ring-2 focus:ring-amber-400 focus:outline-none disabled:opacity-80 disabled:cursor-default"
+              className="form-input-standard font-semibold text-amber-700 md:w-1/3"
             />
           </div>
         </div>
       </div>
 
       {/* 2. Specialized Licenses and Certificates */}
-      <div className="cns-glass-card p-6">
-        <div className="flex items-center justify-between border-b border-[#182d5a]/80 pb-3 mb-5">
+      <div className="enterprise-card p-6">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-5">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Award className="w-5 h-5 text-sky-400" />
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Award className="w-5 h-5 text-blue-600" />
               Giấy phép / Chứng nhận chuyên ngành liên quan
             </h2>
-            <p className="text-xs text-sky-200/70 mt-0.5">Giấy phép sử dụng tần số vô tuyến điện, Giấy chứng nhận đủ điều kiện bảo đảm hoạt động bay</p>
+            <p className="text-xs text-slate-500 mt-0.5">Giấy phép sử dụng tần số vô tuyến điện, Giấy chứng nhận đủ điều kiện bảo đảm hoạt động bay</p>
           </div>
           {!isReadOnly && (
             <button
               onClick={addLicense}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 border border-[#1e3c7a] rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-sky-400" />
+              <Plus className="w-3.5 h-3.5 text-blue-600" />
               <span>Thêm giấy phép</span>
             </button>
           )}
         </div>
 
-        <div className="border border-[#182d5a] rounded-lg overflow-x-auto">
+        <div className="border border-slate-200 rounded-lg overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse min-w-[700px]">
-            <thead className="bg-[#071128] text-sky-200 border-b border-[#182d5a] font-semibold">
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
               <tr>
                 <th className="p-2.5 w-44">Số Giấy phép / Chứng nhận</th>
                 <th className="p-2.5 w-32">Ngày bắt đầu</th>
@@ -287,16 +300,16 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                 {!isReadOnly && <th className="p-2.5 w-12 text-center">Xóa</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#182d5a]">
+            <tbody className="divide-y divide-slate-200">
               {data.licenses.length === 0 ? (
                 <tr>
-                  <td colSpan={isReadOnly ? 5 : 6} className="p-4 text-center text-slate-400 italic bg-[#050c1e]/60">
+                  <td colSpan={isReadOnly ? 5 : 6} className="p-4 text-center text-slate-500 italic bg-white">
                     Chưa có dữ liệu giấy phép chuyên ngành.
                   </td>
                 </tr>
               ) : (
                 data.licenses.map((lic, idx) => (
-                  <tr key={lic.id || idx} className="hover:bg-[#0c183a] bg-[#060e24]/60">
+                  <tr key={lic.id || idx} className="hover:bg-slate-50 bg-white">
                     <td className="p-2">
                       <input
                         type="text"
@@ -304,7 +317,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                         placeholder="Số GP-TS-..."
                         value={lic.startNo}
                         onChange={(e) => updateLicense(idx, 'startNo', e.target.value)}
-                        className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs font-mono font-medium text-sky-300 disabled:opacity-85"
+                        className="form-input-standard font-mono font-medium text-blue-600"
                       />
                     </td>
                     <td className="p-2">
@@ -313,7 +326,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                         disabled={isReadOnly}
                         value={lic.startDate}
                         onChange={(e) => updateLicense(idx, 'startDate', e.target.value)}
-                        className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
+                        className="form-input-standard"
                       />
                     </td>
                     <td className="p-2">
@@ -323,7 +336,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                         placeholder="Cơ quan cấp và nội dung..."
                         value={lic.content}
                         onChange={(e) => updateLicense(idx, 'content', e.target.value)}
-                        className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
+                        className="form-input-standard"
                       />
                     </td>
                     <td className="p-2">
@@ -332,7 +345,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                         disabled={isReadOnly}
                         value={lic.endDate}
                         onChange={(e) => updateLicense(idx, 'endDate', e.target.value)}
-                        className="w-full bg-[#091533] border border-[#1e3c7a] rounded p-1.5 text-xs text-white disabled:opacity-85"
+                        className="form-input-standard"
                       />
                     </td>
                     <td className="p-2 text-center">
@@ -342,7 +355,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                           disabled={isReadOnly}
                           checked={lic.active}
                           onChange={(e) => updateLicense(idx, 'active', e.target.checked)}
-                          className="w-4 h-4 text-sky-500 rounded focus:ring-sky-400 bg-[#091533] border-[#1e3c7a]"
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300"
                         />
                       </label>
                     </td>
@@ -350,7 +363,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                       <td className="p-2 text-center">
                         <button
                           onClick={() => removeLicense(idx)}
-                          className="p-1 text-slate-400 hover:text-rose-400 rounded transition-colors"
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
                           title="Xóa giấy phép này"
                         >
                           <Trash2 className="w-4 h-4" />

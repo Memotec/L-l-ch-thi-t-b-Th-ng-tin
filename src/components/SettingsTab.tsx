@@ -18,14 +18,7 @@ import {
   FolderDown,
   Building2,
   User,
-  KeyRound,
-  ExternalLink,
-  RefreshCw,
-  HardDrive,
-  FileSpreadsheet,
-  Check,
-  ChevronRight,
-  Info
+  KeyRound
 } from 'lucide-react';
 import { EquipmentData, AppUser } from '../types';
 import { GoogleWorkspaceTab } from './GoogleWorkspaceTab';
@@ -47,6 +40,8 @@ interface SettingsTabProps {
   onSyncFromGas: (equipments: EquipmentData[]) => void;
   onShowToast: (msg: string) => void;
   onNavigateTab: (tab: string) => void;
+  onOpenTrash?: () => void;
+  trashCount?: number;
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({
@@ -65,7 +60,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   onUpdateEquipment,
   onSyncFromGas,
   onShowToast,
-  onNavigateTab
+  onNavigateTab,
+  onOpenTrash,
+  trashCount = 0
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'database' | 'security' | 'google' | 'organization' | 'qr'>('database');
   const isAdmin = currentUser.role === 'admin';
@@ -80,6 +77,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [defaultSupervisor, setDefaultSupervisor] = useState<string>(
     () => localStorage.getItem('cns_default_supervisor') || 'Trưởng Trung tâm BĐKT'
   );
+
+  // Auto backup option state
+  const [autoBackupDrive, setAutoBackupDrive] = useState<boolean>(
+    () => localStorage.getItem('cns_auto_backup_drive') === 'true'
+  );
+
+  const handleToggleAutoBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.checked;
+    setAutoBackupDrive(val);
+    localStorage.setItem('cns_auto_backup_drive', val ? 'true' : 'false');
+    onShowToast(val ? '✓ Đã BẬT tự động sao lưu JSON lên Google Drive!' : '✓ Đã TẮT tự động sao lưu.');
+  };
 
   const handleSaveOrgDefaults = () => {
     localStorage.setItem('cns_default_company_name', orgCompanyName);
@@ -117,22 +126,22 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#0c1c45] via-[#10245c] to-[#0a183d] border border-[#1e3c7a] rounded-2xl p-6 shadow-xl text-white">
+      <div className="enterprise-card p-6 bg-white">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-gradient-to-br from-blue-600 to-sky-500 rounded-2xl shadow-lg shadow-blue-950/80 border border-sky-300/40 shrink-0">
-              <Settings className="w-7 h-7 text-white" />
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shrink-0">
+              <Settings className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-extrabold tracking-tight">Trung Tâm Cài Đặt & Quản Trị Hệ Thống</h1>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40">
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">Trung Tâm Cài Đặt & Quản Trị Hệ Thống</h1>
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                   Settings Hub
                 </span>
               </div>
-              <p className="text-xs text-sky-200/80 mt-1 max-w-2xl">
+              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
                 Quản lý tập trung toàn bộ cấu hình: Sao lưu & phục hồi dữ liệu, phân quyền bảo mật, đồng bộ Google Workspace, thông tin đơn vị và mẫu in tem nhãn.
               </p>
             </div>
@@ -141,7 +150,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onSaveData}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-sky-950/60 transition-all cursor-pointer border border-sky-400/40"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>Lưu toàn bộ dữ liệu</span>
@@ -150,13 +159,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         </div>
 
         {/* Sub-tab Navigation Ribbon */}
-        <div className="flex items-center gap-2 mt-6 pt-4 border-t border-sky-500/20 overflow-x-auto select-none">
+        <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-200 overflow-x-auto select-none">
           <button
             onClick={() => setActiveSubTab('database')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'database'
-                ? 'bg-sky-500 text-white shadow-md'
-                : 'text-sky-200 hover:bg-[#162d66] hover:text-white'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Database className="w-4 h-4" />
@@ -165,25 +174,25 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
           <button
             onClick={() => setActiveSubTab('security')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'security'
-                ? 'bg-sky-500 text-white shadow-md'
-                : 'text-sky-200 hover:bg-[#162d66] hover:text-white'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
             <span>Phân quyền & Tài khoản</span>
             {isAdmin && (
-              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
             )}
           </button>
 
           <button
             onClick={() => setActiveSubTab('google')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'google'
-                ? 'bg-sky-500 text-white shadow-md'
-                : 'text-sky-200 hover:bg-[#162d66] hover:text-white'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Cloud className="w-4 h-4" />
@@ -192,10 +201,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
           <button
             onClick={() => setActiveSubTab('organization')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'organization'
-                ? 'bg-sky-500 text-white shadow-md'
-                : 'text-sky-200 hover:bg-[#162d66] hover:text-white'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <Building2 className="w-4 h-4" />
@@ -204,10 +213,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
           <button
             onClick={() => setActiveSubTab('qr')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'qr'
-                ? 'bg-sky-500 text-white shadow-md'
-                : 'text-sky-200 hover:bg-[#162d66] hover:text-white'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <QrCode className="w-4 h-4" />
@@ -220,44 +229,64 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {activeSubTab === 'database' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Status & Overview Card */}
-          <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-5 shadow-xl space-y-4">
+          <div className="enterprise-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <Database className="w-4 h-4 text-sky-400" />
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                <Database className="w-4 h-4 text-blue-600" />
                 <span>Trạng thái Cơ sở dữ liệu</span>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
                 Sẵn sàng
               </span>
             </div>
 
-            <div className="space-y-3 pt-2">
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
-                <span className="text-xs text-slate-300 font-medium">Tổng số thiết bị trong hệ thống:</span>
-                <span className="text-sm font-extrabold text-sky-300 font-mono">{allEquipments.length} thiết bị</span>
+            <div className="space-y-2.5 pt-1">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                <span className="text-slate-600">Tổng số thiết bị trong hệ thống:</span>
+                <span className="font-bold text-slate-900 font-mono">{allEquipments.length} thiết bị</span>
               </div>
 
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
-                <span className="text-xs text-slate-300 font-medium">Thiết bị đang chọn:</span>
-                <span className="text-xs font-bold text-white truncate max-w-[160px]" title={currentEquipment.general.name}>
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                <span className="text-slate-600">Thiết bị đang chọn:</span>
+                <span className="font-bold text-slate-900 truncate max-w-[160px]" title={currentEquipment.general.name}>
                   {currentEquipment.general.name || '---'}
                 </span>
               </div>
 
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
-                <span className="text-xs text-slate-300 font-medium">Dung lượng bộ nhớ (LocalStorage):</span>
-                <span className="text-xs font-mono font-bold text-amber-300">{calculateStorageSize()}</span>
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                <span className="text-slate-600">Dung lượng bộ nhớ (LocalStorage):</span>
+                <span className="font-mono font-bold text-blue-600">{calculateStorageSize()}</span>
               </div>
 
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
-                <span className="text-xs text-slate-300 font-medium">Trạng thái lưu:</span>
-                <span className="text-xs font-medium text-slate-400">{lastSaved}</span>
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                <span className="text-slate-600">Trạng thái lưu:</span>
+                <span className="font-medium text-slate-500">{lastSaved}</span>
               </div>
+            </div>
+
+            {/* Auto Google Drive Backup Toggle */}
+            <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="auto-backup-toggle" className="text-xs font-semibold text-blue-900 cursor-pointer flex items-center gap-2">
+                  <Cloud className="w-4 h-4 text-blue-600" />
+                  <span>Tự động sao lưu JSON lên Google Drive</span>
+                </label>
+                <input
+                  id="auto-backup-toggle"
+                  type="checkbox"
+                  checked={autoBackupDrive}
+                  onChange={handleToggleAutoBackup}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300 cursor-pointer"
+                />
+              </div>
+              <p className="text-[11px] text-blue-700/80 leading-relaxed">
+                Khi kích hoạt, mỗi khi có thay đổi thông tin quan trọng, hệ thống sẽ tự động đồng bộ bản sao lưu JSON lên Google Drive cá nhân của bạn.
+              </p>
             </div>
 
             <button
               onClick={onSaveData}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>Ghi đè & Lưu ngay lập tức</span>
@@ -265,32 +294,32 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           </div>
 
           {/* Backup & Export/Import Controls */}
-          <div className="lg:col-span-2 bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-5 shadow-xl space-y-5">
+          <div className="lg:col-span-2 enterprise-card p-5 space-y-5">
             <div>
-              <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                <FolderDown className="w-4 h-4 text-sky-400" />
+              <h2 className="text-slate-900 font-bold text-sm flex items-center gap-2">
+                <FolderDown className="w-4 h-4 text-blue-600" />
                 <span>Sao Lưu & Nhập/Xuất Dữ Liệu An Toàn</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Xuất file định dạng JSON tiêu chuẩn để lưu trữ an toàn hoặc chia sẻ giữa các máy tính trong đài/trạm.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Export All */}
-              <div className="p-4 bg-[#071129] border border-[#193366] rounded-xl flex flex-col justify-between space-y-3">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex flex-col justify-between space-y-3">
                 <div>
-                  <div className="text-xs font-bold text-white flex items-center gap-2">
-                    <Download className="w-4 h-4 text-sky-400" />
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                    <Download className="w-4 h-4 text-blue-600" />
                     <span>Sao lưu toàn bộ ({allEquipments.length} thiết bị)</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 mt-1">
                     Tải về một file JSON duy nhất chứa toàn bộ cơ sở dữ liệu hồ sơ kỹ thuật của tất cả thiết bị.
                   </p>
                 </div>
                 <button
                   onClick={onExportAll}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-md"
+                  className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Xuất Toàn Bộ Database</span>
@@ -298,19 +327,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               </div>
 
               {/* Export Current */}
-              <div className="p-4 bg-[#071129] border border-[#193366] rounded-xl flex flex-col justify-between space-y-3">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex flex-col justify-between space-y-3">
                 <div>
-                  <div className="text-xs font-bold text-white flex items-center gap-2">
-                    <Download className="w-4 h-4 text-emerald-400" />
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                    <Download className="w-4 h-4 text-emerald-600" />
                     <span>Xuất hồ sơ đang chọn</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 mt-1">
                     Tải về file JSON riêng của thiết bị: <b>{currentEquipment.general.name}</b> (SN: {currentEquipment.general.serial || 'N/A'}).
                   </p>
                 </div>
                 <button
                   onClick={onExportCurrent}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-[#0d2252] hover:bg-[#15347a] text-sky-200 hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer border border-sky-500/40"
+                  className="w-full flex items-center justify-center gap-2 py-2 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-xs font-semibold transition-all cursor-pointer border border-slate-200 shadow-xs"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Xuất Thiết Bị Này</span>
@@ -319,24 +348,24 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             </div>
 
             {/* Import JSON Section */}
-            <div className="p-4 bg-[#071129] border border-[#193366] rounded-xl space-y-3">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-white">
-                  <Upload className="w-4 h-4 text-amber-400" />
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                  <Upload className="w-4 h-4 text-amber-600" />
                   <span>Nhập file sao lưu JSON (Khôi phục / Bổ sung)</span>
                 </div>
                 {!isAdmin && (
-                  <span className="text-[10px] text-amber-300 flex items-center gap-1">
+                  <span className="text-[10px] text-amber-700 flex items-center gap-1 font-medium">
                     <Lock className="w-3 h-3" /> Cần quyền Admin
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 Hệ thống tự động phát hiện file sao lưu chứa 1 thiết bị hoặc toàn bộ danh sách để cập nhật an toàn.
               </p>
 
               {isAdmin ? (
-                <label className="flex items-center justify-center gap-2 py-2.5 bg-[#12285a] hover:bg-[#1a387d] text-amber-300 hover:text-amber-100 rounded-xl text-xs font-bold border border-amber-400/40 cursor-pointer transition-all">
+                <label className="flex items-center justify-center gap-2 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold border border-amber-200 cursor-pointer transition-all">
                   <Upload className="w-4 h-4" />
                   <span>Chọn File JSON từ máy tính để Nhập</span>
                   <input type="file" accept=".json" onChange={onImportFile} className="hidden" />
@@ -344,49 +373,60 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               ) : (
                 <button
                   onClick={onOpenLoginModal}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#12285a]/60 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium border border-slate-200 cursor-pointer"
                 >
-                  <Lock className="w-4 h-4 text-amber-400" />
+                  <Lock className="w-4 h-4 text-amber-600" />
                   <span>Đăng nhập Admin để mở khóa tính năng Nhập JSON</span>
                 </button>
               )}
             </div>
 
             {/* Danger Zone: Factory Reset & Delete */}
-            <div className="p-4 bg-rose-950/20 border border-rose-500/30 rounded-xl space-y-3">
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <span className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-rose-600" />
                   <span>Thao tác nhạy cảm (Quản trị viên)</span>
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <button
                   onClick={onCloneEquipment}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-[#0d1d42] hover:bg-[#17306b] text-sky-200 rounded-lg text-xs font-semibold border border-sky-500/30 transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-slate-50 text-slate-800 rounded-lg text-xs font-medium border border-slate-200 transition-all cursor-pointer shadow-xs"
                   title="Nhân bản thiết bị hiện tại"
                 >
-                  <Copy className="w-3.5 h-3.5 text-emerald-400" />
+                  <Copy className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Nhân bản thiết bị</span>
                 </button>
+
+                {onOpenTrash && (
+                  <button
+                    onClick={onOpenTrash}
+                    className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-all cursor-pointer shadow-xs"
+                    title="Mở Thùng Rác (Phục hồi sổ lý lịch đã xóa trong 30 ngày)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Thùng Rác ({trashCount})</span>
+                  </button>
+                )}
 
                 <button
                   onClick={onDeleteEquipment}
                   disabled={isAdmin && allEquipments.length <= 1}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-rose-900/30 hover:bg-rose-900/50 text-rose-200 rounded-lg text-xs font-semibold border border-rose-500/40 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Xóa hồ sơ thiết bị hiện tại"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-all cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Chuyển sổ lý lịch thiết bị vào Thùng rác"
                 >
-                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Xóa hồ sơ thiết bị</span>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Xóa vào Thùng rác</span>
                 </button>
 
                 <button
                   onClick={onResetDefaults}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-900/30 hover:bg-amber-900/50 text-amber-200 rounded-lg text-xs font-semibold border border-amber-500/40 transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-all cursor-pointer shadow-xs"
                   title="Khôi phục lại dữ liệu mẫu của hệ thống"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                  <RotateCcw className="w-3.5 h-3.5" />
                   <span>Khôi phục dữ liệu gốc</span>
                 </button>
               </div>
@@ -399,34 +439,34 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {activeSubTab === 'security' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Current User Role Card */}
-          <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-5 shadow-xl space-y-4">
+          <div className="enterprise-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-white uppercase tracking-wider">Tài khoản hiện tại</span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tài khoản hiện tại</span>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                 isAdmin 
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                  : 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-blue-50 text-blue-700 border-blue-200'
               }`}>
                 {isAdmin ? 'Quản Trị Viên (Admin)' : 'Kỹ Thuật Viên (Mặc định)'}
               </span>
             </div>
 
-            <div className="p-4 bg-[#060e24] rounded-xl border border-[#162d5a] text-center space-y-2">
-              <div className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center border shadow-inner ${
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center space-y-2">
+              <div className={`w-14 h-14 mx-auto rounded-xl flex items-center justify-center border shadow-xs ${
                 isAdmin 
-                  ? 'bg-rose-950 text-rose-300 border-rose-500/50'
-                  : 'bg-sky-950 text-sky-300 border-sky-500/50'
+                  ? 'bg-rose-100 text-rose-700 border-rose-200'
+                  : 'bg-blue-100 text-blue-700 border-blue-200'
               }`}>
                 {isAdmin ? <ShieldCheck className="w-7 h-7" /> : <User className="w-7 h-7" />}
               </div>
-              <div className="font-bold text-white text-base">{currentUser.displayName}</div>
-              <div className="text-xs text-slate-400 font-mono">@{currentUser.username}</div>
+              <div className="font-bold text-slate-900 text-base">{currentUser.displayName}</div>
+              <div className="text-xs text-slate-500 font-mono">@{currentUser.username}</div>
             </div>
 
             <div className="space-y-2">
               <button
                 onClick={onOpenLoginModal}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
               >
                 <KeyRound className="w-4 h-4" />
                 <span>{isAdmin ? 'Chuyển đổi / Quản lý tài khoản' : 'Đăng nhập Quyền Admin'}</span>
@@ -434,21 +474,21 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             </div>
           </div>
 
-            {/* Permissions Matrix */}
-          <div className="lg:col-span-2 cns-glass-card p-5 shadow-xl space-y-4">
+          {/* Permissions Matrix */}
+          <div className="lg:col-span-2 enterprise-card p-5 space-y-4">
             <div>
-              <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-sky-400" />
+              <h2 className="text-slate-900 font-bold text-sm flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
                 <span>Bảng Phân Quyền Thao Tác (Role Permissions Matrix)</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Chi tiết quyền hạn được cấp cho vai trò hiện tại trong ứng dụng Sổ Lý Lịch CNS. Mặc định tài khoản là Người Xem (Viewer) - Chỉ đọc và Quét mã QR.
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-[#193366]">
+            <div className="overflow-hidden rounded-lg border border-slate-200">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#081533] text-sky-300 border-b border-[#193366]">
+                <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
                   <tr>
                     <th className="p-3">Tính năng / Quyền hạn</th>
                     <th className="p-3 text-center">Người Xem (Viewer - Mặc định)</th>
@@ -456,70 +496,70 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     <th className="p-3 text-center">Trạng thái của bạn</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#152a57] bg-[#060e24] text-slate-200">
+                <tbody className="divide-y divide-slate-200 bg-white text-slate-900">
                   <tr>
                     <td className="p-3 font-medium">Xem & Tra cứu hồ sơ thiết bị</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className="p-3 text-center text-emerald-400 font-bold">Cho phép</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600 font-bold">Cho phép</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Quét mã QR tra cứu thiết bị</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className="p-3 text-center text-emerald-400 font-bold">Cho phép</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600 font-bold">Cho phép</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">In sổ A4 & Xuất file JSON/PDF</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className="p-3 text-center text-emerald-400 font-bold">Cho phép</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600 font-bold">Cho phép</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Thêm thiết bị mới & Chỉnh sửa thông số</td>
-                    <td className="p-3 text-center text-slate-500 font-mono">--</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canCreateEquipment ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canCreateEquipment ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {currentUser.permissions.canCreateEquipment ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Ghi nhật ký bảo dưỡng & sửa chữa</td>
-                    <td className="p-3 text-center text-slate-500 font-mono">--</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canEditDetails ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canEditDetails ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {currentUser.permissions.canEditDetails ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Nhân bản thiết bị (Clone)</td>
-                    <td className="p-3 text-center text-slate-500 font-mono">--</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canClone ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canClone ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {currentUser.permissions.canClone ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Xóa hồ sơ thiết bị</td>
-                    <td className="p-3 text-center text-slate-500 font-mono">--</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canDelete ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canDelete ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {currentUser.permissions.canDelete ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Nhập dữ liệu sao lưu JSON</td>
-                    <td className="p-3 text-center text-slate-500 font-mono">--</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canImportData ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canImportData ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {currentUser.permissions.canImportData ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
                   <tr>
                     <td className="p-3 font-medium">Khôi phục dữ liệu gốc (Factory Reset)</td>
-                    <td className="p-3 text-center text-slate-500 font-mono">--</td>
-                    <td className="p-3 text-center text-emerald-400"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
-                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canResetDatabase ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canResetDatabase ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {currentUser.permissions.canResetDatabase ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
@@ -532,7 +572,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* SUB-TAB 3: GOOGLE DRIVE & DOCS WORKSPACE */}
       {activeSubTab === 'google' && (
-        <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-6 shadow-xl">
+        <div className="enterprise-card p-6">
           <GoogleWorkspaceTab
             currentEquipment={currentEquipment}
             allEquipments={allEquipments}
@@ -546,20 +586,20 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {/* SUB-TAB 4: ORGANIZATION & PRINT TEMPLATE DEFAULTS */}
       {activeSubTab === 'organization' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-5 shadow-xl space-y-4">
+          <div className="enterprise-card p-5 space-y-4">
             <div>
-              <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-sky-400" />
+              <h2 className="text-slate-900 font-bold text-sm flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-blue-600" />
                 <span>Thông Tin Cơ Quan Quản Lý Mặc Định</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Các thông tin này sẽ xuất hiện tự động trên Trang Bìa và Quốc hiệu tiêu đề khi in ấn Sổ Lý Lịch chuẩn A4.
               </p>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-sky-200 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Tên Tổng Công ty / Công ty quản lý:
                 </label>
                 <input
@@ -567,12 +607,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   value={orgCompanyName}
                   onChange={(e) => setOrgCompanyName(e.target.value)}
                   placeholder="CÔNG TY QUẢN LÝ BAY MIỀN NAM"
-                  className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-semibold"
+                  className="form-input-standard font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-sky-200 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Tên Đơn vị kỹ thuật trực tiếp:
                 </label>
                 <input
@@ -580,12 +620,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   value={orgUnitName}
                   onChange={(e) => setOrgUnitName(e.target.value)}
                   placeholder="ĐỘI THÔNG TIN - TRUNG TÂM BẢO ĐẢM KỸ THUẬT"
-                  className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-semibold"
+                  className="form-input-standard font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-sky-200 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Chức danh duyệt biên bản / Trưởng đơn vị:
                 </label>
                 <input
@@ -593,7 +633,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   value={defaultSupervisor}
                   onChange={(e) => setDefaultSupervisor(e.target.value)}
                   placeholder="Trưởng Trung tâm BĐKT"
-                  className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-semibold"
+                  className="form-input-standard font-semibold"
                 />
               </div>
             </div>
@@ -601,55 +641,55 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             <div className="flex items-center gap-2 pt-2">
               <button
                 onClick={handleSaveOrgDefaults}
-                className="flex-1 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
               >
                 Lưu làm Mặc định
               </button>
               <button
                 onClick={handleApplyOrgToCurrent}
-                className="px-4 py-2.5 bg-[#12285a] hover:bg-[#1a387d] text-sky-200 rounded-xl font-bold text-xs border border-sky-400/30 transition-all cursor-pointer"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold text-xs border border-slate-200 transition-all cursor-pointer"
               >
                 Áp dụng cho thiết bị này
               </button>
             </div>
           </div>
 
-          <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-5 shadow-xl space-y-4">
+          <div className="enterprise-card p-5 space-y-4">
             <div>
-              <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                <Printer className="w-4 h-4 text-emerald-400" />
+              <h2 className="text-slate-900 font-bold text-sm flex items-center gap-2">
+                <Printer className="w-4 h-4 text-emerald-600" />
                 <span>Tiêu Chuẩn In Ấn Sổ Lý Lịch A4</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Định dạng in ấn tuân thủ thể thức văn bản kỹ thuật quản lý chuyên ngành Hàng không Việt Nam (VATM).
               </p>
             </div>
 
-            <div className="space-y-2.5 text-xs text-slate-300">
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
+            <div className="space-y-2.5 text-xs text-slate-700">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
                 <span>Khổ giấy tiêu chuẩn:</span>
-                <span className="font-bold text-sky-300">A4 (210mm x 297mm) Dọc</span>
+                <span className="font-bold text-slate-900">A4 (210mm x 297mm) Dọc</span>
               </div>
 
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
                 <span>Phông chữ tiêu chuẩn in ấn:</span>
-                <span className="font-bold text-sky-300">Times New Roman (12pt - 14pt)</span>
+                <span className="font-bold text-slate-900">Times New Roman (12pt - 14pt)</span>
               </div>
 
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
                 <span>Định dạng xuất:</span>
-                <span className="font-bold text-sky-300">In trực tiếp / Xuất PDF sắc nét</span>
+                <span className="font-bold text-slate-900">In trực tiếp / Xuất PDF sắc nét</span>
               </div>
 
-              <div className="p-3 bg-[#060e24] rounded-xl border border-[#162d5a] flex items-center justify-between">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
                 <span>Trang Bìa có Logo & Quốc hiệu:</span>
-                <span className="font-bold text-emerald-400">Đã tích hợp đầy đủ</span>
+                <span className="font-bold text-emerald-700">Đã tích hợp đầy đủ</span>
               </div>
             </div>
 
             <button
               onClick={() => onNavigateTab('printPreview')}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Xem Trước Mẫu In A4 Ngay</span>
@@ -660,20 +700,20 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* SUB-TAB 5: QR CODE & MOBILE LOOKUP */}
       {activeSubTab === 'qr' && (
-        <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl p-6 shadow-xl space-y-5">
+        <div className="enterprise-card p-6 space-y-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <h2 className="text-white font-bold text-base flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-sky-400" />
+              <h2 className="text-slate-900 font-bold text-base flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-blue-600" />
                 <span>Cấu Hình Nhãn Tem & Tra Cứu Mã QR Di Động</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Tự động sinh mã QR Vector có logo CNS để dán trực tiếp lên mặt máy, tủ rack trạm kỹ thuật.
               </p>
             </div>
             <button
               onClick={() => onNavigateTab('qrCode')}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
               <QrCode className="w-4 h-4" />
               <span>Đi đến Quản lý Mã QR & In Tem Nhãn</span>
@@ -681,23 +721,23 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 bg-[#060e24] rounded-xl border border-[#162d5a] space-y-2">
-              <span className="text-xs font-bold text-sky-300">Chế độ 1: Mở PDF trực tiếp</span>
-              <p className="text-[11px] text-slate-400">
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-blue-700">Chế độ 1: Mở PDF trực tiếp</span>
+              <p className="text-[11px] text-slate-500">
                 Khi kỹ sư quét mã QR bằng camera điện thoại, hệ thống sẽ tự động mở xem ngay toàn bộ file PDF Sổ Lý Lịch của thiết bị.
               </p>
             </div>
 
-            <div className="p-4 bg-[#060e24] rounded-xl border border-[#162d5a] space-y-2">
-              <span className="text-xs font-bold text-sky-300">Chế độ 2: Mở Hồ sơ Điện tử</span>
-              <p className="text-[11px] text-slate-400">
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-blue-700">Chế độ 2: Mở Hồ sơ Điện tử</span>
+              <p className="text-[11px] text-slate-500">
                 Tự động kích hoạt hồ sơ thiết bị trên ứng dụng Web với đầy đủ 6 mục thông tin, lịch sử bảo dưỡng và linh kiện.
               </p>
             </div>
 
-            <div className="p-4 bg-[#060e24] rounded-xl border border-[#162d5a] space-y-2">
-              <span className="text-xs font-bold text-sky-300">Chế độ 3: Mở Google Docs</span>
-              <p className="text-[11px] text-slate-400">
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-blue-700">Chế độ 3: Mở Google Docs</span>
+              <p className="text-[11px] text-slate-500">
                 Chuyển thẳng đến tài liệu Google Docs trực tuyến được lưu trữ tập trung trên Google Drive của đài trạm.
               </p>
             </div>

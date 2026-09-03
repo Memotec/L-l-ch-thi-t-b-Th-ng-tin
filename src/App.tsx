@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { sampleEquipments } from './sampleData';
-import { EquipmentData, AppUser } from './types';
+import { sampleEquipments, createEmptyEquipment } from './sampleData';
+import { EquipmentData, AppUser, TrashEquipmentItem } from './types';
 import { authService } from './utils/authService';
 import { googleDriveDocsService } from './utils/googleDriveDocsService';
 import { storageService } from './utils/storageService';
@@ -27,16 +27,19 @@ const PdfViewerModal = lazy(() => import('./components/PdfViewerModal').then(m =
 const FullScreenPdfViewer = lazy(() => import('./components/FullScreenPdfViewer').then(m => ({ default: m.FullScreenPdfViewer })));
 const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
 const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ default: m.SearchModal })));
+const RecycleBinModal = lazy(() => import('./components/RecycleBinModal').then(m => ({ default: m.RecycleBinModal })));
 
 export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState<AppUser>(() => authService.getCurrentUser());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
+  const [isTrashModalOpen, setIsTrashModalOpen] = useState<boolean>(false);
 
   const isReadOnly = useMemo(() => authService.isReadOnly(currentUser), [currentUser]);
 
   const [equipments, setEquipments] = useState<EquipmentData[]>(() => storageService.loadEquipments());
+  const [trashList, setTrashList] = useState<TrashEquipmentItem[]>(() => storageService.loadTrash());
 
   const [currentId, setCurrentId] = useState<string>(() => {
     return equipments[0]?.id || 'eq-vhf-01';
@@ -261,26 +264,121 @@ export default function App() {
     showToast(`✓ Đã sao chép hồ sơ mới thành công!`);
   }, [currentUser, currentEquipment, showToast]);
 
-  // Delete equipment
-  const handleDeleteCurrent = useCallback(() => {
+  // Delete equipment -> Move to Trash
+  const handleDeleteCurrent = useCallback((targetEqId?: string) => {
     if (!currentUser.permissions.canDelete) {
       setIsLoginModalOpen(true);
-      showToast('Cần quyền Quản trị viên (Admin) để xóa hồ sơ thiết bị.');
+      showToast('Cần quyền Quản trị viên (Admin) để xóa sổ lý lịch thiết bị.');
       return;
     }
-    if (equipments.length <= 1) {
-      alert('Không thể xóa thiết bị duy nhất trong hệ thống.');
-      return;
-    }
-    const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa hồ sơ thiết bị: "${currentEquipment.general.name}"?`);
+    
+    const target = targetEqId 
+      ? equipments.find(e => e.id === targetEqId) || currentEquipment 
+      : currentEquipment;
+
+    const confirmDelete = window.confirm(
+      `⚠️ CHUYỂN VÀO THÙNG RÁC:\n\nBạn có chắc chắn muốn chuyển Sổ lý lịch thiết bị vào Thùng Rác?\n• Tên thiết bị: "${target.general.name}"\n• Model: ${target.general.model || 'N/A'}\n• Mã Serial: ${target.general.serial || 'N/A'}\n• Mã TS: ${target.general.assetNo || 'N/A'}\n\nSổ lý lịch sẽ được lưu giữ trong Thùng Rác trong 30 ngày và có thể khôi phục bất kỳ lúc nào.`
+    );
     if (!confirmDelete) return;
 
-    const remaining = equipments.filter(e => e.id !== currentEquipment.id);
+    // Add to trash list
+    const trashItem: TrashEquipmentItem = {
+      equipment: target,
+      deletedAt: new Date().toISOString(),
+      deletedBy: currentUser.displayName || 'Quản trị viên'
+    };
+
+    const updatedTrash = [trashItem, ...trashList.filter(t => t.equipment.id !== target.id)];
+    setTrashList(updatedTrash);
+    storageService.saveTrash(updatedTrash);
+
+    // Filter out from active list
+    let remaining = equipments.filter(e => e.id !== target.id);
+    if (remaining.length === 0) {
+      const emptyEq = createEmptyEquipment();
+      remaining = [emptyEq];
+    }
+
     setEquipments(remaining);
-    setCurrentId(remaining[0].id);
+    
+    // Switch to another equipment if deleting the current selected one
+    if (target.id === currentId || !remaining.some(e => e.id === currentId)) {
+      setCurrentId(remaining[0].id);
+    }
+    
     storageService.saveImmediate(remaining);
-    showToast(`✓ Đã xóa hồ sơ thiết bị.`);
-  }, [currentUser, equipments, currentEquipment, showToast]);
+    showToast(`✓ Đã chuyển Sổ lý lịch "${target.general.name}" vào Thùng Rác (Lưu giữ 30 ngày).`);
+  }, [currentUser, equipments, currentEquipment, currentId, trashList, showToast]);
+
+  // Restore equipment from trash
+  const handleRestoreFromTrash = useCallback((targetEqId: string) => {
+    if (!currentUser.permissions.canDelete) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để khôi phục sổ lý lịch.');
+      return;
+    }
+
+    const trashItem = trashList.find(t => t.equipment.id === targetEqId);
+    if (!trashItem) return;
+
+    // Remove from trash
+    const updatedTrash = trashList.filter(t => t.equipment.id !== targetEqId);
+    setTrashList(updatedTrash);
+    storageService.saveTrash(updatedTrash);
+
+    // Add back to active equipments
+    setEquipments(prev => {
+      const exists = prev.some(e => e.id === targetEqId);
+      const updated = exists ? prev : [trashItem.equipment, ...prev];
+      storageService.saveImmediate(updated);
+      return updated;
+    });
+
+    setCurrentId(trashItem.equipment.id);
+    showToast(`✓ Đã khôi phục thành công Sổ lý lịch "${trashItem.equipment.general.name}"!`);
+  }, [currentUser, trashList, showToast]);
+
+  // Permanently delete equipment from trash
+  const handlePermanentDeleteFromTrash = useCallback((targetEqId: string) => {
+    if (!currentUser.permissions.canDelete) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để xóa vĩnh viễn sổ lý lịch.');
+      return;
+    }
+
+    const trashItem = trashList.find(t => t.equipment.id === targetEqId);
+    const eqName = trashItem?.equipment?.general?.name || 'thiết bị';
+
+    const confirmPermanent = window.confirm(
+      `⚠️ CẢNH BÁO XÓA VĨNH VIỄN (ADMIN):\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN Sổ lý lịch:\n"${eqName}"?\n\nHành động này dữ liệu sẽ bị xóa hoàn toàn khỏi hệ thống và KHÔNG THỂ KHÔI PHỤC LẠI!`
+    );
+    if (!confirmPermanent) return;
+
+    const updatedTrash = trashList.filter(t => t.equipment.id !== targetEqId);
+    setTrashList(updatedTrash);
+    storageService.saveTrash(updatedTrash);
+    showToast(`✓ Đã xóa vĩnh viễn Sổ lý lịch "${eqName}".`);
+  }, [currentUser, trashList, showToast]);
+
+  // Empty entire trash
+  const handleEmptyTrash = useCallback(() => {
+    if (!currentUser.permissions.canDelete) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để dọn sạch thùng rác.');
+      return;
+    }
+
+    if (trashList.length === 0) return;
+
+    const confirmEmpty = window.confirm(
+      `⚠️ CẢNH BÁO DỌN SẠCH THÙNG RÁC:\n\nBạn có chắc chắn muốn DỌN SẠCH toàn bộ ${trashList.length} sổ lý lịch trong Thùng Rác?\n\nTất cả dữ liệu trong thùng rác sẽ bị XÓA VĨNH VIỄN và KHÔNG THỂ KHÔI PHỤC!`
+    );
+    if (!confirmEmpty) return;
+
+    setTrashList([]);
+    storageService.saveTrash([]);
+    showToast(`✓ Đã dọn sạch thùng rác.`);
+  }, [currentUser, trashList, showToast]);
 
   // Export current equipment JSON
   const handleExportCurrent = useCallback(() => {
@@ -407,7 +505,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#152238] text-slate-100 antialiased overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#7A75FA] text-slate-100 antialiased overflow-hidden font-sans">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#5F6471] text-white px-4 py-3 rounded-xl shadow-2xl border border-sky-400/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -434,11 +532,13 @@ export default function App() {
         onSaveData={handleManualSave}
         onResetDefaults={handleResetDefaults}
         onOpenSearchModal={() => setIsSearchModalOpen(true)}
+        onOpenTrash={() => setIsTrashModalOpen(true)}
+        trashCount={trashList.length}
         lastSaved={lastSaved}
       />
 
-      {/* Main App Canvas with Deep Sky Blue + Gray Slate Background */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-[#16273f] via-[#1c304d] to-[#253549]">
+      {/* Main App Canvas with Modern Enterprise Background */}
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-[#F8FAFC]">
         {/* Topbar Action Header */}
         <Topbar
           currentEquipment={currentEquipment}
@@ -451,6 +551,9 @@ export default function App() {
           onOpenGas={() => setActiveTab('settings')}
           onOpenSettings={() => setActiveTab('settings')}
           onOpenPdfModal={() => handleOpenPdfFullScreen(currentEquipment)}
+          onDeleteEquipment={handleDeleteCurrent}
+          onOpenTrash={() => setIsTrashModalOpen(true)}
+          trashCount={trashList.length}
           onResetDefaults={handleResetDefaults}
           searchTerm={searchTerm}
           onSearchChange={(term) => setSearchTerm(term)}
@@ -475,6 +578,8 @@ export default function App() {
                 onSelectEquipment={(id) => setCurrentId(id)}
                 onNewEquipment={() => setIsNewModalOpen(true)}
                 onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
+                onDeleteEquipment={handleDeleteCurrent}
+                currentUser={currentUser}
               />
             )}
 
@@ -484,6 +589,8 @@ export default function App() {
                 onChange={handleUpdateCurrent}
                 isReadOnly={isReadOnly}
                 onOpenLoginModal={() => setIsLoginModalOpen(true)}
+                onDeleteEquipment={handleDeleteCurrent}
+                currentUser={currentUser}
               />
             )}
 
@@ -575,6 +682,8 @@ export default function App() {
                   onSyncFromGas={handleSyncFromGas}
                   onShowToast={showToast}
                   onNavigateTab={(tab) => setActiveTab(tab)}
+                  onOpenTrash={() => setIsTrashModalOpen(true)}
+                  trashCount={trashList.length}
                 />
               )}
 
@@ -632,6 +741,19 @@ export default function App() {
               showToast(`✓ Đã chuyển đến hồ sơ: ${equipments.find(e => e.id === equipmentId)?.general.name || equipmentId}`);
             }}
             onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
+          />
+        )}
+
+        {/* Recycle Bin & Restore Modal */}
+        {isTrashModalOpen && (
+          <RecycleBinModal
+            isOpen={isTrashModalOpen}
+            onClose={() => setIsTrashModalOpen(false)}
+            trashList={trashList}
+            onRestoreItem={handleRestoreFromTrash}
+            onPermanentDeleteItem={handlePermanentDeleteFromTrash}
+            onEmptyTrash={handleEmptyTrash}
+            currentUser={currentUser}
           />
         )}
       </Suspense>

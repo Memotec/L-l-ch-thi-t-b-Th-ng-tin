@@ -58,22 +58,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const isAdmin = currentUser.role === 'admin';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-[#0b1739] border border-[#1e3c7a] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl text-slate-100 flex flex-col">
-        {/* Simple Header */}
-        <div className="bg-gradient-to-r from-[#1e40af] to-[#1d4ed8] px-5 py-4 border-b border-[#2563eb]/40 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+      <div className="bg-white border border-slate-200 rounded-xl w-full max-w-sm overflow-hidden shadow-lg text-slate-900 flex flex-col">
+        {/* Header */}
+        <div className="bg-slate-900 px-5 py-4 flex items-center justify-between text-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-sky-500/20 text-sky-400 rounded-lg border border-sky-400/30">
+            <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-400/30">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
               <h3 className="font-bold text-sm text-white">Đăng Nhập Quản Trị</h3>
-              <p className="text-[11px] text-sky-200/70">Xác thực quyền quản trị hệ thống</p>
+              <p className="text-[11px] text-slate-300">Xác thực quyền quản trị hệ thống</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -82,13 +82,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* Current User Status (if already admin, offer quick logout) */}
         {isAdmin ? (
           <div className="p-5 space-y-4">
-            <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-600/40 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-bold text-white shadow-md text-xs">
+            <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white shadow-2xs text-xs">
                 AD
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white truncate">{currentUser.displayName}</div>
-                <div className="text-[11px] text-emerald-300 font-medium">Đang có toàn quyền Quản trị viên</div>
+                <div className="text-xs font-bold text-slate-900 truncate">{currentUser.displayName}</div>
+                <div className="text-[11px] text-emerald-700 font-medium">Đang có toàn quyền Quản trị viên</div>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <button
                 type="button"
                 onClick={handleSwitchToDefault}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-all cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Đăng xuất Quản trị</span>
@@ -104,7 +104,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 bg-[#0e1d44] hover:bg-[#152c63] text-slate-300 rounded-xl text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
               >
                 Đóng
               </button>
@@ -113,15 +113,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         ) : (
           <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
             {errorMsg && (
-              <div className="p-2.5 bg-rose-950/60 border border-rose-500/50 rounded-xl text-xs text-rose-200 flex items-center gap-2 animate-in fade-in">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-sky-200 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-sky-400" />
+              <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-blue-600" />
                 <span>Tài khoản</span>
               </label>
               <input
@@ -131,13 +131,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 placeholder="Nhập tên tài khoản"
                 required
                 autoFocus
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all shadow-inner"
+                className="form-input-standard"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-sky-200 flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-sky-400" />
+              <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-blue-600" />
                 <span>Mật khẩu</span>
               </label>
               <div className="relative">
@@ -147,12 +147,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu"
                   required
-                  className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-xl px-3.5 py-2 pr-10 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all shadow-inner"
+                  className="form-input-standard pr-9"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                   title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -163,7 +163,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div className="pt-2 flex items-center gap-2">
               <button
                 type="submit"
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
               >
                 <Lock className="w-3.5 h-3.5" />
                 <span>Đăng nhập</span>
@@ -173,7 +173,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-2.5 bg-[#0e1d44] hover:bg-[#152c63] text-slate-300 rounded-xl text-xs font-medium border border-[#1e3c7a] transition-colors cursor-pointer"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
               >
                 Hủy
               </button>

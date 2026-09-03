@@ -3,11 +3,7 @@ import {
   Printer, 
   Download, 
   Settings2,
-  FileCheck,
-  Eye,
-  QrCode,
-  ExternalLink,
-  FileSpreadsheet
+  ExternalLink
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -188,43 +184,35 @@ ${content}
     return [...list, ...Array.from({ length: minLength - list.length }, () => null)];
   }
 
-  // Format date helper
-  const formatDateDisplay = (val?: string) => {
-    if (!val) return '';
-    return val;
-  };
-
   return (
     <div className="space-y-6">
       {/* Top Toolbar / Action Controls (Hidden on Print) */}
-      <div className="bg-[#091533] p-4 rounded-xl border border-[#182d5a] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-sky-950 text-sky-400 rounded-lg border border-sky-800">
-              <Printer className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                Bản In Chuẩn Đề Mục & Form Mẫu "LÝ LỊCH THIẾT BỊ" (Theo Bản Gốc PDF)
-              </h2>
-              <p className="text-xs text-sky-200/70 mt-0.5">
-                Thiết kế chính xác 100% từng trang, khung viền đôi, mục lục, bảng 2 cột giấy phép, mã QR thiết bị, kẻ dòng bảo dưỡng & sửa chữa.
-              </p>
-            </div>
+      <div className="p-4 rounded-xl bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 no-print shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-400/30">
+            <Printer className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              Bản In Chuẩn Đề Mục & Form Mẫu "LÝ LỊCH THIẾT BỊ"
+            </h2>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Khung viền đôi, mục lục, bảng 2 cột giấy phép, mã QR thiết bị, kẻ dòng bảo dưỡng & sửa chữa.
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-sky-200 bg-[#060e24] border border-[#1e3c7a] px-2.5 py-1.5 rounded-lg">
-            <Settings2 className="w-3.5 h-3.5 text-sky-400" />
-            <span>Dòng bảo dưỡng/trang:</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg">
+            <Settings2 className="w-3.5 h-3.5 text-blue-400" />
+            <span>Dòng/trang:</span>
             <select
               value={itemsPerPageMaint}
               onChange={(e) => setItemsPerPageMaint(Number(e.target.value))}
-              className="bg-[#091533] border border-[#1e3c7a] rounded px-1.5 py-0.5 font-semibold text-white text-xs focus:outline-none cursor-pointer"
+              className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-semibold text-white text-xs focus:outline-none cursor-pointer"
             >
               <option value={5}>5 dòng</option>
-              <option value={7}>7 dòng (Chuẩn PDF)</option>
+              <option value={7}>7 dòng (Chuẩn)</option>
               <option value={9}>9 dòng</option>
             </select>
           </div>
@@ -233,28 +221,28 @@ ${content}
             href={data.googleDocUrl || `https://docs.google.com/document/create?title=${encodeURIComponent('Sổ_Lý_Lịch_' + (data.general.name || data.id))}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold border border-emerald-500/40 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             title="Mở tài liệu Google Docs trực tuyến"
           >
-            <ExternalLink className="w-4 h-4 text-emerald-300" />
+            <ExternalLink className="w-3.5 h-3.5" />
             <span>Mở Google Docs</span>
           </a>
 
           <button
             onClick={handleDownloadHtml}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#060e24] hover:bg-[#12224d] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
             title="Tải file HTML nguyên bản để lưu trữ hoặc in độc lập"
           >
-            <Download className="w-4 h-4 text-sky-400" />
+            <Download className="w-3.5 h-3.5 text-blue-400" />
             <span>Tải file HTML Sổ</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-md shadow-sky-950/40 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
           >
-            <Printer className="w-4 h-4" />
-            <span>In / Xuất PDF Chuẩn (Ctrl+P)</span>
+            <Printer className="w-3.5 h-3.5" />
+            <span>In / Xuất PDF (Ctrl+P)</span>
           </button>
         </div>
       </div>
@@ -303,14 +291,14 @@ ${content}
       {/* Pages Container - Interactive Preview & Print Source */}
       <div 
         ref={printRef}
-        className="bg-slate-300 p-4 md:p-8 rounded-xl overflow-x-auto space-y-8 print:bg-white print:p-0 print:m-0 print:space-y-0"
+        className="bg-slate-200/80 p-4 md:p-8 rounded-xl overflow-x-auto space-y-8 print:bg-white print:p-0 print:m-0 print:space-y-0 border border-slate-300"
         style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
       >
         {/* ========================================================================= */}
         {/* TRANG 1: BÌA SỔ LÝ LỊCH (EXACT SCAN PAGE 1) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl relative flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 relative flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '12mm 15mm 12mm 18mm' }}
         >
           {/* Double Frame Border */}
@@ -430,7 +418,7 @@ ${content}
         {/* TRANG 2: MỤC LỤC & 1- CƠ QUAN, ĐƠN VỊ QUẢN LÝ (EXACT SCAN PAGE 2) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
         >
           <div>
@@ -520,7 +508,7 @@ ${content}
         {/* TRANG 3: 2 - SƠ LƯỢC THIẾT BỊ (EXACT SCAN PAGE 3) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
         >
           <div>
@@ -639,7 +627,7 @@ ${content}
         {/* TRANG 4: 2.1 - ĐẶC TÍNH KỸ THUẬT (EXACT SCAN PAGE 4) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
         >
           <div>
@@ -707,7 +695,7 @@ ${content}
         {/* TRANG 5: 2.2 - THÀNH PHẦN THIẾT BỊ (EXACT SCAN PAGE 5) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
         >
           <div>
@@ -760,7 +748,7 @@ ${content}
         {/* TRANG 6: 2.3 - TÀI LIỆU KỸ THUẬT KÈM THEO (EXACT SCAN PAGE 6) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
         >
           <div>
@@ -815,7 +803,7 @@ ${content}
           return (
             <div 
               key={`maint-page-${pageIdx}`}
-              className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+              className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
               style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
             >
               <div>
@@ -877,7 +865,7 @@ ${content}
         {/* TRANG CUỐI: 4 - KIỂM TRA - SỬA CHỮA - THAY THẾ - THAY ĐỔI (EXACT SCAN PAGE 10) */}
         {/* ========================================================================= */}
         <div 
-          className="page-sheet bg-white mx-auto shadow-2xl flex flex-col justify-between"
+          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
           style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
         >
           <div>

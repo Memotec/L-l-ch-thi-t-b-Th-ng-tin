@@ -107,18 +107,18 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-      <div className="bg-[#091533] rounded-2xl border border-[#182d5a] shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 bg-[#040a1c] text-white flex items-center justify-between border-b border-[#182d5a]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-lg max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-sky-500 rounded-lg text-white">
+            <div className="p-1.5 bg-blue-500 rounded-lg text-white">
               <Plus className="w-4 h-4" />
             </div>
             <h3 className="font-bold text-sm text-white">Thêm Hồ Sơ Lý Lịch Thiết Bị Mới</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -127,7 +127,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {/* Category Select */}
           <div className="space-y-1.5">
-            <label className="font-bold text-sky-200 block">Chủng loại thiết bị CNS *</label>
+            <label className="font-bold text-slate-900 block">Chủng loại thiết bị CNS *</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'VHF/UHF', label: 'VHF / UHF Radio', icon: Radio },
@@ -143,13 +143,13 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
                     key={item.id}
                     type="button"
                     onClick={() => setCategory(item.id as EquipmentCategory)}
-                    className={`p-2 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                    className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
                       category === item.id
-                        ? 'bg-sky-600 border-sky-400 text-white font-bold'
-                        : 'bg-[#060e24] border-[#1e3c7a] hover:bg-[#12224d] text-sky-200/80'
+                        ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-2xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
                     }`}
                   >
-                    <Icon className="w-4 h-4 text-sky-400 shrink-0" />
+                    <Icon className="w-4 h-4 text-blue-600 shrink-0" />
                     <span className="truncate text-[11px]">{item.label}</span>
                   </button>
                 );
@@ -158,100 +158,100 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-bold text-sky-200 block">Tên thiết bị *</label>
+            <label className="font-bold text-slate-900 block">Tên thiết bị *</label>
             <input
               type="text"
               required
               placeholder="Nhập tên thiết bị"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2.5 font-semibold text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+              className="form-input-standard font-semibold"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-bold text-sky-200 block">Kiểu loại (Model)</label>
+              <label className="font-bold text-slate-900 block">Kiểu loại (Model)</label>
               <input
                 type="text"
                 placeholder="Nhập model thiết bị"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white font-mono placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="form-input-standard font-mono"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-sky-200 block">Hãng sản xuất</label>
+              <label className="font-bold text-slate-900 block">Hãng sản xuất</label>
               <input
                 type="text"
                 placeholder="Nhập hãng sản xuất"
                 value={manufacturer}
                 onChange={(e) => setManufacturer(e.target.value)}
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="form-input-standard"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-bold text-sky-200 block">Số Serial</label>
+              <label className="font-bold text-slate-900 block">Số Serial</label>
               <input
                 type="text"
                 placeholder="Nhập số serial"
                 value={serial}
                 onChange={(e) => setSerial(e.target.value)}
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white font-mono placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="form-input-standard font-mono"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-sky-200 block">Mã Tài Sản Quản Lý</label>
+              <label className="font-bold text-slate-900 block">Mã Tài Sản Quản Lý</label>
               <input
                 type="text"
                 placeholder="Nhập mã tài sản"
                 value={assetNo}
                 onChange={(e) => setAssetNo(e.target.value)}
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white font-mono placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="form-input-standard font-mono"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-bold text-sky-200 block">Đơn vị quản lý</label>
+              <label className="font-bold text-slate-900 block">Đơn vị quản lý</label>
               <input
                 type="text"
                 placeholder="Nhập đơn vị quản lý"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="form-input-standard"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-sky-200 block">Vị trí lắp đặt</label>
+              <label className="font-bold text-slate-900 block">Vị trí lắp đặt</label>
               <input
                 type="text"
                 placeholder="Nhập vị trí lắp đặt"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-[#060e24] border border-[#1e3c7a] rounded-lg p-2 text-white placeholder:text-slate-500 focus:bg-[#0a183d] focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="form-input-standard"
               />
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#182d5a] flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-[#060e24] hover:bg-[#12224d] text-sky-200 border border-[#1e3c7a] rounded-lg font-semibold transition-colors cursor-pointer"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Tạo Sổ Lý Lịch Mới</span>

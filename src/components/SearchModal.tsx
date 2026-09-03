@@ -16,17 +16,12 @@ import {
   FileText, 
   Cpu, 
   Sliders, 
-  Building2, 
   MapPin, 
-  Printer, 
-  QrCode, 
   ChevronRight, 
   Clock, 
-  CheckCircle2, 
   Sparkles,
   ArrowRight,
-  ExternalLink,
-  Tag
+  ExternalLink
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory } from '../types';
 
@@ -124,14 +119,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   // Helper category icons
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
-      case 'VHF/UHF': return <Radio className="w-3.5 h-3.5 text-sky-400" />;
-      case 'VIBA': return <HardDrive className="w-3.5 h-3.5 text-emerald-400" />;
-      case 'VOICE': return <PhoneCall className="w-3.5 h-3.5 text-amber-400" />;
-      case 'POWER': return <Zap className="w-3.5 h-3.5 text-yellow-400" />;
-      case 'IT': return <Server className="w-3.5 h-3.5 text-purple-400" />;
-      case 'RADAR_ADS': return <Radar className="w-3.5 h-3.5 text-rose-400" />;
-      case 'NAV': return <Compass className="w-3.5 h-3.5 text-cyan-400" />;
-      default: return <Box className="w-3.5 h-3.5 text-slate-400" />;
+      case 'VHF/UHF': return <Radio className="w-3.5 h-3.5 text-blue-600" />;
+      case 'VIBA': return <HardDrive className="w-3.5 h-3.5 text-emerald-600" />;
+      case 'VOICE': return <PhoneCall className="w-3.5 h-3.5 text-amber-600" />;
+      case 'POWER': return <Zap className="w-3.5 h-3.5 text-yellow-600" />;
+      case 'IT': return <Server className="w-3.5 h-3.5 text-purple-600" />;
+      case 'RADAR_ADS': return <Radar className="w-3.5 h-3.5 text-rose-600" />;
+      case 'NAV': return <Compass className="w-3.5 h-3.5 text-cyan-600" />;
+      default: return <Box className="w-3.5 h-3.5 text-slate-500" />;
     }
   };
 
@@ -140,44 +135,44 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     switch (type) {
       case 'EQUIPMENT':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1">
-            <Layers className="w-3 h-3" /> Sổ Thiết Bị
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+            <Layers className="w-3 h-3 text-blue-600" /> Sổ Thiết Bị
           </span>
         );
       case 'COMPONENT':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
-            <Cpu className="w-3 h-3" /> Linh Kiện / Bo Mạch
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+            <Cpu className="w-3 h-3 text-purple-600" /> Linh Kiện / Bo Mạch
           </span>
         );
       case 'MAINTENANCE':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-            <Wrench className="w-3 h-3" /> Nhật Ký Bảo Dưỡng
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+            <Wrench className="w-3 h-3 text-emerald-600" /> Nhật Ký Bảo Dưỡng
           </span>
         );
       case 'REPAIR':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> Sự Cố & Sửa Chữa
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3 text-amber-600" /> Sự Cố & Sửa Chữa
           </span>
         );
       case 'DOC':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
-            <FileText className="w-3 h-3" /> Hồ Sơ & Bản Vẽ
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+            <FileText className="w-3 h-3 text-slate-600" /> Hồ Sơ & Bản Vẽ
           </span>
         );
       case 'SPEC':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
-            <Sliders className="w-3 h-3" /> Thông Số Kỹ Thuật
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 flex items-center gap-1">
+            <Sliders className="w-3 h-3 text-cyan-600" /> Thông Số Kỹ Thuật
           </span>
         );
       case 'LOCATION':
         return (
-          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1">
-            <MapPin className="w-3 h-3" /> Vị Trí & Đài Trạm
+          <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+            <MapPin className="w-3 h-3 text-indigo-600" /> Vị Trí & Đài Trạm
           </span>
         );
     }
@@ -192,7 +187,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       <>
         {parts.map((part, i) => 
           part.toLowerCase() === q.toLowerCase() ? (
-            <mark key={i} className="bg-amber-400/30 text-amber-200 font-bold px-0.5 rounded">
+            <mark key={i} className="bg-amber-100 text-amber-900 font-bold px-0.5 rounded">
               {part}
             </mark>
           ) : (
@@ -486,16 +481,16 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-6 sm:pt-10 px-3 sm:px-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-6 sm:pt-10 px-3 sm:px-6 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
       {/* Search Modal Card */}
       <div 
-        className="w-full max-w-4xl cns-glass-card rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[88vh]"
+        className="w-full max-w-4xl bg-white rounded-xl border border-slate-200 shadow-xl flex flex-col overflow-hidden max-h-[88vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Search Header */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0d1e47] via-[#091533] to-[#0d1e47] border-b border-[#182d5a] flex flex-col gap-3">
+        <div className="p-4 sm:p-5 bg-slate-900 text-white flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-blue-600 to-sky-500 rounded-xl text-white shadow-lg border border-sky-400/40 shrink-0">
+            <div className="p-2.5 bg-blue-600 rounded-lg text-white shadow-xs shrink-0">
               <Search className="w-5 h-5" />
             </div>
 
@@ -511,7 +506,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                   }
                 }}
                 placeholder="Tìm kiếm: Tên thiết bị, Serial, Linh kiện, Lịch sử bảo dưỡng, Sự cố, IP, Tần số, Vị trí..."
-                className="w-full bg-[#050c1e] text-white text-sm sm:text-base font-semibold placeholder-slate-400 pl-4 pr-10 py-3 rounded-xl border border-[#1e3c7a] focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 shadow-inner"
+                className="w-full bg-slate-800 text-white text-sm sm:text-base font-semibold placeholder-slate-400 pl-4 pr-10 py-2.5 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {query && (
                 <button
@@ -519,7 +514,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     setQuery('');
                     inputRef.current?.focus();
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-md bg-[#0e1d44] hover:bg-[#162d66] transition-colors cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-md hover:bg-slate-700 transition-colors cursor-pointer"
                   title="Xóa từ khóa"
                 >
                   <X className="w-4 h-4" />
@@ -529,7 +524,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-2.5 text-slate-400 hover:text-white bg-[#060e24] hover:bg-[#162d66] border border-[#1e3c7a] rounded-xl transition-all cursor-pointer shrink-0"
+              className="p-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all cursor-pointer shrink-0"
               title="Đóng cửa sổ tìm kiếm (Esc)"
             >
               <X className="w-5 h-5" />
@@ -542,12 +537,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('ALL')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'ALL'
-                  ? 'bg-sky-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
               <span>Tất cả mục</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px] font-mono font-bold">
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-slate-300 text-[10px] font-mono font-bold">
                 {countStats.ALL}
               </span>
             </button>
@@ -556,14 +551,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('EQUIPMENT')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'EQUIPMENT'
-                  ? 'bg-sky-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              <Layers className="w-3.5 h-3.5 text-sky-300" />
+              <Layers className="w-3.5 h-3.5 text-blue-400" />
               <span>Sổ Thiết Bị</span>
               {countStats.EQUIPMENT > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-sky-950 text-sky-300 text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-blue-400 text-[10px] font-mono font-bold">
                   {countStats.EQUIPMENT}
                 </span>
               )}
@@ -573,14 +568,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('COMPONENT')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'COMPONENT'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-purple-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              <Cpu className="w-3.5 h-3.5 text-purple-300" />
+              <Cpu className="w-3.5 h-3.5 text-purple-400" />
               <span>Linh Kiện</span>
               {countStats.COMPONENT > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-purple-950 text-purple-300 text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-purple-400 text-[10px] font-mono font-bold">
                   {countStats.COMPONENT}
                 </span>
               )}
@@ -590,14 +585,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('MAINTENANCE')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'MAINTENANCE'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              <Wrench className="w-3.5 h-3.5 text-emerald-300" />
+              <Wrench className="w-3.5 h-3.5 text-emerald-400" />
               <span>Bảo Dưỡng</span>
               {countStats.MAINTENANCE > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-emerald-400 text-[10px] font-mono font-bold">
                   {countStats.MAINTENANCE}
                 </span>
               )}
@@ -607,14 +602,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('REPAIR')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'REPAIR'
-                  ? 'bg-amber-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-amber-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
               <span>Sự Cố & Sửa Chữa</span>
               {countStats.REPAIR > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-950 text-amber-300 text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-amber-400 text-[10px] font-mono font-bold">
                   {countStats.REPAIR}
                 </span>
               )}
@@ -624,14 +619,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('SPEC')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'SPEC'
-                  ? 'bg-cyan-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-cyan-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              <Sliders className="w-3.5 h-3.5 text-cyan-300" />
+              <Sliders className="w-3.5 h-3.5 text-cyan-400" />
               <span>Thông Số & IP</span>
               {countStats.SPEC > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-cyan-950 text-cyan-300 text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-cyan-400 text-[10px] font-mono font-bold">
                   {countStats.SPEC}
                 </span>
               )}
@@ -641,14 +636,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               onClick={() => setFilterType('DOC')}
               className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
                 filterType === 'DOC'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-[#060e24] text-slate-300 hover:text-white hover:bg-[#0e1d44] border border-[#182d5a]'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-blue-300" />
+              <FileText className="w-3.5 h-3.5 text-slate-300" />
               <span>Tài Liệu</span>
               {countStats.DOC > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-blue-950 text-blue-300 text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-slate-300 text-[10px] font-mono font-bold">
                   {countStats.DOC}
                 </span>
               )}
@@ -656,17 +651,17 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           </div>
 
           {/* Layer 2: Equipment Category & Sorting Filter Bar */}
-          <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-[#182d5a]/60 text-xs">
+          <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-slate-800 text-xs">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <span className="text-[11px] font-bold text-sky-300 uppercase tracking-wider shrink-0">Chủng loại:</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Chủng loại:</span>
               {(['ALL', 'VHF/UHF', 'VIBA', 'VOICE', 'POWER', 'IT', 'RADAR_ADS', 'NAV'] as EquipmentCategoryFilter[]).map(cat => (
                 <button
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
                   className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer shrink-0 ${
                     categoryFilter === cat
-                      ? 'bg-sky-500 text-white font-bold'
-                      : 'bg-[#060e24] text-sky-200/70 hover:text-white border border-[#182d5a]'
+                      ? 'bg-blue-600 text-white font-bold'
+                      : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
                   }`}
                 >
                   {cat === 'ALL' ? 'Tất cả nhóm' : cat}
@@ -675,12 +670,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] text-sky-300/80">Sắp xếp:</span>
+              <span className="text-[11px] text-slate-400">Sắp xếp:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 aria-label="Sắp xếp kết quả tìm kiếm"
-                className="px-2 py-1 bg-[#060e24] border border-[#1e3c7a] rounded text-[11px] text-sky-200 focus:outline-none cursor-pointer"
+                className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-[11px] text-slate-200 focus:outline-none cursor-pointer"
               >
                 <option value="relevance">Độ liên quan</option>
                 <option value="date">Ngày gần nhất</option>
@@ -691,15 +686,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         </div>
 
         {/* Modal Results & Content Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 bg-[#060e24]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 bg-slate-50">
           {/* Recent Searches / Fast Keyword Chips when no query */}
           {!query.trim() && (
             <div className="space-y-5 py-4">
               {recentSearches.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between text-xs font-bold text-sky-200 mb-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-2">
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-sky-400" />
+                      <Clock className="w-3.5 h-3.5 text-blue-600" />
                       Tìm kiếm gần đây & Từ khóa phổ biến:
                     </span>
                     <button
@@ -709,7 +704,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                           localStorage.removeItem('cns_recent_searches');
                         } catch {}
                       }}
-                      className="text-[11px] text-slate-400 hover:text-sky-300 cursor-pointer"
+                      className="text-[11px] text-slate-500 hover:text-blue-600 cursor-pointer"
                     >
                       Xóa lịch sử
                     </button>
@@ -719,9 +714,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       <button
                         key={i}
                         onClick={() => handleQuickSearch(term)}
-                        className="px-3 py-1.5 bg-[#0b1739] hover:bg-[#12285a] text-sky-200 hover:text-white rounded-xl border border-[#1e3c7a] text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                        className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                       >
-                        <Search className="w-3 h-3 text-sky-400" />
+                        <Search className="w-3 h-3 text-blue-600" />
                         <span>{term}</span>
                       </button>
                     ))}
@@ -730,34 +725,34 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               )}
 
               {/* Suggestions / Shortcuts */}
-              <div className="p-4 cns-glass-card rounded-xl space-y-2">
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+              <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
                   Mẹo tra cứu nhanh toàn diện hệ thống:
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
                   <div className="flex items-start gap-2">
-                    <span className="font-mono text-sky-400 font-bold">•</span>
-                    <span>Gõ <b>Tần số</b> (ví dụ: <code className="text-amber-300">125.6</code>) để tìm đài phát VHF tương ứng</span>
+                    <span className="font-mono text-blue-600 font-bold">•</span>
+                    <span>Gõ <b>Tần số</b> (ví dụ: <code className="text-amber-700 font-semibold">125.6</code>) để tìm đài phát VHF tương ứng</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-mono text-sky-400 font-bold">•</span>
-                    <span>Gõ <b>Địa chỉ IP</b> (ví dụ: <code className="text-amber-300">192.168</code>) để tra cứu thiết bị mạng & máy chủ</span>
+                    <span className="font-mono text-blue-600 font-bold">•</span>
+                    <span>Gõ <b>Địa chỉ IP</b> (ví dụ: <code className="text-amber-700 font-semibold">192.168</code>) để tra cứu thiết bị mạng & máy chủ</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-mono text-sky-400 font-bold">•</span>
-                    <span>Gõ <b>Mã bo mạch</b> (ví dụ: <code className="text-amber-300">PA-</code>, <code className="text-amber-300">MOD-</code>) để tìm linh kiện & phụ tùng</span>
+                    <span className="font-mono text-blue-600 font-bold">•</span>
+                    <span>Gõ <b>Mã bo mạch</b> (ví dụ: <code className="text-amber-700 font-semibold">PA-</code>, <code className="text-amber-700 font-semibold">MOD-</code>) để tìm linh kiện & phụ tùng</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-mono text-sky-400 font-bold">•</span>
-                    <span>Gõ <b>Tên kỹ sư / Đài trạm</b> (ví dụ: <code className="text-amber-300">Tân Sơn Nhất</code>, <code className="text-amber-300">C2</code>) để lọc thiết bị</span>
+                    <span className="font-mono text-blue-600 font-bold">•</span>
+                    <span>Gõ <b>Tên kỹ sư / Đài trạm</b> (ví dụ: <code className="text-amber-700 font-semibold">Tân Sơn Nhất</code>, <code className="text-amber-700 font-semibold">C2</code>) để lọc thiết bị</span>
                   </div>
                 </div>
               </div>
 
               {/* Quick Jump to all registered books */}
               <div>
-                <div className="text-xs font-bold text-slate-300 mb-2">
+                <div className="text-xs font-bold text-slate-700 mb-2">
                   Danh mục toàn bộ {equipments.length} sổ lý lịch trong hệ thống:
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -768,18 +763,18 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         onSelectResult(eq.id, 'general');
                         onClose();
                       }}
-                      className="p-3 cns-glass-card hover:border-sky-400/50 rounded-xl transition-all cursor-pointer flex items-center justify-between"
+                      className="p-3 bg-white border border-slate-200 hover:border-blue-400 rounded-xl transition-all cursor-pointer flex items-center justify-between shadow-2xs"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="p-1.5 rounded-lg bg-[#060e24] border border-[#1e3c7a]">
+                        <div className="p-1.5 rounded-lg bg-slate-100 border border-slate-200">
                           {getCategoryIcon(eq.general.category)}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-xs font-bold text-white truncate">{eq.general.name}</div>
-                          <div className="text-[11px] text-slate-400 font-mono">SN: {eq.general.serial || 'N/A'} • {eq.org.location || 'N/A'}</div>
+                          <div className="text-xs font-bold text-slate-900 truncate">{eq.general.name}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">SN: {eq.general.serial || 'N/A'} • {eq.org.location || 'N/A'}</div>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-sky-400 shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -791,14 +786,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           {query.trim() && (
             <div className="space-y-2.5">
               {filteredResults.length === 0 ? (
-                <div className="py-16 text-center text-slate-400 space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-[#0b1739] border border-[#1e3c7a] flex items-center justify-center mx-auto text-slate-400">
+                <div className="py-16 text-center text-slate-500 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center mx-auto text-slate-500">
                     <Search className="w-6 h-6" />
                   </div>
-                  <div className="text-sm font-bold text-slate-200">
+                  <div className="text-sm font-bold text-slate-800">
                     Không tìm thấy thông tin nào phù hợp với từ khóa "{query}"
                   </div>
-                  <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
                     Thử tìm kiếm với từ khóa ngắn hơn, kiểm tra lại số Serial, mã Part No hoặc bỏ các bộ lọc đang chọn.
                   </p>
                 </div>
@@ -810,25 +805,25 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     <div
                       key={item.id}
                       onClick={() => handleSelect(item)}
-                      className="p-3.5 cns-glass-card hover:border-sky-400/60 rounded-xl transition-all cursor-pointer flex flex-col gap-2 group shadow-sm"
+                      className="p-3.5 bg-white border border-slate-200 hover:border-blue-400 rounded-xl transition-all cursor-pointer flex flex-col gap-2 group shadow-2xs"
                     >
                       {/* Item Top Meta */}
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-2 flex-wrap">
                           {getTypeBadge(item.categoryType)}
-                          <div className="flex items-center gap-1 text-[11px] text-sky-300/80 font-mono">
-                            <span>Sổ: <b className="text-white font-semibold">{item.equipmentName}</b></span>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-600 font-mono">
+                            <span>Sổ: <b className="text-slate-900 font-semibold">{item.equipmentName}</b></span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 text-[11px]">
                           {item.date && (
-                            <span className="text-slate-400 font-mono flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-slate-500" />
+                            <span className="text-slate-500 font-mono flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-400" />
                               {item.date}
                             </span>
                           )}
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#060e24] text-sky-200 border border-[#1e3c7a]">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                             Mục: {item.targetTab.toUpperCase()}
                           </span>
                         </div>
@@ -837,10 +832,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       {/* Item Title & Match Highlight */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1 min-w-0">
-                          <h4 className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                          <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                             {highlightMatch(item.title, query)}
                           </h4>
-                          <p className="text-xs text-slate-300/90 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                             {highlightMatch(item.snippet, query)}
                           </p>
                         </div>
@@ -851,7 +846,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                             e.stopPropagation();
                             handleSelect(item);
                           }}
-                          className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
                         >
                           <span>Mở ngay</span>
                           <ArrowRight className="w-3 h-3" />
@@ -859,13 +854,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       </div>
 
                       {/* Equipment parent info footer */}
-                      <div className="pt-2 border-t border-[#122550] flex items-center justify-between text-[11px] text-slate-400 flex-wrap gap-2">
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 flex-wrap gap-2">
                         <div className="flex items-center gap-2 font-mono">
-                          <span>Chủng loại: <b className="text-sky-300">{item.equipmentCategory}</b></span>
+                          <span>Chủng loại: <b className="text-slate-800">{item.equipmentCategory}</b></span>
                           <span>•</span>
-                          <span>Model: <b className="text-slate-200">{item.equipmentModel}</b></span>
+                          <span>Model: <b className="text-slate-800">{item.equipmentModel}</b></span>
                           <span>•</span>
-                          <span>SN: <b className="text-sky-300">{item.equipmentSerial}</b></span>
+                          <span>SN: <b className="text-blue-700">{item.equipmentSerial}</b></span>
                         </div>
 
                         <div className="flex items-center gap-1.5">
@@ -875,7 +870,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                 e.stopPropagation();
                                 onOpenPdfModal(targetEq);
                               }}
-                              className="px-2 py-0.5 bg-[#060e24] hover:bg-[#12285a] text-amber-300 rounded border border-[#1e3c7a] text-[10.5px] font-semibold transition-colors cursor-pointer"
+                              className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-amber-800 rounded border border-slate-200 text-[10.5px] font-semibold transition-colors cursor-pointer"
                               title="Xem nhanh bản PDF chuẩn A4"
                             >
                               PDF A4
@@ -887,14 +882,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="px-2 py-0.5 bg-[#060e24] hover:bg-[#12285a] text-emerald-300 rounded border border-[#1e3c7a] text-[10.5px] font-semibold transition-colors flex items-center gap-1"
+                              className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-emerald-800 rounded border border-slate-200 text-[10.5px] font-semibold transition-colors flex items-center gap-1"
                               title="Mở Google Doc"
                             >
                               <ExternalLink className="w-2.5 h-2.5" />
                               <span>Doc</span>
                             </a>
                           )}
-                          <span className="text-sky-400 group-hover:translate-x-0.5 transition-transform">
+                          <span className="text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform">
                             Chuyển đến tab {item.targetTab} →
                           </span>
                         </div>
@@ -908,19 +903,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         </div>
 
         {/* Modal Footer Controls & Keyboard Shortcuts */}
-        <div className="p-3.5 bg-[#050c1e] border-t border-[#182d5a] flex items-center justify-between text-xs text-slate-400">
+        <div className="p-3.5 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-[#0c1836] border border-[#1e3c7a] rounded text-[10px] font-mono text-sky-300">Esc</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-mono text-slate-700">Esc</kbd>
               <span>Đóng</span>
             </span>
             <span className="flex items-center gap-1 hidden sm:inline-flex">
-              <kbd className="px-1.5 py-0.5 bg-[#0c1836] border border-[#1e3c7a] rounded text-[10px] font-mono text-sky-300">Enter</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-mono text-slate-700">Enter</kbd>
               <span>Mở kết quả đầu</span>
             </span>
           </div>
 
-          <div className="text-[11.5px] text-sky-300 font-medium">
+          <div className="text-[11.5px] text-slate-700 font-medium">
             {query.trim() ? (
               <span>Tìm thấy <b>{filteredResults.length}</b> kết quả cho "<b>{query}</b>"</span>
             ) : (

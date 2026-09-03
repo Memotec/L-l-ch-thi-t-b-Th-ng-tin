@@ -1,7 +1,9 @@
-import { EquipmentData } from '../types';
+import { EquipmentData, TrashEquipmentItem } from '../types';
 import { createEmptyEquipment } from '../sampleData';
 
 const STORAGE_KEY = 'cns_multi_equipment_data_v2';
+const TRASH_STORAGE_KEY = 'cns_trash_equipment_data_v1';
+const TRASH_RETENTION_DAYS = 30;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const storageService = {
@@ -35,6 +37,54 @@ export const storageService = {
       return true;
     } catch (err) {
       console.error('Failed to save equipments immediately to localStorage:', err);
+      return false;
+    }
+  },
+
+  /**
+   * Loads trash equipment items, auto-purging items deleted more than 30 days ago
+   */
+  loadTrash(): TrashEquipmentItem[] {
+    try {
+      if (typeof window === 'undefined') return [];
+      const raw = localStorage.getItem(TRASH_STORAGE_KEY);
+      if (!raw) return [];
+
+      const parsed: TrashEquipmentItem[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+
+      const now = Date.now();
+      const maxAgeMs = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+      // Filter out items older than 30 days
+      const validItems = parsed.filter(item => {
+        if (!item || !item.deletedAt || !item.equipment) return false;
+        const deletedTime = new Date(item.deletedAt).getTime();
+        return (now - deletedTime) <= maxAgeMs;
+      });
+
+      // If any items were purged, update localStorage
+      if (validItems.length !== parsed.length) {
+        this.saveTrash(validItems);
+      }
+
+      return validItems;
+    } catch (err) {
+      console.error('Failed to load trash from localStorage:', err);
+      return [];
+    }
+  },
+
+  /**
+   * Saves trash list to localStorage
+   */
+  saveTrash(trashList: TrashEquipmentItem[]): boolean {
+    try {
+      if (typeof window === 'undefined') return false;
+      localStorage.setItem(TRASH_STORAGE_KEY, JSON.stringify(trashList));
+      return true;
+    } catch (err) {
+      console.error('Failed to save trash to localStorage:', err);
       return false;
     }
   },

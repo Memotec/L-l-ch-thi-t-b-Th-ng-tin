@@ -1,3 +1,9 @@
+export interface TrashEquipmentItem {
+  equipment: EquipmentData;
+  deletedAt: string;
+  deletedBy?: string;
+}
+
 export type EquipmentCategory = 
   | 'VHF/UHF'
   | 'Ghép Kênh'
