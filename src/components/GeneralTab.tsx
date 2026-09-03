@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
-  Award, 
   Calendar, 
-  Globe2, 
+  Award, 
   Plus, 
-  Trash2,
-  AlertTriangle
+  Trash2, 
+  Globe2, 
+  AlertTriangle,
+  Building,
+  User,
+  ShieldCheck,
+  Copy,
+  Check
 } from 'lucide-react';
 import { EquipmentData, LicenseRow, AppUser } from '../types';
 
@@ -14,20 +19,22 @@ interface GeneralTabProps {
   data: EquipmentData;
   onChange: (updated: EquipmentData) => void;
   isReadOnly?: boolean;
+  currentUser?: AppUser;
   onOpenLoginModal?: () => void;
   onDeleteEquipment?: () => void;
-  currentUser?: AppUser;
 }
 
 export const GeneralTab: React.FC<GeneralTabProps> = ({ 
   data, 
   onChange,
   isReadOnly = false,
+  currentUser,
   onOpenLoginModal,
-  onDeleteEquipment,
-  currentUser
+  onDeleteEquipment
 }) => {
-  const updateGeneral = (field: string, value: any) => {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const updateGeneral = (field: string, value: string) => {
     if (isReadOnly) return;
     onChange({
       ...data,
@@ -38,9 +45,20 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     });
   };
 
+  const updateOrg = (field: string, value: string) => {
+    if (isReadOnly) return;
+    onChange({
+      ...data,
+      org: {
+        ...data.org,
+        [field]: value
+      }
+    });
+  };
+
   const addLicense = () => {
     if (isReadOnly) return;
-    const newLicense: LicenseRow = {
+    const newLic: LicenseRow = {
       id: `lic-${Date.now()}`,
       startNo: '',
       startDate: new Date().toISOString().split('T')[0],
@@ -50,7 +68,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     };
     onChange({
       ...data,
-      licenses: [...data.licenses, newLicense]
+      licenses: [...data.licenses, newLic]
     });
   };
 
@@ -67,10 +85,23 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     onChange({ ...data, licenses: newLicenses });
   };
 
-  // Check calibration expiry status
-  const nextCalDate = data.general.nextCalDate ? new Date(data.general.nextCalDate) : null;
-  const today = new Date();
-  const daysUntilCal = nextCalDate ? Math.ceil((nextCalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+  const handleCopy = (text: string, key: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1800);
+  };
+
+  // Check calibration countdown
+  const getCalibrationCountdown = () => {
+    if (!data.general.nextCalDate) return null;
+    const target = new Date(data.general.nextCalDate).getTime();
+    const now = new Date().getTime();
+    const diffDays = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const daysUntilCal = getCalibrationCountdown();
 
   return (
     <div className="space-y-6">
@@ -81,7 +112,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
             <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">
               CHỈ XEM (VIEWER)
             </span>
-            <span>Bạn đang ở chế độ xem và tra cứu. Để chỉnh sửa dữ liệu, vui lòng đăng nhập tài khoản Quản trị viên (Admin).</span>
+            <span>Bạn đang ở chế độ xem thông tin chung. Để sửa các trường dữ liệu pháp lý & tổ chức, vui lòng đăng nhập Quản trị viên.</span>
           </div>
           {onOpenLoginModal && (
             <button
@@ -94,9 +125,9 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
         </div>
       )}
 
-      {/* Expiry / Calibration Notice Banner if upcoming */}
-      {daysUntilCal !== null && daysUntilCal <= 60 && (
-        <div className={`p-4 rounded-xl border flex items-center gap-3 ${
+      {/* Calibration Alert Ribbon if within 30 days or overdue */}
+      {daysUntilCal !== null && daysUntilCal <= 30 && (
+        <div className={`p-4 rounded-xl border flex items-center gap-3.5 ${
           daysUntilCal < 0 
             ? 'bg-rose-50 border-rose-200 text-rose-800'
             : 'bg-amber-50 border-amber-200 text-amber-800'
@@ -123,7 +154,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               <button
                 onClick={onDeleteEquipment}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 transition-all cursor-pointer shadow-xs"
-                title="Xóa vĩnh viễn sổ lý lịch thiết bị này (Admin)"
+                title="Xóa sổ lý lịch thiết bị này"
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                 <span>Xóa Sổ Lý Lịch</span>
@@ -139,7 +170,19 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Tên thiết bị</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-700">Tên thiết bị</label>
+              {data.general.name && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(data.general.name, 'name')}
+                  className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedKey === 'name' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                  <span>{copiedKey === 'name' ? 'Đã sao chép' : 'Sao chép'}</span>
+                </button>
+              )}
+            </div>
             <input
               type="text"
               disabled={isReadOnly}
@@ -161,7 +204,19 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Kiểu loại (Model)</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-700">Kiểu loại (Model)</label>
+              {data.general.model && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(data.general.model, 'model')}
+                  className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedKey === 'model' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                  <span>{copiedKey === 'model' ? 'Đã sao chép' : 'Sao chép'}</span>
+                </button>
+              )}
+            </div>
             <input
               type="text"
               disabled={isReadOnly}
@@ -184,7 +239,19 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Số Serial / Part No</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-700">Số Serial / Part No</label>
+              {data.general.serial && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(data.general.serial, 'serial')}
+                  className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedKey === 'serial' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                  <span>{copiedKey === 'serial' ? 'Đã sao chép' : 'Sao chép'}</span>
+                </button>
+              )}
+            </div>
             <input
               type="text"
               disabled={isReadOnly}
@@ -262,6 +329,100 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               value={data.general.nextCalDate || ''}
               onChange={(e) => updateGeneral('nextCalDate', e.target.value)}
               className="form-input-standard font-semibold text-amber-700 md:w-1/3"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Organizational Ownership & Management Units */}
+      <div className="enterprise-card p-6">
+        <div className="border-b border-slate-200 pb-3 mb-5">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Building className="w-5 h-5 text-blue-600" />
+            Cơ quan Quản lý, Vị trí lắp đặt & Nhân sự chịu trách nhiệm
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">Phân cấp quản lý tài sản theo hệ thống Tổng công ty Quản lý bay Việt Nam</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">Đơn vị quản lý cấp trên (Công ty / Trung tâm)</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              value={data.org.companyName || ''}
+              onChange={(e) => updateOrg('companyName', e.target.value)}
+              className="form-input-standard font-semibold"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">Bộ phận / Đội / Đài kỹ thuật trực tiếp</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              value={data.org.unit || ''}
+              onChange={(e) => updateOrg('unit', e.target.value)}
+              className="form-input-standard"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-700">Vị trí lắp đặt / Trạm / Phòng máy</label>
+              {data.org.location && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(data.org.location, 'location')}
+                  className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedKey === 'location' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                  <span>{copiedKey === 'location' ? 'Đã sao chép' : 'Sao chép'}</span>
+                </button>
+              )}
+            </div>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              value={data.org.location || ''}
+              onChange={(e) => updateOrg('location', e.target.value)}
+              className="form-input-standard font-semibold text-slate-900"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">Số điện thoại liên hệ / Trực ban kỹ thuật</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              placeholder="VD: 028.38485383 - Ext 123"
+              value={data.org.phoneContact || ''}
+              onChange={(e) => updateOrg('phoneContact', e.target.value)}
+              className="form-input-standard font-mono"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">Kỹ sư chính phụ trách trang thiết bị</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              placeholder="VD: Kỹ sư Nguyễn Văn A"
+              value={data.org.primaryEngineer || ''}
+              onChange={(e) => updateOrg('primaryEngineer', e.target.value)}
+              className="form-input-standard"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">Cán bộ phụ trách / Đội trưởng</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              placeholder="VD: Trưởng đài / Đội trưởng"
+              value={data.org.supervisor || ''}
+              onChange={(e) => updateOrg('supervisor', e.target.value)}
+              className="form-input-standard"
             />
           </div>
         </div>

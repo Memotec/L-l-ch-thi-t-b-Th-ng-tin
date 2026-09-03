@@ -16,6 +16,7 @@ import { DocsTab } from './components/DocsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
 import { RepairTab } from './components/RepairTab';
 import { SectionNavRibbon } from './components/SectionNavRibbon';
+import { QuickLookupBar } from './components/QuickLookupBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
 import { ConfirmModal } from './components/ConfirmModal';
@@ -789,6 +790,7 @@ export default function App() {
         {/* Topbar Action Header */}
         <Topbar
           currentEquipment={currentEquipment}
+          equipments={equipments}
           currentUser={currentUser}
           onOpenLoginModal={() => setIsLoginModalOpen(true)}
           onSaveData={handleManualSave}
@@ -812,6 +814,17 @@ export default function App() {
 
         {/* Tab Body Viewports with ErrorBoundary and Suspense */}
         <main className="p-6 flex-1 max-w-7xl w-full mx-auto">
+          {/* Quick HUD Bar for Equipment Details and 1-Click Copy */}
+          {activeTab !== 'dashboard' && activeTab !== 'printPreview' && activeTab !== 'settings' && (
+            <QuickLookupBar
+              equipment={currentEquipment}
+              activeTab={activeTab}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onOpenPdfModal={() => handleOpenPdfFullScreen(currentEquipment)}
+              onOpenQr={() => setActiveTab('qrCode')}
+            />
+          )}
+
           {/* Quick Horizontal Section Switcher */}
           <SectionNavRibbon
             activeTab={activeTab}

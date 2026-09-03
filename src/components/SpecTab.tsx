@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Cpu, 
   Zap, 
   Radio, 
-  Network
+  Network,
+  Copy,
+  Check,
+  Server,
+  Shield,
+  Layers
 } from 'lucide-react';
 import { EquipmentData } from '../types';
 
@@ -20,6 +25,8 @@ export const SpecTab: React.FC<SpecTabProps> = ({
   isReadOnly = false,
   onOpenLoginModal
 }) => {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
   const updateSpec = (field: string, value: string) => {
     if (isReadOnly) return;
     onChange({
@@ -29,6 +36,13 @@ export const SpecTab: React.FC<SpecTabProps> = ({
         [field]: value
       }
     });
+  };
+
+  const handleCopy = (text: string, key: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1800);
   };
 
   return (
@@ -87,10 +101,22 @@ export const SpecTab: React.FC<SpecTabProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-amber-600" />
-                Điện áp nguồn cung cấp
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-600" />
+                  Điện áp nguồn cung cấp
+                </label>
+                {data.spec.power && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(data.spec.power, 'power')}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'power' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedKey === 'power' ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 disabled={isReadOnly}
@@ -102,10 +128,22 @@ export const SpecTab: React.FC<SpecTabProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-amber-600" />
-                Công suất tiêu thụ / phát (RF/Power)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-600" />
+                  Công suất tiêu thụ / phát (RF/Power)
+                </label>
+                {data.spec.output && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(data.spec.output, 'output')}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'output' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedKey === 'output' ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 disabled={isReadOnly}
@@ -117,10 +155,22 @@ export const SpecTab: React.FC<SpecTabProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                <Radio className="w-3.5 h-3.5 text-blue-600" />
-                Dải tần số / Băng thông / Thông lượng
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5 text-blue-600" />
+                  Dải tần số / Băng thông / Thông lượng
+                </label>
+                {data.spec.range && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(data.spec.range, 'range')}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'range' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedKey === 'range' ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 disabled={isReadOnly}
@@ -132,10 +182,22 @@ export const SpecTab: React.FC<SpecTabProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                <Radio className="w-3.5 h-3.5 text-blue-600" />
-                Tần số làm việc / Kênh khai thác
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5 text-blue-600" />
+                  Tần số làm việc / Kênh khai thác
+                </label>
+                {data.spec.channelFreq && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(data.spec.channelFreq || '', 'channelFreq')}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'channelFreq' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedKey === 'channelFreq' ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 disabled={isReadOnly}
@@ -169,7 +231,19 @@ export const SpecTab: React.FC<SpecTabProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">Địa chỉ IP Quản lý (Management IP)</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700">Địa chỉ IP Quản lý (Management IP)</label>
+                {data.spec.mgmtIp && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(data.spec.mgmtIp, 'mgmtIp')}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'mgmtIp' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedKey === 'mgmtIp' ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 disabled={isReadOnly}
@@ -205,7 +279,19 @@ export const SpecTab: React.FC<SpecTabProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">Default Gateway</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700">Default Gateway</label>
+                {data.spec.gateway && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(data.spec.gateway || '', 'gateway')}
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedKey === 'gateway' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                    <span>{copiedKey === 'gateway' ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 disabled={isReadOnly}
@@ -215,28 +301,38 @@ export const SpecTab: React.FC<SpecTabProps> = ({
                 className="form-input-standard font-mono"
               />
             </div>
+          </div>
+        </div>
 
+        {/* Environmental & Operating Limits */}
+        <div className="mt-6 pt-5 border-t border-slate-200">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 mb-4">
+            <Radio className="w-4 h-4 text-blue-600" />
+            Điều kiện môi trường & Giới hạn khai thác
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">Phiên bản Firmware / DSP</label>
+              <label className="text-xs font-medium text-slate-700">Nhiệt độ môi trường làm việc</label>
               <input
                 type="text"
                 disabled={isReadOnly}
-                placeholder="VD: v4.32.08-DSP2.1"
-                value={data.spec.firmware}
-                onChange={(e) => updateSpec('firmware', e.target.value)}
-                className="form-input-standard font-mono"
+                placeholder="VD: -10°C đến +55°C (Tiêu chuẩn phòng máy lạnh 22°C ± 2°C)"
+                value={data.spec.tempLimit || ''}
+                onChange={(e) => updateSpec('tempLimit', e.target.value)}
+                className="form-input-standard"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">SNMP Community / Port</label>
+              <label className="text-xs font-medium text-slate-700">Độ ẩm tương đối</label>
               <input
                 type="text"
                 disabled={isReadOnly}
-                placeholder="VD: cns_snmp_v2 / Port 161"
-                value={data.spec.snmpCommunity || ''}
-                onChange={(e) => updateSpec('snmpCommunity', e.target.value)}
-                className="form-input-standard font-mono"
+                placeholder="VD: 10% - 90% không ngưng tụ"
+                value={data.spec.humidityLimit || ''}
+                onChange={(e) => updateSpec('humidityLimit', e.target.value)}
+                className="form-input-standard"
               />
             </div>
           </div>

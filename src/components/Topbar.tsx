@@ -23,9 +23,11 @@ import {
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 import { CloudSyncState } from '../utils/cloudSyncService';
 import { NotificationBell } from './NotificationBell';
+import { InstantSearchDropdown } from './InstantSearchDropdown';
 
 interface TopbarProps {
   currentEquipment: EquipmentData;
+  equipments?: EquipmentData[];
   currentUser: AppUser;
   onOpenLoginModal: () => void;
   onSaveData: () => void;
@@ -49,6 +51,7 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = React.memo(({
   currentEquipment,
+  equipments = [],
   currentUser,
   onOpenLoginModal,
   onSaveData,
@@ -132,23 +135,18 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
 
       {/* Right: Organized Action Clusters */}
       <div className="flex items-center gap-2 flex-wrap xl:justify-end">
-        {/* Search Field & Modal Trigger */}
-        <div className="relative">
-          <button
-            onClick={onOpenSearchModal}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs transition-all cursor-pointer group"
-            title="Mở cửa sổ tìm kiếm & tra cứu toàn diện (Phím tắt: Ctrl + K)"
-          >
-            <Search className="w-3.5 h-3.5 text-blue-400 group-hover:scale-110 transition-transform" />
-            <span className="text-slate-300 font-medium hidden sm:inline">
-              {searchTerm ? `Tìm: "${searchTerm}"` : "Tìm kiếm toàn bộ sổ..."}
-            </span>
-            <span className="text-slate-300 font-medium sm:hidden">Tìm kiếm</span>
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] font-mono text-slate-300 font-medium ml-1">
-              Ctrl K
-            </kbd>
-          </button>
-        </div>
+        {/* Instant Fast Search with Dropdown & Autocomplete */}
+        <InstantSearchDropdown
+          equipments={equipments}
+          onSelectResult={(eqId, targetTab) => {
+            if (onNavigateToEquipment) {
+              onNavigateToEquipment(eqId, targetTab);
+            }
+          }}
+          onOpenAdvancedSearch={() => {
+            if (onOpenSearchModal) onOpenSearchModal();
+          }}
+        />
 
         {/* Group A: Electronic & Document Outputs */}
         <div className="flex items-center gap-1.5 bg-slate-900/60 p-1 rounded-lg border border-slate-800">

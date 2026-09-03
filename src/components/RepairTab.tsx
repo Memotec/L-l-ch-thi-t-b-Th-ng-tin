@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   AlertTriangle, 
   Plus, 
   Trash2, 
-  CheckCircle2
+  CheckCircle2,
+  Search,
+  X,
+  Copy,
+  Check,
+  Filter
 } from 'lucide-react';
 import { EquipmentData, RepairRow, RepairType, RepairStatus } from '../types';
 import { PerformerSelect } from './PerformerSelect';
@@ -22,6 +27,12 @@ export const RepairTab: React.FC<RepairTabProps> = ({
   isReadOnly = false,
   onOpenLoginModal
 }) => {
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [isCompact, setIsCompact] = useState<boolean>(false);
+  const [copiedAll, setCopiedAll] = useState<boolean>(false);
+
   const addRepair = (presetType: RepairType = 'Sửa chữa khắc phục sự cố') => {
     if (isReadOnly) return;
     const newRow: RepairRow = {
@@ -52,16 +63,16 @@ export const RepairTab: React.FC<RepairTabProps> = ({
     });
   };
 
-  const updateRepair = (index: number, field: keyof RepairRow, value: any) => {
+  const updateRepair = (originalIndex: number, field: keyof RepairRow, value: any) => {
     if (isReadOnly) return;
     const newRepairs = [...data.repair];
-    newRepairs[index] = { ...newRepairs[index], [field]: value };
+    newRepairs[originalIndex] = { ...newRepairs[originalIndex], [field]: value };
     onChange({ ...data, repair: newRepairs });
   };
 
-  const removeRepair = (index: number) => {
+  const removeRepair = (originalIndex: number) => {
     if (isReadOnly) return;
-    const newRepairs = data.repair.filter((_, i) => i !== index);
+    const newRepairs = data.repair.filter((_, i) => i !== originalIndex);
     onChange({ ...data, repair: newRepairs });
   };
 
@@ -76,6 +87,42 @@ export const RepairTab: React.FC<RepairTabProps> = ({
       default:
         return 'bg-slate-50 text-slate-700 border-slate-200';
     }
+  };
+
+  const filteredRepairs = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return data.repair.map((rp, originalIndex) => ({ rp, originalIndex })).filter(({ rp }) => {
+      const matchStatus = statusFilter === 'ALL' || rp.status === statusFilter;
+      const matchType = typeFilter === 'ALL' || rp.type === typeFilter;
+      const matchSearch = !q ||
+        (rp.incidentDescription && rp.incidentDescription.toLowerCase().includes(q)) ||
+        (rp.rootCause && rp.rootCause.toLowerCase().includes(q)) ||
+        (rp.actionTaken && rp.actionTaken.toLowerCase().includes(q)) ||
+        (rp.replacedParts && rp.replacedParts.toLowerCase().includes(q)) ||
+        (rp.person && rp.person.toLowerCase().includes(q)) ||
+        (rp.date && rp.date.includes(q));
+      return matchStatus && matchType && matchSearch;
+    });
+  }, [data.repair, statusFilter, typeFilter, searchTerm]);
+
+  // Copy table to clipboard
+  const handleCopyTable = () => {
+    if (data.repair.length === 0) return;
+    const headers = ['Thời gian phát sinh', 'Thời gian hoàn thành', 'Phân loại', 'Mô tả hiện tượng', 'Nguyên nhân', 'Biện pháp xử lý & Vật tư', 'Người thực hiện', 'Trạng thái'];
+    const rows = data.repair.map(r => [
+      r.date || '',
+      r.resolvedDate || '',
+      r.type || '',
+      r.incidentDescription || '',
+      r.rootCause || '',
+      `${r.actionTaken || ''} | Linh kiện: ${r.replacedParts || ''}`,
+      r.person || '',
+      r.status || 'Đã xử lý dứt điểm'
+    ]);
+    const tsv = [headers.join('\t'), ...rows.map(row => row.join('\t'))].join('\n');
+    navigator.clipboard.writeText(tsv);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
   };
 
   return (
@@ -104,190 +151,241 @@ export const RepairTab: React.FC<RepairTabProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 mb-5 gap-3">
           <div>
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-              6. Nhật ký Kiểm tra - Sửa chữa - Thay thế linh kiện - Biến động kỹ thuật
+              <AlertTriangle className="w-5 h-5 text-rose-600" />
+              6. Nhật ký Sửa chữa, Khắc phục sự cố & Biến động kỹ thuật
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Ghi nhận tất cả các sự cố phát sinh, nguyên nhân, biện pháp khắc phục và linh kiện thay thế
+              Ghi nhận chi tiết hiện tượng bất thường, nguyên nhân, biện pháp khắc phục và thay thế vật tư
             </p>
           </div>
 
-          {!isReadOnly && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => addRepair('Sửa chữa khắc phục sự cố')}
-                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-medium border border-rose-200 transition-colors cursor-pointer"
-              >
-                + Khắc phục sự cố
-              </button>
-              <button
-                onClick={() => addRepair('Thay thế linh kiện / bo mạch')}
-                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
-              >
-                + Thay thế linh kiện
-              </button>
-              <button
-                onClick={() => addRepair('Nâng cấp cấu hình / Firmware')}
-                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
-              >
-                + Nâng cấp Firmware
-              </button>
-              <button
-                onClick={() => addRepair()}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Thêm bản ghi sửa chữa</span>
-              </button>
-            </div>
-          )}
-        </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleCopyTable}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                copiedAll ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+              }`}
+              title="Sao chép nhật ký sự cố sang Excel"
+            >
+              {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+              <span>{copiedAll ? 'Đã sao chép!' : 'Xuất Excel / Copy'}</span>
+            </button>
 
-        <div className="space-y-4">
-          {data.repair.length === 0 ? (
-            <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-500">
-              <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-600 mb-2" />
-              <p className="font-semibold text-slate-900 text-sm">Chưa có bản ghi sự cố hoặc sửa chữa nào</p>
-              <p className="text-xs mt-1 text-slate-500">Hệ thống đang vận hành trơn tru và ổn định.</p>
-            </div>
-          ) : (
-            data.repair.map((rp, idx) => (
-              <div 
-                key={`repair-${rp.id || idx}-${idx}`}
-                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all space-y-3 shadow-xs"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-slate-500">#{idx + 1}</span>
-                    <select
-                      disabled={isReadOnly}
-                      value={rp.type}
-                      onChange={(e) => updateRepair(idx, 'type', e.target.value as RepairType)}
-                      className="form-input-standard py-1 text-xs font-bold"
-                    >
-                      <option value="Sửa chữa khắc phục sự cố">Sửa chữa khắc phục sự cố</option>
-                      <option value="Thay thế linh kiện / bo mạch">Thay thế linh kiện / bo mạch</option>
-                      <option value="Hiệu chỉnh căn chỉnh kỹ thuật">Hiệu chỉnh căn chỉnh kỹ thuật</option>
-                      <option value="Nâng cấp cấu hình / Firmware">Nâng cấp cấu hình / Firmware</option>
-                      <option value="Bảo trì ngăn ngừa">Bảo trì ngăn ngừa</option>
-                    </select>
-                    <select
-                      disabled={isReadOnly}
-                      value={rp.status}
-                      onChange={(e) => updateRepair(idx, 'status', e.target.value as RepairStatus)}
-                      className={`text-xs font-semibold border rounded-md px-2 py-1 focus:outline-none ${getStatusBadge(rp.status)}`}
-                    >
-                      <option value="Đã xử lý dứt điểm">Đã xử lý dứt điểm</option>
-                      <option value="Đang theo dõi">Đang theo dõi</option>
-                      <option value="Chờ vật tư">Chờ vật tư</option>
-                    </select>
-                  </div>
-
-                  {!isReadOnly && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => removeRepair(idx)}
-                        className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
-                        title="Xóa bản ghi sự cố này"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Thời điểm phát sinh sự cố</label>
-                    <input
-                      type="text"
-                      disabled={isReadOnly}
-                      placeholder="YYYY-MM-DD HH:mm"
-                      value={rp.date}
-                      onChange={(e) => updateRepair(idx, 'date', e.target.value)}
-                      className="form-input-standard font-mono text-blue-600"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Thời điểm hoàn thành / Khôi phục</label>
-                    <input
-                      type="text"
-                      disabled={isReadOnly}
-                      placeholder="YYYY-MM-DD HH:mm"
-                      value={rp.resolvedDate || ''}
-                      onChange={(e) => updateRepair(idx, 'resolvedDate', e.target.value)}
-                      className="form-input-standard font-mono text-blue-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Mô tả hiện tượng sự cố & triệu chứng *</label>
-                    <textarea
-                      rows={2}
-                      disabled={isReadOnly}
-                      placeholder="Hiện tượng cảnh báo Alarm, mất tín hiệu, suy hao..."
-                      value={rp.incidentDescription}
-                      onChange={(e) => updateRepair(idx, 'incidentDescription', e.target.value)}
-                      className="form-input-standard"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Nguyên nhân cốt lõi (Root cause)</label>
-                    <textarea
-                      rows={2}
-                      disabled={isReadOnly}
-                      placeholder="Do ẩm đầu cáp cao tần, linh kiện lão hóa, sét lan truyền..."
-                      value={rp.rootCause || ''}
-                      onChange={(e) => updateRepair(idx, 'rootCause', e.target.value)}
-                      className="form-input-standard"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-slate-700">Biện pháp xử lý chi tiết & Kết quả đo kiểm sau can thiệp *</label>
-                  <textarea
-                    rows={2}
-                    disabled={isReadOnly}
-                    placeholder="Chuyển kênh dự phòng, thay thế module, vệ sinh điểm tiếp xúc, đo lại công suất và SWR..."
-                    value={rp.actionTaken}
-                    onChange={(e) => updateRepair(idx, 'actionTaken', e.target.value)}
-                    className="form-input-standard"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Linh kiện / Vật tư đã thay thế</label>
-                    <input
-                      type="text"
-                      disabled={isReadOnly}
-                      placeholder="VD: Bo mạch nguồn PSU mã 65-3000-02 (SN: 9901)..."
-                      value={rp.replacedParts || ''}
-                      onChange={(e) => updateRepair(idx, 'replacedParts', e.target.value)}
-                      className="form-input-standard"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Kíp / Nhân Kỹ thuật thực hiện</label>
-                    <PerformerSelect
-                      value={rp.person}
-                      onChange={(val) => updateRepair(idx, 'person', val)}
-                      disabled={isReadOnly}
-                      placeholder="Chọn Kíp hoặc tự nhập..."
-                      showQuickPills={true}
-                    />
-                  </div>
-                </div>
+            {!isReadOnly && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => addRepair('Sửa chữa khắc phục sự cố')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Ghi nhận sự cố</span>
+                </button>
+                <button
+                  onClick={() => addRepair('Thay thế linh kiện')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3 text-amber-400" />
+                  <span>Thay linh kiện</span>
+                </button>
               </div>
-            ))
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Filters and Search toolbar */}
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="flex items-center gap-2 flex-1 max-w-md">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Lọc sự cố (Hiện tượng, Nguyên nhân, Xử lý, Vật tư, KTV)..."
+                className="w-full pl-8 pr-7 py-1 text-xs bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+            <span className="text-slate-500 text-[11px] font-medium mr-1">Trạng thái:</span>
+            {['ALL', 'Đã xử lý dứt điểm', 'Đang theo dõi', 'Chờ vật tư'].map((st) => (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                  statusFilter === st
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                }`}
+              >
+                {st === 'ALL' ? 'Tất cả' : st}
+              </button>
+            ))}
+
+            <div className="h-4 w-[1px] bg-slate-300 mx-1" />
+
+            <button
+              onClick={() => setIsCompact(!isCompact)}
+              className={`px-2 py-0.5 rounded text-[11px] font-medium border cursor-pointer ${
+                isCompact ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+              title="Chuyển chế độ hiển thị thu gọn"
+            >
+              {isCompact ? 'Thu gọn' : 'Chuẩn'}
+            </button>
+          </div>
+        </div>
+
+        {/* Table View */}
+        <div className="border border-slate-200 rounded-lg overflow-x-auto">
+          <table className={`w-full text-left border-collapse min-w-[950px] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
+              <tr>
+                <th className="p-2.5 w-32">Thời gian phát sinh</th>
+                <th className="p-2.5 w-32">Thời gian hoàn thành</th>
+                <th className="p-2.5 w-36">Phân loại</th>
+                <th className="p-2.5">Mô tả hiện tượng & Nguyên nhân</th>
+                <th className="p-2.5">Biện pháp xử lý & Vật tư thay thế</th>
+                <th className="p-2.5 w-36">Người thực hiện</th>
+                <th className="p-2.5 w-32">Trạng thái</th>
+                {!isReadOnly && <th className="p-2.5 w-10 text-center">Xóa</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredRepairs.length === 0 ? (
+                <tr>
+                  <td colSpan={isReadOnly ? 7 : 8} className="p-6 text-center text-slate-500 italic bg-white">
+                    {data.repair.length === 0
+                      ? 'Thiết bị hoạt động ổn định, chưa có ghi nhận sự cố hay hỏng hóc kỹ thuật nào.'
+                      : `Không tìm thấy sự cố nào khớp với bộ lọc "${searchTerm || statusFilter}".`}
+                  </td>
+                </tr>
+              ) : (
+                filteredRepairs.map(({ rp, originalIndex }) => (
+                  <tr key={`repair-${rp.id || originalIndex}-${originalIndex}`} className="hover:bg-slate-50 bg-white">
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="YYYY-MM-DD HH:mm"
+                        value={rp.date}
+                        onChange={(e) => updateRepair(originalIndex, 'date', e.target.value)}
+                        className={`form-input-standard font-mono ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="YYYY-MM-DD HH:mm"
+                        value={rp.resolvedDate || ''}
+                        onChange={(e) => updateRepair(originalIndex, 'resolvedDate', e.target.value)}
+                        className={`form-input-standard font-mono ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      />
+                    </td>
+                    <td className="p-2">
+                      <select
+                        disabled={isReadOnly}
+                        value={rp.type}
+                        onChange={(e) => updateRepair(originalIndex, 'type', e.target.value as RepairType)}
+                        className={`form-input-standard font-medium ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      >
+                        <option value="Sửa chữa khắc phục sự cố">Sửa chữa sự cố</option>
+                        <option value="Sửa chữa đột xuất">Sửa chữa đột xuất</option>
+                        <option value="Thay thế linh kiện">Thay thế linh kiện</option>
+                        <option value="Nâng cấp phần mềm/firmware">Nâng cấp Firmware</option>
+                        <option value="Hiệu chuẩn lại tham số">Hiệu chuẩn tham số</option>
+                      </select>
+                    </td>
+                    <td className="p-2 space-y-1">
+                      <textarea
+                        rows={isCompact ? 1 : 2}
+                        disabled={isReadOnly}
+                        placeholder="Hiện tượng bất thường / cảnh báo..."
+                        value={rp.incidentDescription}
+                        onChange={(e) => updateRepair(originalIndex, 'incidentDescription', e.target.value)}
+                        className={`form-input-standard font-medium text-slate-900 ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      />
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="Nguyên nhân xác định..."
+                        value={rp.rootCause}
+                        onChange={(e) => updateRepair(originalIndex, 'rootCause', e.target.value)}
+                        className={`form-input-standard text-rose-600 font-mono text-[11px] ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      />
+                    </td>
+                    <td className="p-2 space-y-1">
+                      <textarea
+                        rows={isCompact ? 1 : 2}
+                        disabled={isReadOnly}
+                        placeholder="Nội dung thao tác khắc phục..."
+                        value={rp.actionTaken}
+                        onChange={(e) => updateRepair(originalIndex, 'actionTaken', e.target.value)}
+                        className={`form-input-standard text-slate-800 ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      />
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="Linh kiện/vật tư thay thế (nếu có)..."
+                        value={rp.replacedParts}
+                        onChange={(e) => updateRepair(originalIndex, 'replacedParts', e.target.value)}
+                        className={`form-input-standard text-blue-600 font-mono text-[11px] ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      />
+                    </td>
+                    <td className="p-2 min-w-[180px]">
+                      <PerformerSelect
+                        value={rp.person}
+                        onChange={(val) => updateRepair(originalIndex, 'person', val)}
+                        disabled={isReadOnly}
+                        placeholder="KTV xử lý..."
+                      />
+                    </td>
+                    <td className="p-2">
+                      <select
+                        disabled={isReadOnly}
+                        value={rp.status}
+                        onChange={(e) => updateRepair(originalIndex, 'status', e.target.value as RepairStatus)}
+                        className={`w-full border rounded p-1.5 font-semibold focus:outline-none ${getStatusBadge(rp.status)} ${isCompact ? 'py-0.5' : 'py-1'}`}
+                      >
+                        <option value="Đã xử lý dứt điểm">✓ Đã xử lý xong</option>
+                        <option value="Đang theo dõi">⚠ Đang theo dõi</option>
+                        <option value="Chờ vật tư">✕ Chờ vật tư</option>
+                      </select>
+                    </td>
+                    {!isReadOnly && (
+                      <td className="p-2 text-center">
+                        <button
+                          onClick={() => removeRepair(originalIndex)}
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                          title="Xóa sự vụ này"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredRepairs.length > 0 && (
+          <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <span>Hiển thị <b>{filteredRepairs.length}</b> / <b>{data.repair.length}</b> vụ việc kỹ thuật</span>
+            <span className="italic text-[11px]">Hồ sơ biến động được lưu trữ đối soát đầy đủ</span>
+          </div>
+        )}
       </div>
     </div>
   );

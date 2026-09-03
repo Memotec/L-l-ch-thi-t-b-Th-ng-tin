@@ -106,6 +106,8 @@ export interface SpecInfo {
   firmware?: string;
   snmpCommunity?: string;
   channelFreq?: string;
+  tempLimit?: string;
+  humidityLimit?: string;
 }
 
 export type ComponentHealth = 'Tốt' | 'Cần theo dõi' | 'Đã sửa chữa' | 'Hỏng';
