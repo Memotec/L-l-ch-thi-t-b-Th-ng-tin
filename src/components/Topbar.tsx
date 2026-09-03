@@ -8,18 +8,20 @@ import {
   PhoneCall, 
   Zap, 
   Server, 
-  HardDrive,
-  FileCheck,
-  Search,
-  Cloud,
-  FileText,
-  ExternalLink,
-  ShieldCheck,
-  Lock,
-  Settings,
-  Trash2
+  HardDrive, 
+  FileCheck, 
+  Search, 
+  Cloud, 
+  FileText, 
+  ExternalLink, 
+  ShieldCheck, 
+  Lock, 
+  Settings, 
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
+import { CloudSyncState } from '../utils/cloudSyncService';
 
 interface TopbarProps {
   currentEquipment: EquipmentData;
@@ -39,6 +41,8 @@ interface TopbarProps {
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
   onOpenSearchModal?: () => void;
+  cloudSyncState?: CloudSyncState;
+  onTriggerCloudSync?: () => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = React.memo(({
@@ -56,7 +60,9 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
   onOpenTrash,
   trashCount = 0,
   searchTerm = '',
-  onOpenSearchModal
+  onOpenSearchModal,
+  cloudSyncState,
+  onTriggerCloudSync
 }) => {
   const isAdmin = currentUser.role === 'admin';
 
@@ -216,6 +222,42 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
             >
               <Cloud className="w-3.5 h-3.5 text-indigo-400" />
               <span>Apps Script</span>
+            </button>
+          )}
+
+          {/* Cloud Sync Status & Trigger */}
+          {onTriggerCloudSync && (
+            <button
+              onClick={onTriggerCloudSync}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer shadow-xs ${
+                cloudSyncState?.status === 'syncing'
+                  ? 'bg-blue-950/60 text-blue-300 border-blue-500/50'
+                  : cloudSyncState?.status === 'error'
+                  ? 'bg-amber-950/60 text-amber-300 border-amber-500/50'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+              }`}
+              title={
+                cloudSyncState?.status === 'syncing'
+                  ? 'Đang đồng bộ dữ liệu với Cloud...'
+                  : cloudSyncState?.lastSyncedAt
+                  ? `Cloud: Đã đồng bộ lúc ${new Date(cloudSyncState.lastSyncedAt).toLocaleTimeString('vi-VN')} (${cloudSyncState.cloudCount} thiết bị). Nhấn để tải về / đồng bộ lại.`
+                  : 'Đồng bộ Cloud đa thiết bị - Nhấn để đồng bộ ngay'
+              }
+            >
+              {cloudSyncState?.status === 'syncing' ? (
+                <RefreshCw className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+              ) : (
+                <Cloud className={`w-3.5 h-3.5 ${
+                  cloudSyncState?.status === 'error' ? 'text-amber-400' : 'text-emerald-400'
+                }`} />
+              )}
+              <span className="hidden sm:inline">
+                {cloudSyncState?.status === 'syncing'
+                  ? 'Đang đồng bộ...'
+                  : cloudSyncState?.lastSyncedAt
+                  ? `Cloud (${cloudSyncState.cloudCount || 'OK'})`
+                  : 'Đồng bộ Cloud'}
+              </span>
             </button>
           )}
 

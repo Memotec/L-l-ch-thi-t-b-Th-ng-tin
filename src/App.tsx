@@ -4,6 +4,7 @@ import { EquipmentData, AppUser, TrashEquipmentItem } from './types';
 import { authService } from './utils/authService';
 import { googleDriveDocsService } from './utils/googleDriveDocsService';
 import { storageService } from './utils/storageService';
+import { cloudSyncService, CloudSyncState } from './utils/cloudSyncService';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardTab } from './components/DashboardTab';
@@ -61,15 +62,101 @@ export default function App() {
   const [pdfFullscreenEquipment, setPdfFullscreenEquipment] = useState<EquipmentData | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Cross-Device Cloud Sync State
+  const [cloudSyncState, setCloudSyncState] = useState<CloudSyncState>(() => cloudSyncService.getState());
+
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  const handleLoginSuccess = useCallback((user: AppUser, message: string) => {
+  // Listen to cloudSyncService internal state changes
+  useEffect(() => {
+    return cloudSyncService.subscribe(setCloudSyncState);
+  }, []);
+
+  // Auto-sync & load latest Cloud data when logging in or switching devices
+  const handleLoginSuccess = useCallback(async (
+    user: AppUser, 
+    message: string, 
+    options?: { autoLoadCloud?: boolean }
+  ) => {
     setCurrentUser(user);
     showToast(`✓ ${message}`);
+
+    const shouldAutoLoad = options?.autoLoadCloud !== undefined 
+      ? options.autoLoadCloud 
+      : cloudSyncService.getAutoLoadOnLogin();
+
+    if (shouldAutoLoad) {
+      try {
+        showToast('🔄 Đang tự động nạp dữ liệu từ Cloud cho thiết bị này...');
+        const cloudResult = await cloudSyncService.pullFromCloud({ reason: 'login', force: true });
+        if (cloudResult.success && cloudResult.equipments && cloudResult.equipments.length > 0) {
+          setEquipments(cloudResult.equipments);
+          if (cloudResult.trash) setTrashList(cloudResult.trash);
+          storageService.saveImmediate(cloudResult.equipments);
+          showToast(`✓ Đã nạp thành công ${cloudResult.equipments.length} thiết bị mới nhất từ Cloud!`);
+        }
+      } catch (err: any) {
+        console.warn('Auto cloud load on login error:', err);
+      }
+    }
   }, [showToast]);
+
+  // Handler to manually trigger Cloud Pull / Push on demand
+  const handleTriggerCloudSync = useCallback(async () => {
+    showToast('🔄 Đang đồng bộ với Cloud...');
+    const result = await cloudSyncService.pullFromCloud({ reason: 'manual', force: true });
+    if (result.success && result.equipments && result.equipments.length > 0) {
+      setEquipments(result.equipments);
+      if (result.trash) setTrashList(result.trash);
+      storageService.saveImmediate(result.equipments);
+      showToast(`✓ Đã đồng bộ thành công ${result.equipments.length} thiết bị từ Cloud!`);
+    } else {
+      await cloudSyncService.pushToCloud(equipments, trashList, currentUser);
+      showToast(`✓ Đã đồng bộ dữ liệu hiện tại (${equipments.length} thiết bị) lên Cloud!`);
+    }
+  }, [equipments, trashList, currentUser, showToast]);
+
+  // Auto load Cloud data on mount (for new device or fresh browser session) and listen for cross-device updates
+  useEffect(() => {
+    let isCancelled = false;
+
+    const initCloudData = async () => {
+      try {
+        const res = await cloudSyncService.pullFromCloud({ reason: 'app_mount' });
+        if (!isCancelled && res.success && res.equipments && res.equipments.length > 0) {
+          setEquipments(res.equipments);
+          if (res.trash) setTrashList(res.trash);
+          storageService.saveImmediate(res.equipments);
+          showToast(`✓ Đã tự động nạp ${res.equipments.length} thiết bị từ Cloud cho thiết bị này.`);
+        } else if (!isCancelled && !res.success && equipments.length > 0) {
+          // Initialize server cloud database with current dataset if server has no records yet
+          cloudSyncService.pushToCloud(equipments, trashList, currentUser);
+        }
+      } catch (e) {
+        console.warn('Initial cloud sync check error:', e);
+      }
+    };
+
+    initCloudData();
+
+    // Start background cross-device sync (polls on focus/interval to detect other devices' edits)
+    const stopCrossDevice = cloudSyncService.startCrossDeviceSync((newEquipments, newTrash, msg) => {
+      if (!isCancelled) {
+        setEquipments(newEquipments);
+        if (newTrash) setTrashList(newTrash);
+        storageService.saveImmediate(newEquipments);
+        showToast(msg);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+      stopCrossDevice();
+    };
+  }, []);
 
   // Handler to enter Full-Screen PDF Viewer for any equipment
   const handleOpenPdfFullScreen = useCallback((eq?: EquipmentData) => {
@@ -184,9 +271,11 @@ export default function App() {
       storageService.saveDebounced(updatedList, 300, (timeStr) => {
         setLastSaved(`Đã lưu lúc ${timeStr}`);
       });
+      // Automatically push debounced state to cloud so other devices stay in sync
+      cloudSyncService.pushToCloud(updatedList, undefined, currentUser);
       return updatedList;
     });
-  }, []);
+  }, [currentUser]);
 
   // Sync down from Google Apps Script / Google Sheets
   const handleSyncFromGas = useCallback((gasEquipments: EquipmentData[]) => {
@@ -196,16 +285,18 @@ export default function App() {
       setCurrentId(gasEquipments[0].id);
     }
     storageService.saveImmediate(gasEquipments);
+    cloudSyncService.pushToCloud(gasEquipments, undefined, currentUser);
     const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setLastSaved(`Đã lưu lúc ${timeStr}`);
-  }, [currentId]);
+  }, [currentId, currentUser]);
 
   // Manual save trigger
   const handleManualSave = useCallback(async () => {
     storageService.saveImmediate(equipments);
+    cloudSyncService.pushToCloud(equipments, trashList, currentUser);
     const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setLastSaved(`Đã lưu lúc ${timeStr}`);
-    showToast('✓ Đã lưu toàn bộ cơ sở dữ liệu thành công!');
+    showToast('✓ Đã lưu toàn bộ cơ sở dữ liệu & đồng bộ lên Cloud!');
 
     // Check if auto-sync to Google Docs on change is enabled
     const autoSync = localStorage.getItem('cns_auto_sync_gdoc_on_change_v1') === 'true';
@@ -223,19 +314,20 @@ export default function App() {
         console.warn('Auto sync Google Doc error:', err);
       }
     }
-  }, [equipments, currentEquipment, handleUpdateCurrent, showToast]);
+  }, [equipments, trashList, currentUser, currentEquipment, handleUpdateCurrent, showToast]);
 
   // Create new equipment
   const handleCreateNew = useCallback((newEq: EquipmentData) => {
     setEquipments(prev => {
       const updatedList = [...prev, newEq];
       storageService.saveImmediate(updatedList);
+      cloudSyncService.pushToCloud(updatedList, trashList, currentUser);
       return updatedList;
     });
     setCurrentId(newEq.id);
     setActiveTab('general');
     showToast(`✓ Đã tạo hồ sơ cho thiết bị: ${newEq.general.name}`);
-  }, [showToast]);
+  }, [trashList, currentUser, showToast]);
 
   // Clone equipment
   const handleCloneCurrent = useCallback(() => {
@@ -258,11 +350,12 @@ export default function App() {
     setEquipments(prev => {
       const updatedList = [...prev, cloned];
       storageService.saveImmediate(updatedList);
+      cloudSyncService.pushToCloud(updatedList, trashList, currentUser);
       return updatedList;
     });
     setCurrentId(cloned.id);
     showToast(`✓ Đã sao chép hồ sơ mới thành công!`);
-  }, [currentUser, currentEquipment, showToast]);
+  }, [currentUser, currentEquipment, trashList, showToast]);
 
   // Delete equipment -> Move to Trash
   const handleDeleteCurrent = useCallback((targetEqId?: string) => {
@@ -307,6 +400,7 @@ export default function App() {
     }
     
     storageService.saveImmediate(remaining);
+    cloudSyncService.pushToCloud(remaining, updatedTrash, currentUser);
     showToast(`✓ Đã chuyển Sổ lý lịch "${target.general.name}" vào Thùng Rác (Lưu giữ 30 ngày).`);
   }, [currentUser, equipments, currentEquipment, currentId, trashList, showToast]);
 
@@ -327,13 +421,15 @@ export default function App() {
     storageService.saveTrash(updatedTrash);
 
     // Add back to active equipments
+    let updatedActive: EquipmentData[] = [];
     setEquipments(prev => {
       const exists = prev.some(e => e.id === targetEqId);
-      const updated = exists ? prev : [trashItem.equipment, ...prev];
-      storageService.saveImmediate(updated);
-      return updated;
+      updatedActive = exists ? prev : [trashItem.equipment, ...prev];
+      storageService.saveImmediate(updatedActive);
+      return updatedActive;
     });
 
+    cloudSyncService.pushToCloud(updatedActive, updatedTrash, currentUser);
     setCurrentId(trashItem.equipment.id);
     showToast(`✓ Đã khôi phục thành công Sổ lý lịch "${trashItem.equipment.general.name}"!`);
   }, [currentUser, trashList, showToast]);
@@ -357,8 +453,9 @@ export default function App() {
     const updatedTrash = trashList.filter(t => t.equipment.id !== targetEqId);
     setTrashList(updatedTrash);
     storageService.saveTrash(updatedTrash);
+    cloudSyncService.pushToCloud(equipments, updatedTrash, currentUser);
     showToast(`✓ Đã xóa vĩnh viễn Sổ lý lịch "${eqName}".`);
-  }, [currentUser, trashList, showToast]);
+  }, [currentUser, trashList, equipments, showToast]);
 
   // Empty entire trash
   const handleEmptyTrash = useCallback(() => {
@@ -377,8 +474,9 @@ export default function App() {
 
     setTrashList([]);
     storageService.saveTrash([]);
+    cloudSyncService.pushToCloud(equipments, [], currentUser);
     showToast(`✓ Đã dọn sạch thùng rác.`);
-  }, [currentUser, trashList, showToast]);
+  }, [currentUser, trashList, equipments, showToast]);
 
   // Export current equipment JSON
   const handleExportCurrent = useCallback(() => {
@@ -427,11 +525,12 @@ export default function App() {
           setEquipments(parsed);
           setCurrentId(parsed[0].id);
           storageService.saveImmediate(parsed);
+          cloudSyncService.pushToCloud(parsed, trashList, currentUser);
           showToast(`✓ Đã nhập thành công ${parsed.length} thiết bị từ file backup!`);
         } else if (parsed && parsed.general && parsed.org) {
+          let updatedList: EquipmentData[] = [];
           setEquipments(prev => {
             const existingIdx = prev.findIndex(eq => eq.id === parsed.id);
-            let updatedList: EquipmentData[];
             if (existingIdx >= 0) {
               updatedList = prev.map(eq => eq.id === parsed.id ? parsed : eq);
             } else {
@@ -440,6 +539,7 @@ export default function App() {
             storageService.saveImmediate(updatedList);
             return updatedList;
           });
+          cloudSyncService.pushToCloud(updatedList, trashList, currentUser);
           setCurrentId(parsed.id);
           showToast(`✓ Đã nhập hồ sơ thiết bị: ${parsed.general.name}`);
         } else {
@@ -452,7 +552,7 @@ export default function App() {
     };
     reader.readAsText(file);
     e.target.value = '';
-  }, [currentUser, showToast]);
+  }, [currentUser, trashList, showToast]);
 
   // Reset to default sample
   const handleResetDefaults = useCallback(() => {
@@ -466,8 +566,9 @@ export default function App() {
     setEquipments(sampleEquipments);
     setCurrentId(sampleEquipments[0].id);
     storageService.saveImmediate(sampleEquipments);
-    showToast('✓ Đã khôi phục dữ liệu mẫu ban đầu!');
-  }, [currentUser, showToast]);
+    cloudSyncService.pushToCloud(sampleEquipments, trashList, currentUser);
+    showToast('✓ Đã khôi phục dữ liệu mẫu ban đầu và đồng bộ lên Cloud!');
+  }, [currentUser, trashList, showToast]);
 
   // Handle direct print
   const handlePrintDirect = useCallback(() => {
@@ -558,6 +659,8 @@ export default function App() {
           searchTerm={searchTerm}
           onSearchChange={(term) => setSearchTerm(term)}
           onOpenSearchModal={() => setIsSearchModalOpen(true)}
+          cloudSyncState={cloudSyncState}
+          onTriggerCloudSync={handleTriggerCloudSync}
         />
 
         {/* Tab Body Viewports with ErrorBoundary and Suspense */}
@@ -731,6 +834,7 @@ export default function App() {
             onClose={() => setIsLoginModalOpen(false)}
             currentUser={currentUser}
             onLoginSuccess={handleLoginSuccess}
+            onTriggerCloudSync={handleTriggerCloudSync}
           />
         )}
 

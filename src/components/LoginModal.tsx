@@ -9,28 +9,35 @@ import {
   EyeOff, 
   AlertCircle, 
   LogOut,
-  ArrowRight
+  ArrowRight,
+  Cloud,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 import { AppUser } from '../types';
 import { authService } from '../utils/authService';
+import { cloudSyncService } from '../utils/cloudSyncService';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: AppUser;
-  onLoginSuccess: (user: AppUser, message: string) => void;
+  onLoginSuccess: (user: AppUser, message: string, options?: { autoLoadCloud?: boolean }) => void;
+  onTriggerCloudSync?: () => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
   currentUser,
-  onLoginSuccess
+  onLoginSuccess,
+  onTriggerCloudSync
 }) => {
   const [username, setUsername] = useState<string>('admin');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [autoLoadCloud, setAutoLoadCloud] = useState<boolean>(() => cloudSyncService.getAutoLoadOnLogin());
 
   if (!isOpen) return null;
 
@@ -40,7 +47,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     const res = authService.login(username, password);
     if (res.success && res.user) {
-      onLoginSuccess(res.user, res.message);
+      onLoginSuccess(res.user, res.message, { autoLoadCloud });
       onClose();
       setPassword('');
     } else {
@@ -68,7 +75,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-sm text-white">Đăng Nhập Quản Trị</h3>
-              <p className="text-[11px] text-slate-300">Xác thực quyền quản trị hệ thống</p>
+              <p className="text-[11px] text-slate-300">Xác thực quyền & Đồng bộ dữ liệu Cloud</p>
             </div>
           </div>
           <button
@@ -79,7 +86,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           </button>
         </div>
 
-        {/* Current User Status (if already admin, offer quick logout) */}
+        {/* Current User Status (if already admin, offer quick logout & sync) */}
         {isAdmin ? (
           <div className="p-5 space-y-4">
             <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-3">
@@ -91,6 +98,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <div className="text-[11px] text-emerald-700 font-medium">Đang có toàn quyền Quản trị viên</div>
               </div>
             </div>
+
+            {onTriggerCloudSync && (
+              <button
+                type="button"
+                onClick={() => {
+                  onTriggerCloudSync();
+                  onClose();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
+                <span>Tải về & Đồng bộ dữ liệu mới nhất từ Cloud</span>
+              </button>
+            )}
 
             <div className="flex items-center gap-2 pt-1">
               <button
@@ -158,6 +179,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            {/* Cloud Auto-Load & Synchronization toggle */}
+            <div className="pt-1">
+              <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer select-none bg-blue-50/70 p-2.5 rounded-lg border border-blue-200/60 hover:bg-blue-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={autoLoadCloud}
+                  onChange={(e) => {
+                    setAutoLoadCloud(e.target.checked);
+                    cloudSyncService.setAutoLoadOnLogin(e.target.checked);
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="font-semibold text-blue-900 flex items-center gap-1.5">
+                    <Cloud className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    Tự động nạp & đồng bộ dữ liệu từ Cloud
+                  </span>
+                  <p className="text-[11px] text-blue-700/85 mt-0.5 leading-relaxed">
+                    Khi đăng nhập ở thiết bị khác, dữ liệu sẽ được tự động load về và đồng bộ với Cloud.
+                  </p>
+                </div>
+              </label>
             </div>
 
             <div className="pt-2 flex items-center gap-2">
