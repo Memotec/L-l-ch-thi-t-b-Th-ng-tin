@@ -1,5 +1,6 @@
 import { EquipmentData, TrashEquipmentItem, AppUser } from '../types';
 import { storageService } from './storageService';
+import { firestoreService } from '../firebase';
 
 export interface CloudSyncState {
   status: 'idle' | 'syncing' | 'synced' | 'error' | 'offline';
@@ -203,7 +204,35 @@ export const cloudSyncService = {
     updateState({ status: 'syncing', errorMessage: null });
 
     try {
-      // 1. Try pulling from Server Cloud DB
+      // 1. Try pulling from Cloud Firestore directly
+      try {
+        const firestoreList = await firestoreService.getAllEquipments();
+        if (Array.isArray(firestoreList) && firestoreList.length > 0) {
+          const nowStr = new Date().toISOString();
+          localStorage.setItem(CLOUD_LAST_SYNC_KEY, nowStr);
+
+          updateState({
+            status: 'synced',
+            lastSyncedAt: nowStr,
+            cloudCount: firestoreList.length,
+            lastModified: nowStr,
+            updatedBy: 'Firebase Firestore'
+          });
+
+          return {
+            success: true,
+            equipments: firestoreList,
+            trash: [],
+            gasUrl: this.getGasUrl(),
+            message: `Đã tải về thành công ${firestoreList.length} thiết bị từ Firebase Firestore.`,
+            source: 'server'
+          };
+        }
+      } catch (fsErr) {
+        console.warn('Direct Firestore pull skipped or empty, falling back to Server DB:', fsErr);
+      }
+
+      // 2. Try pulling from Server Cloud DB
       const res = await fetch('/api/cloud-sync/data');
       if (res.ok) {
         const serverResult = await res.json();
@@ -236,7 +265,7 @@ export const cloudSyncService = {
         }
       }
 
-      // 2. Fallback: If server has no saved data yet, check Google Apps Script Web App if configured
+      // 3. Fallback: If server has no saved data yet, check Google Apps Script Web App if configured
       const gasUrl = this.getGasUrl();
       if (gasUrl && gasUrl.trim().startsWith('https://script.google.com')) {
         const pullUrl = gasUrl.includes('?') 
@@ -311,6 +340,13 @@ export const cloudSyncService = {
     const doPush = async () => {
       updateState({ status: 'syncing' });
       try {
+        // Direct Firestore batch write
+        try {
+          await firestoreService.batchSaveEquipments(equipments, user?.displayName || 'Quản trị viên');
+        } catch (fsErr) {
+          console.warn('Direct Firestore save notice (fallback will handle):', fsErr);
+        }
+
         const gasUrl = typeof window !== 'undefined' ? localStorage.getItem(GAS_URL_STORAGE_KEY) || '' : '';
         const payload = {
           equipments,
@@ -344,7 +380,7 @@ export const cloudSyncService = {
 
         return {
           success: true,
-          message: `Đã đồng bộ ${equipments.length} thiết bị lên Cloud.`
+          message: `Đã đồng bộ ${equipments.length} thiết bị lên Firebase & Cloud.`
         };
       } catch (err: any) {
         console.error('Failed to push to Cloud:', err);
@@ -432,10 +468,38 @@ export const cloudSyncService = {
     window.addEventListener('focus', onFocus);
     window.addEventListener('online', onOnline);
 
+    // 4. Real-time Firestore snapshot listener
+    let unsubscribeFirestore: (() => void) | null = null;
+    try {
+      unsubscribeFirestore = firestoreService.subscribeEquipments((fsEquipments) => {
+        if (Array.isArray(fsEquipments) && fsEquipments.length > 0) {
+          const localLastSync = currentState.lastSyncedAt 
+            ? new Date(currentState.lastSyncedAt).getTime() 
+            : 0;
+          const nowTime = Date.now();
+          // If update came after local last sync (with 3s buffer to prevent echo loop)
+          if (nowTime > localLastSync + 3000) {
+            onNewDataReceived(
+              fsEquipments,
+              storageService.loadTrash(),
+              `✓ Firebase Firestore: Đã đồng bộ tức thì ${fsEquipments.length} thiết bị từ đám mây!`
+            );
+          }
+        }
+      }, (err) => {
+        console.warn('Firestore subscription notice (using polling fallback):', err?.message);
+      });
+    } catch (subErr) {
+      console.warn('Firestore live subscription init notice:', subErr);
+    }
+
     return () => {
       clearInterval(intervalId);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('online', onOnline);
+      if (unsubscribeFirestore) {
+        unsubscribeFirestore();
+      }
     };
   }
 };

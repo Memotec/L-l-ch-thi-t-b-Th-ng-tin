@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all to prevent unauthorized path access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Validation Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // --- Equipment Validation ---
+    function isValidEquipment(data) {
+      return data is map &&
+        data.id is string &&
+        data.id.size() > 0 &&
+        data.id.size() <= 128 &&
+        data.general is map &&
+        (!('updatedBy' in data) || (data.updatedBy is string && data.updatedBy.size() <= 200)) &&
+        (!('components' in data) || (data.components is list && data.components.size() <= 500)) &&
+        (!('maintenance' in data) || (data.maintenance is list && data.maintenance.size() <= 1000)) &&
+        (!('repair' in data) || (data.repair is list && data.repair.size() <= 1000)) &&
+        (!('licenses' in data) || (data.licenses is list && data.licenses.size() <= 200)) &&
+        (!('docs' in data) || (data.docs is list && data.docs.size() <= 200));
+    }
+
+    // --- Trash Item Validation ---
+    function isValidTrash(data) {
+      return data is map &&
+        data.id is string &&
+        data.id.size() > 0 &&
+        data.id.size() <= 128 &&
+        data.equipment is map &&
+        data.deletedAt is string &&
+        data.deletedAt.size() <= 64;
+    }
+
+    // --- Sync Metadata Validation ---
+    function isValidSyncMeta(data) {
+      return data is map &&
+        data.lastModified is string &&
+        data.lastModified.size() <= 64 &&
+        (!('count' in data) || data.count is number) &&
+        (!('version' in data) || data.version is number) &&
+        (!('updatedBy' in data) || (data.updatedBy is string && data.updatedBy.size() <= 200)) &&
+        (!('gasUrl' in data) || (data.gasUrl is string && data.gasUrl.size() <= 500));
+    }
+
+    // --- Collection: Equipments ---
+    match /equipments/{equipmentId} {
+      allow get, list: if true;
+      allow create: if isValidId(equipmentId) && isValidEquipment(incoming()) && incoming().id == equipmentId;
+      allow update: if isValidId(equipmentId) && isValidEquipment(incoming()) && incoming().id == equipmentId;
+      allow delete: if isValidId(equipmentId);
+    }
+
+    // --- Collection: Trash ---
+    match /trash/{trashId} {
+      allow get, list: if true;
+      allow create: if isValidId(trashId) && isValidTrash(incoming()) && incoming().id == trashId;
+      allow update: if isValidId(trashId) && isValidTrash(incoming()) && incoming().id == trashId;
+      allow delete: if isValidId(trashId);
+    }
+
+    // --- Collection: Sync Metadata ---
+    match /sync_meta/{metaId} {
+      allow get, list: if true;
+      allow create, update: if isValidId(metaId) && isValidSyncMeta(incoming());
+      allow delete: if isValidId(metaId);
+    }
+
+    // Connection testing endpoint
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

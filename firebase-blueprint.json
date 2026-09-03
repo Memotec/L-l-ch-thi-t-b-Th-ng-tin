@@ -1,0 +1,131 @@
+{
+  "entities": {
+    "Equipment": {
+      "title": "Equipment",
+      "description": "Thực thể hồ sơ Sổ Lý Lịch Thiết Bị Kỹ Thuật (CNS/ATM)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Mã định danh duy nhất của thiết bị",
+          "maxLength": 128
+        },
+        "general": {
+          "type": "object",
+          "description": "Thông tin lý lịch chung (Tên, model, serial, đơn vị quản lý, trạng thái)"
+        },
+        "org": {
+          "type": "object",
+          "description": "Thông tin cơ quan, đài trạm, đơn vị vận hành trực tiếp"
+        },
+        "spec": {
+          "type": "object",
+          "description": "Thông số kỹ thuật, tần số vô tuyến, công suất, IP"
+        },
+        "components": {
+          "type": "array",
+          "description": "Danh sách các khối chức năng và linh kiện cấu thành"
+        },
+        "licenses": {
+          "type": "array",
+          "description": "Danh sách giấy phép tần số, kiểm định kỹ thuật"
+        },
+        "maintenance": {
+          "type": "array",
+          "description": "Nhật ký kiểm tra và bảo dưỡng định kỳ"
+        },
+        "repair": {
+          "type": "array",
+          "description": "Nhật ký khắc phục sự cố và sửa chữa"
+        },
+        "docs": {
+          "type": "array",
+          "description": "Tài liệu kỹ thuật, sơ đồ, hướng dẫn khai thác"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Thời điểm tạo hồ sơ ISO-8601"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Thời điểm cập nhật mới nhất ISO-8601"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Người hoặc tài khoản thực hiện cập nhật gần nhất",
+          "maxLength": 200
+        }
+      },
+      "required": ["id", "general"]
+    },
+    "TrashItem": {
+      "title": "TrashItem",
+      "description": "Bản ghi thiết bị tạm xóa vào thùng rác với thời hạn lưu trữ 30 ngày",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Mã định danh của mục thùng rác",
+          "maxLength": 128
+        },
+        "equipment": {
+          "type": "object",
+          "description": "Dữ liệu đầy đủ của thiết bị bị xóa"
+        },
+        "deletedAt": {
+          "type": "string",
+          "description": "Thời điểm xóa vào thùng rác ISO-8601"
+        },
+        "deletedBy": {
+          "type": "string",
+          "description": "Người thực hiện thao tác xóa",
+          "maxLength": 200
+        }
+      },
+      "required": ["id", "equipment", "deletedAt"]
+    },
+    "SyncMetadata": {
+      "title": "SyncMetadata",
+      "description": "Metadata đồng bộ thời gian thực đám mây",
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "description": "Số hiệu phiên bản đồng bộ"
+        },
+        "lastModified": {
+          "type": "string",
+          "description": "Thời điểm sửa đổi mới nhất"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "Tên người dùng cập nhật",
+          "maxLength": 200
+        },
+        "count": {
+          "type": "number",
+          "description": "Tổng số lượng thiết bị đang quản lý"
+        },
+        "gasUrl": {
+          "type": "string",
+          "description": "URL Google Apps Script Web App liên kết"
+        }
+      },
+      "required": ["lastModified"]
+    }
+  },
+  "firestore": {
+    "/equipments/{equipmentId}": {
+      "schema": "Equipment",
+      "description": "Kho dữ liệu thiết bị kỹ thuật toàn hệ thống"
+    },
+    "/trash/{trashId}": {
+      "schema": "TrashItem",
+      "description": "Thùng rác thiết bị phục hồi trong vòng 30 ngày"
+    },
+    "/sync_meta/{metaId}": {
+      "schema": "SyncMetadata",
+      "description": "Trạng thái và phiên bản đồng bộ đám mây"
+    }
+  }
+}
