@@ -8,6 +8,7 @@ dotenv.config();
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const CLOUD_DB_FILE = path.join(DATA_DIR, 'cns_cloud_equipment_db.json');
+export const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbySB2N2_ekkgKoxNzZjrRmdHaysDntLGXmsS7FH2mp04_WSyCpZh7ExWAWfunwjmnS7PA/exec';
 
 // Ensure data directory exists for cloud storage
 if (!fs.existsSync(DATA_DIR)) {
@@ -26,11 +27,19 @@ interface CloudDbSchema {
 let inMemoryCache: CloudDbSchema | null = null;
 
 function getCloudDb(): CloudDbSchema | null {
-  if (inMemoryCache) return inMemoryCache;
+  if (inMemoryCache) {
+    if (!inMemoryCache.gasUrl) {
+      inMemoryCache.gasUrl = DEFAULT_GAS_URL;
+    }
+    return inMemoryCache;
+  }
   try {
     if (fs.existsSync(CLOUD_DB_FILE)) {
       const raw = fs.readFileSync(CLOUD_DB_FILE, 'utf-8');
       inMemoryCache = JSON.parse(raw);
+      if (inMemoryCache && !inMemoryCache.gasUrl) {
+        inMemoryCache.gasUrl = DEFAULT_GAS_URL;
+      }
       return inMemoryCache;
     }
   } catch (err) {
@@ -70,7 +79,7 @@ async function startServer() {
       count: db?.equipments?.length || 0,
       trashCount: db?.trash?.length || 0,
       lastModified: db?.lastModified || null,
-      gasUrl: db?.gasUrl || '',
+      gasUrl: db?.gasUrl || DEFAULT_GAS_URL,
       updatedBy: db?.updatedBy || ''
     });
   });
@@ -83,7 +92,7 @@ async function startServer() {
         version: db.version,
         lastModified: db.lastModified,
         updatedBy: db.updatedBy,
-        gasUrl: db.gasUrl,
+        gasUrl: db.gasUrl || DEFAULT_GAS_URL,
         equipments: db.equipments,
         trash: db.trash || []
       });
@@ -93,7 +102,7 @@ async function startServer() {
         initialized: false,
         equipments: [],
         trash: [],
-        gasUrl: '',
+        gasUrl: DEFAULT_GAS_URL,
         lastModified: null
       });
     }
@@ -107,11 +116,15 @@ async function startServer() {
       }
 
       const existingDb = getCloudDb();
+      const targetGasUrl = (typeof gasUrl === 'string' && gasUrl.trim()) 
+        ? gasUrl.trim() 
+        : (existingDb?.gasUrl || DEFAULT_GAS_URL);
+
       const newDb: CloudDbSchema = {
         version: (existingDb?.version || 0) + 1,
         lastModified: new Date().toISOString(),
         updatedBy: updatedBy || 'Quản trị viên',
-        gasUrl: gasUrl !== undefined ? gasUrl : (existingDb?.gasUrl || ''),
+        gasUrl: targetGasUrl,
         equipments,
         trash: Array.isArray(trash) ? trash : (existingDb?.trash || [])
       };
@@ -124,10 +137,32 @@ async function startServer() {
         lastModified: newDb.lastModified,
         count: equipments.length,
         trashCount: newDb.trash.length,
+        gasUrl: targetGasUrl,
         message: 'Đã lưu và đồng bộ thành công vào cơ sở dữ liệu Cloud'
       });
     } catch (err: any) {
       res.status(500).json({ success: false, message: err.message || 'Lỗi lưu dữ liệu Cloud' });
+    }
+  });
+
+  // Dedicated endpoint to save / update Google Apps Script Web App URL
+  app.post('/api/cloud-sync/gas-url', (req, res) => {
+    try {
+      const { url } = req.body;
+      const finalUrl = (typeof url === 'string' && url.trim()) ? url.trim() : DEFAULT_GAS_URL;
+      const existingDb = getCloudDb();
+      if (existingDb) {
+        existingDb.gasUrl = finalUrl;
+        existingDb.lastModified = new Date().toISOString();
+        saveCloudDb(existingDb);
+      }
+      res.json({
+        success: true,
+        gasUrl: finalUrl,
+        message: 'Đã tự động ghi nhớ URL Google Apps Script thành công!'
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Lỗi ghi nhớ URL' });
     }
   });
 

@@ -14,7 +14,8 @@ export interface CloudSyncState {
 const CLOUD_LAST_SYNC_KEY = 'cns_cloud_last_synced_time_v1';
 const AUTO_LOAD_ON_LOGIN_KEY = 'cns_auto_load_cloud_on_login_v1';
 const CROSS_DEVICE_AUTO_SYNC_KEY = 'cns_cross_device_auto_sync_v1';
-const GAS_URL_STORAGE_KEY = 'cns_gas_webapp_url_v1';
+export const GAS_URL_STORAGE_KEY = 'cns_gas_webapp_url_v1';
+export const DEFAULT_GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbySB2N2_ekkgKoxNzZjrRmdHaysDntLGXmsS7FH2mp04_WSyCpZh7ExWAWfunwjmnS7PA/exec';
 
 type SyncListener = (state: CloudSyncState) => void;
 const listeners = new Set<SyncListener>();
@@ -99,6 +100,40 @@ export const cloudSyncService = {
   },
 
   /**
+   * Get the active Google Apps Script Web App URL with fallback to default
+   */
+  getGasUrl(): string {
+    if (typeof window === 'undefined') return DEFAULT_GAS_WEBAPP_URL;
+    const stored = localStorage.getItem(GAS_URL_STORAGE_KEY);
+    if (!stored || !stored.trim()) {
+      localStorage.setItem(GAS_URL_STORAGE_KEY, DEFAULT_GAS_WEBAPP_URL);
+      return DEFAULT_GAS_WEBAPP_URL;
+    }
+    return stored.trim();
+  },
+
+  /**
+   * Permanently save and remember Google Apps Script Web App URL across client and server
+   */
+  async saveGasUrl(url: string): Promise<string> {
+    const finalUrl = (url && url.trim()) ? url.trim() : DEFAULT_GAS_WEBAPP_URL;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(GAS_URL_STORAGE_KEY, finalUrl);
+    }
+    // Also notify server to remember permanently in database file
+    try {
+      await fetch('/api/cloud-sync/gas-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: finalUrl })
+      });
+    } catch (e) {
+      console.warn('Failed to sync gas URL to server:', e);
+    }
+    return finalUrl;
+  },
+
+  /**
    * Quick status check with server
    */
   async checkCloudStatus(): Promise<{
@@ -126,16 +161,17 @@ export const cloudSyncService = {
           updatedBy: data.updatedBy || ''
         });
 
-        // If server has GAS URL and local doesn't, sync it
-        if (data.gasUrl && typeof window !== 'undefined' && !localStorage.getItem(GAS_URL_STORAGE_KEY)) {
-          localStorage.setItem(GAS_URL_STORAGE_KEY, data.gasUrl);
+        // Ensure GAS URL is synchronized and remembered
+        const activeGasUrl = data.gasUrl || DEFAULT_GAS_WEBAPP_URL;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(GAS_URL_STORAGE_KEY, activeGasUrl);
         }
 
         return {
           hasNewData,
           cloudModified: data.lastModified,
           count: data.count || 0,
-          gasUrl: data.gasUrl
+          gasUrl: activeGasUrl
         };
       }
     } catch (err: any) {
@@ -145,7 +181,8 @@ export const cloudSyncService = {
     return {
       hasNewData: false,
       cloudModified: null,
-      count: 0
+      count: 0,
+      gasUrl: this.getGasUrl()
     };
   },
 
@@ -175,8 +212,9 @@ export const cloudSyncService = {
           const nowStr = new Date().toISOString();
           localStorage.setItem(CLOUD_LAST_SYNC_KEY, nowStr);
 
-          if (serverResult.gasUrl && !localStorage.getItem(GAS_URL_STORAGE_KEY)) {
-            localStorage.setItem(GAS_URL_STORAGE_KEY, serverResult.gasUrl);
+          const activeGas = serverResult.gasUrl || DEFAULT_GAS_WEBAPP_URL;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(GAS_URL_STORAGE_KEY, activeGas);
           }
 
           updateState({
@@ -191,7 +229,7 @@ export const cloudSyncService = {
             success: true,
             equipments: serverResult.equipments,
             trash: serverResult.trash || [],
-            gasUrl: serverResult.gasUrl,
+            gasUrl: activeGas,
             message: `Đã tải về thành công ${serverResult.equipments.length} thiết bị từ Cloud.`,
             source: 'server'
           };
@@ -199,7 +237,7 @@ export const cloudSyncService = {
       }
 
       // 2. Fallback: If server has no saved data yet, check Google Apps Script Web App if configured
-      const gasUrl = typeof window !== 'undefined' ? localStorage.getItem(GAS_URL_STORAGE_KEY) : '';
+      const gasUrl = this.getGasUrl();
       if (gasUrl && gasUrl.trim().startsWith('https://script.google.com')) {
         const pullUrl = gasUrl.includes('?') 
           ? `${gasUrl}&action=getAllEquipments` 

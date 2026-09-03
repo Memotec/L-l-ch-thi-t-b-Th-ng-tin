@@ -36,6 +36,7 @@ import {
 import { EquipmentData, AppUser } from '../types';
 import { generateGasCode, generateGasHtml, generateAppsscriptJson } from '../utils/gasGenerator';
 import { googleDriveDocsService, GoogleDocSyncResult } from '../utils/googleDriveDocsService';
+import { cloudSyncService, DEFAULT_GAS_WEBAPP_URL, GAS_URL_STORAGE_KEY } from '../utils/cloudSyncService';
 
 interface GoogleWorkspaceTabProps {
   currentEquipment: EquipmentData;
@@ -47,7 +48,6 @@ interface GoogleWorkspaceTabProps {
   onOpenLoginModal?: () => void;
 }
 
-const GAS_URL_STORAGE_KEY = 'cns_gas_webapp_url_v1';
 const AUTO_SYNC_STORAGE_KEY = 'cns_auto_sync_gdoc_on_change_v1';
 
 export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
@@ -63,7 +63,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
   const isViewer = !isAdmin;
 
   const [gasUrl, setGasUrl] = useState<string>(() => {
-    return localStorage.getItem(GAS_URL_STORAGE_KEY) || '';
+    return cloudSyncService.getGasUrl();
   });
 
   const [autoSyncOnChange, setAutoSyncOnChange] = useState<boolean>(() => {
@@ -106,23 +106,29 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
   const gasHtml = generateGasHtml();
   const appsscriptJson = generateAppsscriptJson();
 
-  // Check direct Google Drive authorization
+  // Check direct Google Drive authorization and ensure GAS URL is synced
   useEffect(() => {
     googleDriveDocsService.loadScripts().then(() => {
       setIsDriveAuthorized(googleDriveDocsService.isAuthorized());
     }).catch((err) => {
       console.warn('Google scripts load warning:', err);
     });
+
+    const activeUrl = cloudSyncService.getGasUrl();
+    if (activeUrl && activeUrl !== gasUrl) {
+      setGasUrl(activeUrl);
+    }
   }, []);
 
-  // Save GAS URL to local storage
-  const handleSaveGasUrl = (url: string) => {
+  // Save GAS URL to local storage and sync to server cloud storage
+  const handleSaveGasUrl = async (url: string) => {
     if (isViewer) {
       onShowToast('URL Web App Google Apps Script được cố định bởi Quản trị viên. Người xem không được thay đổi.');
       return;
     }
     setGasUrl(url);
-    localStorage.setItem(GAS_URL_STORAGE_KEY, url);
+    await cloudSyncService.saveGasUrl(url);
+    onShowToast('✓ Đã tự động ghi nhớ URL Google Apps Script thành công!');
   };
 
   // Toggle auto-sync setting
