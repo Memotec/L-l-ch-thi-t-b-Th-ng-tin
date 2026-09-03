@@ -2,7 +2,8 @@ import { EquipmentData } from '../types';
 
 declare const google: any;
 
-const CLIENT_ID = '509124400040-o4n2t7b64qj7216l37861pkvlh3k46d3.apps.googleusercontent.com';
+const DEFAULT_CLIENT_ID = '509124400040-o4n2t7b64qj7216l37861pkvlh3k46d3.apps.googleusercontent.com';
+const CUSTOM_CLIENT_ID_KEY = 'cns_google_oauth_client_id_v1';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/documents';
 const FOLDER_NAME = 'CNS_SoLyLich_GoogleDocs';
 
@@ -75,10 +76,36 @@ class GoogleDriveDocsService {
     });
   }
 
+  public getClientId(): string {
+    return localStorage.getItem(CUSTOM_CLIENT_ID_KEY) || DEFAULT_CLIENT_ID;
+  }
+
+  public setClientId(id: string) {
+    const trimmed = id.trim();
+    if (trimmed) {
+      localStorage.setItem(CUSTOM_CLIENT_ID_KEY, trimmed);
+    } else {
+      localStorage.removeItem(CUSTOM_CLIENT_ID_KEY);
+    }
+    this.tokenClient = null;
+    this.initClients();
+  }
+
+  public resetClientId() {
+    localStorage.removeItem(CUSTOM_CLIENT_ID_KEY);
+    this.tokenClient = null;
+    this.initClients();
+  }
+
+  public hasCustomClientId(): boolean {
+    return !!localStorage.getItem(CUSTOM_CLIENT_ID_KEY);
+  }
+
   private initClients() {
     if (typeof google !== 'undefined' && google.accounts?.oauth2) {
+      const activeClientId = this.getClientId();
       this.tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
+        client_id: activeClientId,
         scope: SCOPES,
         callback: (tokenResponse: any) => {
           if (tokenResponse && tokenResponse.access_token) {
@@ -129,13 +156,18 @@ class GoogleDriveDocsService {
       }
 
       if (!this.tokenClient) {
-        reject(new Error('Google Identity Services client not loaded.'));
+        reject(new Error('Thư viện Google Identity Services chưa tải xong. Vui lòng thử lại sau vài giây.'));
         return;
       }
 
       this.tokenClient.callback = (tokenResponse: any) => {
         if (tokenResponse.error) {
-          reject(new Error(tokenResponse.error_description || tokenResponse.error));
+          const rawErr = tokenResponse.error_description || tokenResponse.error;
+          let friendlyMsg = rawErr;
+          if (rawErr.includes('access_denied') || rawErr.includes('unauthorized_client') || rawErr.includes('redirect_uri_mismatch') || rawErr.includes('origin_mismatch')) {
+            friendlyMsg = `Đã chặn quyền truy cập: Lỗi uỷ quyền từ Google. Vui lòng cấu hình OAuth Client ID hợp lệ hoặc chuyển sang dùng Google Apps Script Web App (Không cần Client ID, không bao giờ bị chặn).`;
+          }
+          reject(new Error(friendlyMsg));
           return;
         }
         if (tokenResponse.access_token) {
@@ -147,7 +179,11 @@ class GoogleDriveDocsService {
       };
 
       // Prompt consent / token
-      this.tokenClient.requestAccessToken({ prompt: '' });
+      try {
+        this.tokenClient.requestAccessToken({ prompt: '' });
+      } catch (err: any) {
+        reject(new Error(err.message || 'Lỗi mở cửa sổ xác thực Google'));
+      }
     });
   }
 

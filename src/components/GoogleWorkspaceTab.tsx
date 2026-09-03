@@ -25,7 +25,13 @@ import {
   FileCheck2,
   Lock,
   UserCheck,
-  Eye
+  Eye,
+  AlertTriangle,
+  HelpCircle,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Info
 } from 'lucide-react';
 import { EquipmentData, AppUser } from '../types';
 import { generateGasCode, generateGasHtml, generateAppsscriptJson } from '../utils/gasGenerator';
@@ -72,6 +78,13 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; name: string } | null>(null);
   const [directDocResult, setDirectDocResult] = useState<GoogleDocSyncResult | null>(null);
   const [copiedDocStandard, setCopiedDocStandard] = useState<boolean>(false);
+
+  // Google OAuth Troubleshooter & Client ID configuration
+  const [showOAuthTroubleshooter, setShowOAuthTroubleshooter] = useState<boolean>(false);
+  const [clientIdInput, setClientIdInput] = useState<string>(() => googleDriveDocsService.getClientId());
+  const [hasCustomClientId, setHasCustomClientId] = useState<boolean>(() => googleDriveDocsService.hasCustomClientId());
+  const [copiedOrigin, setCopiedOrigin] = useState<boolean>(false);
+  const [authErrorDetail, setAuthErrorDetail] = useState<string | null>(null);
 
   // Google Apps Script Web App State
   const [isConnecting, setIsConnecting] = useState(false);
@@ -130,16 +143,72 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
   // Connect / Authorize Direct Google Drive & Docs API (Both Viewer & Admin can view and download)
   const handleAuthorizeDrive = async () => {
     setIsAuthorizingDrive(true);
+    setAuthErrorDetail(null);
     try {
       await googleDriveDocsService.requestAccessToken();
       setIsDriveAuthorized(true);
+      setShowOAuthTroubleshooter(false);
       onShowToast('✓ Kết nối tài khoản Google Drive & Google Docs thành công!');
       setLastActionStatus('✓ Đã xác thực thành công Google Drive. Quyền lưu trữ thư mục tập trung đã sẵn sàng.');
     } catch (err: any) {
       console.error('Google Auth Error:', err);
-      onShowToast(`✗ Không thể kết nối Google: ${err.message || 'Hủy bỏ'}`);
+      const msg = err.message || '';
+      const isBlocked = msg.includes('uỷ quyền') || msg.includes('ủy quyền') || msg.includes('chặn') || msg.includes('access_denied') || msg.includes('unauthorized') || msg.includes('redirect_uri_mismatch');
+      if (isBlocked) {
+        setShowOAuthTroubleshooter(true);
+        setAuthErrorDetail(msg);
+        onShowToast('⚠️ Đã chặn quyền truy cập (Lỗi uỷ quyền). Vui lòng xem hướng dẫn khắc phục bên dưới hoặc chuyển sang dùng Apps Script.');
+      } else {
+        onShowToast(`✗ Không thể kết nối Google: ${msg || 'Hủy bỏ'}`);
+      }
+      setLastActionStatus(`✗ Lỗi kết nối Google: ${msg}`);
     } finally {
       setIsAuthorizingDrive(false);
+    }
+  };
+
+  // Save custom Google OAuth Client ID
+  const handleSaveClientId = () => {
+    if (isViewer) {
+      onShowToast('Cần quyền Quản trị viên để thay đổi Client ID.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
+    const trimmed = clientIdInput.trim();
+    if (!trimmed) {
+      googleDriveDocsService.resetClientId();
+      setClientIdInput(googleDriveDocsService.getClientId());
+      setHasCustomClientId(false);
+      onShowToast('Đã khôi phục Google Client ID mặc định.');
+    } else {
+      googleDriveDocsService.setClientId(trimmed);
+      setHasCustomClientId(true);
+      onShowToast('✓ Đã lưu Google OAuth Client ID mới thành công!');
+    }
+    setIsDriveAuthorized(false);
+  };
+
+  // Reset Client ID to default
+  const handleResetClientId = () => {
+    if (isViewer) {
+      onShowToast('Cần quyền Quản trị viên để thay đổi Client ID.');
+      return;
+    }
+    googleDriveDocsService.resetClientId();
+    setClientIdInput(googleDriveDocsService.getClientId());
+    setHasCustomClientId(false);
+    setIsDriveAuthorized(false);
+    onShowToast('Đã khôi phục Client ID mặc định.');
+  };
+
+  // Copy current window origin
+  const handleCopyOrigin = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    if (origin) {
+      navigator.clipboard.writeText(origin);
+      setCopiedOrigin(true);
+      onShowToast(`✓ Đã sao chép Nguồn gốc JavaScript: ${origin}`);
+      setTimeout(() => setCopiedOrigin(false), 3000);
     }
   };
 
@@ -607,7 +676,213 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
 
       {/* Mode 1: DIRECT GOOGLE DRIVE & GOOGLE DOCS AUTO-OVERWRITE */}
       {activeCodeTab === 'directDrive' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="space-y-5">
+          {/* Authorization Block Warning & Quick Fix Banner */}
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-amber-500/20 text-amber-800 rounded-lg shrink-0 border border-amber-300">
+                <AlertTriangle className="w-5 h-5 text-amber-700" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="font-bold text-amber-950 flex items-center gap-2 flex-wrap">
+                  <span>Gặp lỗi &quot;Đã chặn quyền truy cập: Lỗi uỷ quyền&quot; từ Google?</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] bg-amber-200/70 text-amber-900 font-semibold">Lỗi Google OAuth 403 / 400</span>
+                </div>
+                <p className="text-[11.5px] text-slate-600 leading-relaxed">
+                  Nguyên nhân do Google yêu cầu thêm domain vào <b>Nguồn gốc JavaScript</b> hoặc tài khoản chưa nằm trong danh sách <b>Người dùng thử nghiệm (Test users)</b>. 
+                  Hãy dùng <b>Google Apps Script Web App</b> để đồng bộ tự động 100% không bao giờ bị chặn, hoặc bấm nút bên dưới để cấu hình Client ID.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-stretch md:self-auto flex-wrap">
+              <button
+                onClick={() => setActiveCodeTab('gasSync')}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Cloud className="w-3.5 h-3.5" />
+                <span>Dùng Apps Script (Khuyên dùng)</span>
+              </button>
+              <button
+                onClick={() => setShowOAuthTroubleshooter(prev => !prev)}
+                className="px-3.5 py-2 bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-lg font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <Settings className="w-3.5 h-3.5 text-amber-700" />
+                <span>{showOAuthTroubleshooter ? 'Ẩn Trợ Giúp' : 'Khắc Phục Lỗi & Cấu Hình'}</span>
+                {showOAuthTroubleshooter ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Full OAuth Troubleshooter & Client ID Setup Panel */}
+          {showOAuthTroubleshooter && (
+            <div className="p-5 bg-amber-50/90 border border-amber-300 rounded-xl space-y-4 text-xs text-slate-800 shadow-xs">
+              <div className="flex items-start justify-between gap-2 border-b border-amber-200 pb-3">
+                <div className="flex items-center gap-2 text-amber-950 font-bold text-sm">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                  <span>Hướng Dẫn Khắc Phục Triệt Để: &quot;Đã chặn quyền truy cập: Lỗi uỷ quyền&quot;</span>
+                </div>
+                <button
+                  onClick={() => setShowOAuthTroubleshooter(false)}
+                  className="text-slate-500 hover:text-slate-800 text-xs cursor-pointer p-1 rounded hover:bg-amber-100 transition-colors"
+                  title="Đóng bảng hướng dẫn"
+                >
+                  ✕ Đóng
+                </button>
+              </div>
+
+              {authErrorDetail && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 font-mono break-all space-y-1">
+                  <div className="font-bold text-rose-900">Chi tiết thông báo từ Google:</div>
+                  <div>{authErrorDetail}</div>
+                </div>
+              )}
+
+              <div className="space-y-2 text-[11.5px] leading-relaxed bg-white/70 p-3.5 rounded-lg border border-amber-200/80">
+                <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-amber-700" />
+                  Tại sao Google hiển thị thông báo &quot;Đã chặn quyền truy cập: Lỗi uỷ quyền&quot;?
+                </div>
+                <ul className="list-disc list-inside space-y-1.5 pl-1 text-slate-700">
+                  <li>
+                    <b>Lỗi nguồn gốc JavaScript (Origin Mismatch):</b> Tên miền của ứng dụng (<code>{typeof window !== 'undefined' ? window.location.origin : ''}</code>) chưa được thêm vào ô <b>&quot;Nguồn gốc JavaScript đã ủy quyền&quot; (Authorized JavaScript origins)</b> trong Google Cloud Console.
+                  </li>
+                  <li>
+                    <b>Chưa thêm Người dùng thử nghiệm (Test users):</b> Màn hình đồng ý OAuth (OAuth consent screen) đang ở trạng thái <i>Thử nghiệm (Testing)</i> và tài khoản Google của bạn (ví dụ: <code>TAILIEUTBTT@gmail.com</code>) chưa được thêm vào danh sách <b>Test users</b>.
+                  </li>
+                </ul>
+              </div>
+
+              {/* Solution 1: Recommended Google Apps Script */}
+              <div className="p-4 bg-white border border-emerald-300 rounded-lg space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 font-bold text-emerald-900 text-xs">
+                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                    <span>GIẢI PHÁP 1 (KHUYÊN DÙNG 100% - KHÔNG BAO GIỜ BỊ CHẶN): Dùng Google Apps Script Web App</span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded text-[10px] border border-emerald-200">
+                    Khuyến nghị số 1
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Google Apps Script Web App chạy với quyền hạn của chính tài khoản Google của bạn. Toàn bộ tính năng tự động tạo Google Doc 8 trang chuẩn, ghi đè khi thay đổi, xuất link PDF, lưu vào thư mục Drive và đồng bộ Google Sheets <b>hoàn toàn không cần Client ID</b> và không bao giờ bị Google chặn ủy quyền!
+                </p>
+                <button
+                  onClick={() => setActiveCodeTab('gasSync')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Cloud className="w-4 h-4" />
+                  <span>Chuyển Sang Tab Apps Script & Sheets Ngay</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Solution 2: Custom Client ID */}
+              <div className="p-4 bg-white border border-slate-200 rounded-lg space-y-3.5 shadow-2xs">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                    <Settings className="w-4 h-4 text-blue-600" />
+                    <span>GIẢI PHÁP 2: Cấu hình Google OAuth Client ID của bạn</span>
+                  </div>
+                  {hasCustomClientId && (
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-800 font-semibold rounded text-[10px] border border-blue-200">
+                      Đang dùng Client ID tùy chỉnh
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Nếu bạn muốn dùng popup kết nối trực tiếp của Google, bạn có thể tạo một OAuth Client ID miễn phí trong Google Cloud Console và dán vào đây:
+                </p>
+
+                {/* Step 1: Origin */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-slate-800 flex items-center gap-1">
+                    <span>1. Nguồn gốc JavaScript đã ủy quyền (Authorized JavaScript origins):</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <code className="font-mono text-[11px] bg-slate-100 text-blue-900 px-3 py-1.5 rounded border border-slate-300 flex-1 truncate select-all">
+                      {typeof window !== 'undefined' ? window.location.origin : ''}
+                    </code>
+                    <button
+                      onClick={handleCopyOrigin}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer shrink-0 transition-colors"
+                    >
+                      {copiedOrigin ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedOrigin ? 'Đã chép!' : 'Sao chép'}</span>
+                    </button>
+                  </div>
+                  <p className="text-[10.5px] text-slate-500">
+                    Sao chép đường dẫn trên và dán vào ô <b>Authorized JavaScript origins</b> trong Google Cloud Console &gt; Credentials &gt; OAuth 2.0 Client IDs.
+                  </p>
+                </div>
+
+                {/* Step 2: Input Client ID */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-slate-800 flex items-center gap-1">
+                    <span>2. Nhập Google OAuth Client ID của bạn:</span>
+                  </label>
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <input
+                      type="text"
+                      value={clientIdInput}
+                      onChange={(e) => setClientIdInput(e.target.value)}
+                      placeholder="ví dụ: 123456789-abcdef.apps.googleusercontent.com"
+                      className="flex-1 px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                    />
+                    <button
+                      onClick={handleSaveClientId}
+                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition-colors shadow-2xs"
+                    >
+                      Lưu Client ID
+                    </button>
+                    {hasCustomClientId && (
+                      <button
+                        onClick={handleResetClientId}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium cursor-pointer shrink-0 transition-colors"
+                      >
+                        Khôi phục mặc định
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Step 3: Test Users */}
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 space-y-1">
+                  <div className="font-semibold text-slate-800">
+                    3. Thêm tài khoản vào Người dùng thử nghiệm (Test users):
+                  </div>
+                  <div>
+                    Trong Google Cloud Console &gt; <b>APIs &amp; Services</b> &gt; <b>OAuth consent screen</b> &gt; Mục <b>Test users</b>, nhấn <b>+ ADD USERS</b> và nhập email của bạn (ví dụ: <code>TAILIEUTBTT@gmail.com</code>).
+                  </div>
+                </div>
+              </div>
+
+              {/* Solution 3: Offline standard HTML */}
+              <div className="p-3.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between flex-wrap gap-2 text-[11.5px] shadow-2xs">
+                <span className="text-slate-700">
+                  <b>GIẢI PHÁP 3:</b> Tải file HTML chuẩn hoặc sao chép để dán (Ctrl+V) vào Google Docs mà không cần cấu hình Google:
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleDownloadStandardDoc}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-semibold cursor-pointer text-slate-800 transition-colors flex items-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Tải file Doc chuẩn 8 trang</span>
+                  </button>
+                  <button
+                    onClick={handleCopyStandardDoc}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-semibold cursor-pointer text-slate-800 transition-colors flex items-center gap-1"
+                  >
+                    {copiedDocStandard ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
+                    <span>{copiedDocStandard ? 'Đã sao chép!' : 'Sao chép Doc chuẩn'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Left Column: Direct Authorization & Central Folder Status */}
           <div className="enterprise-card p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -673,14 +948,23 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
             </div>
 
             {!isDriveAuthorized ? (
-              <button
-                onClick={handleAuthorizeDrive}
-                disabled={isAuthorizingDrive}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all cursor-pointer"
-              >
-                <KeyRound className={`w-4 h-4 ${isAuthorizingDrive ? 'animate-spin' : ''}`} />
-                <span>{isAuthorizingDrive ? 'Đang kết nối Google...' : 'Kết Nối Google Drive / Docs'}</span>
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={handleAuthorizeDrive}
+                  disabled={isAuthorizingDrive}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all cursor-pointer"
+                >
+                  <KeyRound className={`w-4 h-4 ${isAuthorizingDrive ? 'animate-spin' : ''}`} />
+                  <span>{isAuthorizingDrive ? 'Đang kết nối Google...' : 'Kết Nối Google Drive / Docs'}</span>
+                </button>
+                <button
+                  onClick={() => setShowOAuthTroubleshooter(prev => !prev)}
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-medium transition-colors cursor-pointer"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{showOAuthTroubleshooter ? 'Ẩn trợ giúp lỗi ủy quyền' : 'Khắc phục lỗi: Đã chặn quyền truy cập'}</span>
+                </button>
+              </div>
             ) : (
               <div className="flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
                 <div className="flex items-center gap-1.5 font-semibold">
@@ -912,6 +1196,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
               </div>
             )}
           </div>
+        </div>
         </div>
       )}
 
