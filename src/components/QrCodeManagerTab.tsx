@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   QrCode, 
   Download, 
@@ -19,9 +19,13 @@ import {
   FileText,
   FileSpreadsheet,
   Link,
-  Edit3
+  Edit3,
+  Filter,
+  CheckSquare,
+  Square,
+  ListFilter
 } from 'lucide-react';
-import { EquipmentData } from '../types';
+import { EquipmentData, AppUser, EquipmentCategory } from '../types';
 import { 
   generateEquipmentQrDataUrl, 
   buildEquipmentQrData, 
@@ -38,6 +42,8 @@ interface QrCodeManagerTabProps {
   onUpdateEquipment?: (equipment: EquipmentData) => void;
   isReadOnly?: boolean;
   onOpenLoginModal?: () => void;
+  initialSubTab?: 'single' | 'batch' | 'scanner';
+  currentUser?: AppUser;
 }
 
 export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
@@ -49,17 +55,25 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   onOpenPdfViewer,
   onUpdateEquipment,
   isReadOnly = false,
-  onOpenLoginModal
+  onOpenLoginModal,
+  initialSubTab = 'single',
+  currentUser
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [allQrUrls, setAllQrUrls] = useState<Record<string, string>>({});
-  const [activeSubTab, setActiveSubTab] = useState<'single' | 'batch' | 'scanner'>('single');
+  const [activeSubTab, setActiveSubTab] = useState<'single' | 'batch' | 'scanner'>(initialSubTab);
   const [targetMode, setTargetMode] = useState<QrTargetMode>('pdf');
   const [copied, setCopied] = useState<boolean>(false);
   const darkColor = '#0f172a';
   const errorLevel = 'M';
   const [scanInput, setScanInput] = useState<string>('');
   const [scanResult, setScanResult] = useState<EquipmentData | null>(null);
+
+  // Batch QR Selection & Filtering state
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [batchSearchTerm, setBatchSearchTerm] = useState<string>('');
+  const [selectedEqIds, setSelectedEqIds] = useState<Set<string>>(() => new Set(allEquipments.map(e => e.id)));
+  const [printLayoutFormat, setPrintLayoutFormat] = useState<'decal_standard' | 'decal_compact' | 'a4_catalog'>('decal_standard');
   
   // Custom Google Doc URL editor
   const [customDocUrl, setCustomDocUrl] = useState<string>(currentEquipment.googleDocUrl || '');
@@ -70,6 +84,15 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   useEffect(() => {
     setCustomDocUrl(currentEquipment.googleDocUrl || '');
   }, [currentEquipment]);
+
+  // Keep selectedEqIds updated if allEquipments length changes
+  useEffect(() => {
+    setSelectedEqIds(prev => {
+      const next = new Set(prev);
+      allEquipments.forEach(e => next.add(e.id));
+      return next;
+    });
+  }, [allEquipments]);
 
   // Generate QR for current equipment
   useEffect(() => {
@@ -86,7 +109,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
     return () => { isMounted = false; };
   }, [currentEquipment, darkColor, errorLevel, targetMode]);
 
-  // Pre-generate QR for all equipments (only when batch tab is opened)
+  // Pre-generate QR for all equipments (when batch tab is opened or targetMode changes)
   useEffect(() => {
     if (activeSubTab !== 'batch') return;
     let isMounted = true;
@@ -94,7 +117,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
       const results = await Promise.all(
         allEquipments.map(async (eq) => {
           const url = await generateEquipmentQrDataUrl(eq, {
-            width: 250,
+            width: 300,
             margin: 1,
             color: { dark: '#0f172a', light: '#ffffff' },
             errorCorrectionLevel: 'M',
@@ -114,6 +137,60 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
     generateAll();
     return () => { isMounted = false; };
   }, [allEquipments, targetMode, activeSubTab]);
+
+  // Filter batch equipments based on Category and Search Term
+  const filteredBatchEquipments = useMemo(() => {
+    return allEquipments.filter(eq => {
+      const matchesCategory = selectedCategory === 'all' || eq.general.category === selectedCategory;
+      if (!matchesCategory) return false;
+      if (!batchSearchTerm.trim()) return true;
+      const term = batchSearchTerm.toLowerCase();
+      const name = eq.general?.name || '';
+      const model = eq.general?.model || '';
+      const serial = eq.general?.serial || '';
+      const assetNo = eq.general?.assetNo || '';
+      const location = eq.org?.location || '';
+      return (
+        name.toLowerCase().includes(term) ||
+        model.toLowerCase().includes(term) ||
+        serial.toLowerCase().includes(term) ||
+        assetNo.toLowerCase().includes(term) ||
+        location.toLowerCase().includes(term) ||
+        eq.id.toLowerCase().includes(term)
+      );
+    });
+  }, [allEquipments, selectedCategory, batchSearchTerm]);
+
+  // Toggle single equipment selection in batch mode
+  const handleToggleSelectEq = (id: string) => {
+    setSelectedEqIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Select all filtered items
+  const handleSelectAllFiltered = () => {
+    setSelectedEqIds(prev => {
+      const next = new Set(prev);
+      filteredBatchEquipments.forEach(e => next.add(e.id));
+      return next;
+    });
+  };
+
+  // Deselect all filtered items
+  const handleDeselectAllFiltered = () => {
+    setSelectedEqIds(prev => {
+      const next = new Set(prev);
+      filteredBatchEquipments.forEach(e => next.delete(e.id));
+      return next;
+    });
+  };
 
   const { targetUrl, googleDocUrl, summaryText } = buildEquipmentQrData(
     currentEquipment, 
@@ -216,6 +293,219 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
 
   const handlePrintBatchTags = () => {
     window.print();
+  };
+
+  // Dedicated Admin Print Window for QR PDF Retrieval List & Stickers
+  const handlePrintBatchPdfQrListWindow = async () => {
+    const itemsToPrint = allEquipments.filter(eq => selectedEqIds.has(eq.id));
+    if (itemsToPrint.length === 0) {
+      onShowToast('⚠️ Vui lòng chọn ít nhất 1 thiết bị để in danh sách mã QR!');
+      return;
+    }
+
+    onShowToast(`🖨️ Đang chuẩn bị bản in cho ${itemsToPrint.length} mã QR truy xuất PDF...`);
+
+    // Ensure all QR code data URLs are generated for itemsToPrint
+    const qrMap: Record<string, string> = {};
+    await Promise.all(
+      itemsToPrint.map(async (eq) => {
+        if (allQrUrls[eq.id]) {
+          qrMap[eq.id] = allQrUrls[eq.id];
+        } else {
+          const url = await generateEquipmentQrDataUrl(eq, {
+            width: 320,
+            margin: 1,
+            color: { dark: '#0f172a', light: '#ffffff' },
+            errorCorrectionLevel: 'M',
+            targetMode: targetMode
+          });
+          qrMap[eq.id] = url;
+        }
+      })
+    );
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const companyName = itemsToPrint[0]?.org?.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM';
+    const unitName = itemsToPrint[0]?.org?.unit || 'TRUNG TÂM BẢO ĐẢM KỸ THUẬT';
+    const currentDate = new Date().toLocaleDateString('vi-VN');
+
+    let bodyHtml = '';
+
+    if (printLayoutFormat === 'a4_catalog') {
+      // Catalog table format
+      bodyHtml = `
+        <div class="page-title">
+          <h2>${companyName.toUpperCase()} - ${unitName.toUpperCase()}</h2>
+          <h1>DANH SÁCH MÃ QR TRUY XUẤT FILE PDF SỔ LÝ LỊCH THIẾT BỊ</h1>
+          <p class="sub-info">Ngày lập: ${currentDate} &bull; Chế độ: Truy xuất File PDF A4 &bull; Tổng số: ${itemsToPrint.length} thiết bị</p>
+        </div>
+        <table class="catalog-table">
+          <thead>
+            <tr>
+              <th style="width: 35px;">STT</th>
+              <th style="width: 125px;">Mã QR Truy Xuất PDF</th>
+              <th>Tên Thiết Bị & Chủng Loại</th>
+              <th>Model & Số Serial</th>
+              <th>Mã Tài Sản / Vị Trí</th>
+              <th>Kỹ Sư Phụ Trách & Hướng Dẫn</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsToPrint.map((eq, idx) => `
+              <tr>
+                <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+                <td style="text-align: center; padding: 6px;">
+                  <img src="${qrMap[eq.id]}" class="qr-catalog-img" alt="QR ${eq.id}" />
+                  <div style="font-size: 7.5pt; font-family: monospace; font-weight: bold; margin-top: 3px; color: #1e3a8a;">${eq.id}</div>
+                </td>
+                <td>
+                  <strong style="text-transform: uppercase; font-size: 9.5pt; color: #0f172a;">${eq.general.name}</strong>
+                  <div style="font-size: 8pt; color: #475569; margin-top: 2px;">Phân loại: <strong>${eq.general.category}</strong></div>
+                </td>
+                <td>
+                  <div><strong>Model:</strong> ${eq.general.model || 'N/A'}</div>
+                  <div><strong>Serial:</strong> <span style="font-family: monospace; font-weight: bold;">${eq.general.serial || 'N/A'}</span></div>
+                </td>
+                <td>
+                  <div><strong>Mã TS:</strong> <span style="font-family: monospace; font-weight: bold;">${eq.general.assetNo || 'N/A'}</span></div>
+                  <div style="font-size: 8pt; color: #334155;"><strong>Vị trí:</strong> ${eq.org.location || '---'}</div>
+                </td>
+                <td>
+                  <div><strong>Kỹ sư:</strong> ${eq.org.primaryEngineer || '---'}</div>
+                  <div style="font-size: 7.5pt; color: #2563eb; margin-top: 3px; font-weight: 500;">✓ Quét QR bằng camera để mở trực tiếp File PDF Sổ Lý Lịch A4</div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } else if (printLayoutFormat === 'decal_compact') {
+      // Compact Decal Stamps (3 items per row)
+      bodyHtml = `
+        <div class="header-banner">
+          <div><strong>${companyName}</strong> - ${unitName}</div>
+          <div style="font-size: 9pt; font-weight: bold; color: #1e3a8a;">TEM NHÃN MÃ QR DÁN MẶT MÁY (TRUY XUẤT FILE PDF SỔ LÝ LỊCH)</div>
+        </div>
+        <div class="decal-grid compact-grid">
+          ${itemsToPrint.map((eq) => `
+            <div class="decal-card compact-card">
+              <div class="card-header">${eq.general.name}</div>
+              <div class="card-body">
+                <img src="${qrMap[eq.id]}" class="qr-img-compact" alt="QR" />
+                <div class="card-info">
+                  <div><b>Model:</b> ${eq.general.model || 'N/A'}</div>
+                  <div><b>S/N:</b> <span class="mono">${eq.general.serial || 'N/A'}</span></div>
+                  <div><b>TS:</b> <span class="mono">${eq.general.assetNo || 'N/A'}</span></div>
+                  <div><b>VT:</b> ${eq.org.location || '---'}</div>
+                </div>
+              </div>
+              <div class="card-footer">QUÉT MÃ QR MỞ FILE PDF &bull; ${eq.id}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      // Standard Decal Stamps (2 items per row)
+      bodyHtml = `
+        <div class="header-banner">
+          <div><strong>${companyName.toUpperCase()}</strong> &bull; ${unitName.toUpperCase()}</div>
+          <div style="font-size: 10pt; font-weight: bold; color: #1e3a8a;">BẢNG TEM DECAL MÃ QR TRUY XUẤT FILE PDF SỔ LÝ LỊCH THIẾT BỊ</div>
+        </div>
+        <div class="decal-grid standard-grid">
+          ${itemsToPrint.map((eq) => `
+            <div class="decal-card standard-card">
+              <div class="card-top text-center">
+                <div style="font-size: 8pt; font-weight: bold; color: #0f172a;">${eq.org.companyName || companyName}</div>
+                <div style="font-size: 7.5pt; font-weight: 600; color: #334155;">${eq.org.unit || unitName}</div>
+              </div>
+              <div class="card-body">
+                <img src="${qrMap[eq.id]}" class="qr-img-standard" alt="QR" />
+                <div class="card-info">
+                  <div class="eq-title">${eq.general.name}</div>
+                  <div><b>Chủng loại:</b> ${eq.general.category}</div>
+                  <div><b>Model:</b> ${eq.general.model || 'N/A'}</div>
+                  <div><b>Số Serial:</b> <span class="mono">${eq.general.serial || 'N/A'}</span></div>
+                  <div><b>Mã Tài Sản:</b> <span class="mono">${eq.general.assetNo || 'N/A'}</span></div>
+                  <div><b>Vị trí dán:</b> ${eq.org.location || '---'}</div>
+                  <div><b>Phụ trách:</b> ${eq.org.primaryEngineer || '---'}</div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span>QUÉT MÃ QR ĐỂ HIỂN THỊ FILE PDF SỔ LÝ LỊCH</span>
+                <span class="mono">${eq.id}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>In Tem Mã QR PDF - ${itemsToPrint.length} Thiết Bị</title>
+        <style>
+          @page { size: A4 portrait; margin: 8mm; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #000; margin: 0; padding: 0; background: #fff; font-size: 9pt; }
+          
+          .header-banner { text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; }
+          .page-title { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+          .page-title h2 { margin: 0; font-size: 10pt; font-weight: bold; text-transform: uppercase; color: #1e293b; }
+          .page-title h1 { margin: 3px 0 0 0; font-size: 13pt; font-weight: bold; text-transform: uppercase; color: #0f172a; }
+          .sub-info { margin: 3px 0 0 0; font-size: 8pt; color: #475569; }
+
+          /* Catalog Table Styling */
+          .catalog-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+          .catalog-table th, .catalog-table td { border: 1px solid #334155; padding: 6px 7px; vertical-align: middle; }
+          .catalog-table th { background-color: #f1f5f9; font-weight: bold; text-transform: uppercase; font-size: 8pt; text-align: center; }
+          .qr-catalog-img { width: 95px; height: 95px; display: block; margin: 0 auto; }
+
+          /* Decal Grid Styling */
+          .decal-grid { display: grid; gap: 10px; width: 100%; }
+          .standard-grid { grid-template-columns: repeat(2, 1fr); }
+          .compact-grid { grid-template-columns: repeat(3, 1fr); }
+
+          .decal-card { border: 2px solid #000; border-radius: 4px; padding: 6px; background: #fff; display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; break-inside: avoid; }
+          .card-top { border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 4px; text-transform: uppercase; }
+          .card-header { font-weight: bold; font-size: 9pt; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 4px; text-align: center; }
+          
+          .card-body { display: flex; align-items: center; gap: 8px; flex: 1; }
+          .qr-img-standard { width: 105px; height: 105px; shrink: 0; }
+          .qr-img-compact { width: 80px; height: 80px; shrink: 0; }
+          
+          .card-info { flex: 1; font-size: 8pt; line-height: 1.35; }
+          .eq-title { font-size: 9pt; font-weight: bold; text-transform: uppercase; color: #0f172a; margin-bottom: 2px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 2px; }
+          .card-footer { border-top: 1px dashed #000; margin-top: 4px; padding-top: 3px; font-size: 7pt; font-weight: bold; display: flex; justify-content: space-between; text-transform: uppercase; color: #334155; }
+          .mono { font-family: monospace; font-weight: bold; }
+
+          @media print {
+            body { margin: 0; padding: 0; }
+            .decal-card { border-color: #000 !important; }
+          }
+        </style>
+      </head>
+      <body>
+        ${bodyHtml}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   const handleLookupQr = (query: string) => {
@@ -554,24 +844,161 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
       {/* SUB-TAB 2: BATCH PRINTING SHEET FOR ALL EQUIPMENTS */}
       {activeSubTab === 'batch' && (
         <div className="space-y-5">
-          <div className="enterprise-card p-4 flex items-center justify-between flex-wrap gap-4 no-print">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Printer className="w-4 h-4 text-blue-600" />
-                Bảng In Tem Decal Mã QR Toàn Bộ Thiết Bị ({allEquipments.length} tem)
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Tem nhãn kỹ thuật kích thước chuẩn dán mặt máy, tủ Rack và trang bìa sổ lý lịch.
-              </p>
+          {/* Top Admin Banner */}
+          <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-xl p-5 shadow-sm border border-slate-800 space-y-3 no-print">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-md text-[11px] font-bold uppercase tracking-wide flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                  Tính Năng Quản Trị & In Ấn
+                </span>
+                <span className="text-xs text-slate-300 font-medium hidden sm:inline">
+                  Tạo danh sách mã QR dán trên vỏ máy & tủ Rack
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSelectAllFiltered}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Chọn tất cả ({filteredBatchEquipments.length})</span>
+                </button>
+                <button
+                  onClick={handleDeselectAllFiltered}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Square className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Bỏ chọn</span>
+                </button>
+              </div>
             </div>
 
-            <button
-              onClick={handlePrintBatchTags}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              <span>In Bảng Tem QR (Trang A4)</span>
-            </button>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 border-t border-slate-800/80">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Printer className="w-5 h-5 text-blue-400" />
+                  Danh Sách Mã QR Truy Xuất File PDF Sổ Lý Lịch Tất Cả Thiết Bị
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                  Mã QR được tự động liên kết với URL xem trực tiếp File PDF Sổ lý lịch (<code className="text-blue-300 font-mono">#eq=...&view=pdf</code>). Kỹ sư chỉ cần dùng camera di động quét tem nhãn trên thiết bị để mở nhanh bản PDF A4 chuẩn.
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                <button
+                  onClick={handlePrintBatchPdfQrListWindow}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer border border-blue-400/30"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>In Danh Sách / Tem QR PDF (A4)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Filtering & Layout Toolbar */}
+          <div className="enterprise-card p-4 space-y-4 no-print bg-slate-50 border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-3">
+              {/* Category Filter */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5 text-blue-600" />
+                  Phân Loại Thiết Bị
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Tất cả chủng loại ({allEquipments.length})</option>
+                  <option value="VHF/UHF">VHF/UHF</option>
+                  <option value="VIBA">VIBA & Truyền dẫn</option>
+                  <option value="VOICE">VOICE (Tổng đài/Ghi âm)</option>
+                  <option value="POWER">Nguồn & Phụ Trợ (POWER)</option>
+                  <option value="IT">IT & Mạng Dữ Liệu</option>
+                  <option value="RADAR_ADS">RADAR & ADS-B</option>
+                  <option value="NAV">NAV (Dẫn đường)</option>
+                </select>
+              </div>
+
+              {/* Search Box */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+                  <Search className="w-3.5 h-3.5 text-blue-600" />
+                  Tìm Kiếm Thiết Bị
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={batchSearchTerm}
+                    onChange={(e) => setBatchSearchTerm(e.target.value)}
+                    placeholder="Tên, Model, Serial, Mã TS, Vị trí..."
+                    className="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                </div>
+              </div>
+
+              {/* Print Layout Format */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-blue-600" />
+                  Định Dạng Bố Cục In
+                </label>
+                <select
+                  value={printLayoutFormat}
+                  onChange={(e) => setPrintLayoutFormat(e.target.value as any)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="decal_standard">🏷️ Tem Decal Kỹ Thuật (2 tem/hàng A4)</option>
+                  <option value="decal_compact">🔖 Tem Decal Cỡ Vừa (3 tem/hàng A4)</option>
+                  <option value="a4_catalog">📋 Bảng Catalog A4 Tổng Hợp (Dạng Bảng)</option>
+                </select>
+              </div>
+
+              {/* Target QR Mode */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+                  <Link className="w-3.5 h-3.5 text-blue-600" />
+                  Chế Độ Liên Kết Quét QR
+                </label>
+                <select
+                  value={targetMode}
+                  onChange={(e) => setTargetMode(e.target.value as QrTargetMode)}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="pdf">📄 Truy xuất File PDF Sổ Lý Lịch (Mặc định)</option>
+                  <option value="doc">📊 Google Docs Trực Tuyến</option>
+                  <option value="app">🌐 Bảng Điều Khiển Web App</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Selection Summary Line */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-800">
+                  Đã chọn: <span className="text-blue-700 font-mono text-sm">{selectedEqIds.size}</span> / {allEquipments.length} thiết bị
+                </span>
+                {filteredBatchEquipments.length < allEquipments.length && (
+                  <span className="text-slate-500 text-[11px]">
+                    (Hiển thị {filteredBatchEquipments.length} thiết bị theo bộ lọc)
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrintBatchPdfQrListWindow}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>In ngay {selectedEqIds.size} tem nhãn</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Printable Batch Grid Container */}
@@ -579,15 +1006,40 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
             ref={printBatchRef}
             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 print:grid-cols-2 print:gap-3 print:p-0"
           >
-            {allEquipments.map((eq) => {
+            {filteredBatchEquipments.map((eq) => {
               const eqQr = allQrUrls[eq.id] || qrDataUrl;
+              const isSelected = selectedEqIds.has(eq.id);
+
               return (
                 <div 
                   key={eq.id}
-                  className="bg-white p-4 rounded-lg border-2 border-slate-800 shadow-2xs flex flex-col justify-between gap-3 break-inside-avoid print:border-2 print:border-black print:p-3 text-slate-900"
+                  onClick={() => handleToggleSelectEq(eq.id)}
+                  className={`relative p-4 rounded-xl border-2 transition-all cursor-pointer break-inside-avoid print:border-2 print:border-black print:p-3 text-slate-900 ${
+                    isSelected
+                      ? 'bg-white border-blue-600 shadow-sm ring-2 ring-blue-500/20'
+                      : 'bg-slate-50/80 border-slate-300 opacity-60 hover:opacity-100 hover:border-slate-400'
+                  }`}
                 >
+                  {/* Selection Checkbox Pill */}
+                  <div className="absolute top-3 right-3 no-print z-10">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSelectEq(eq.id);
+                      }}
+                      className={`p-1 rounded-md transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600 text-white shadow-xs' 
+                          : 'bg-slate-200 text-slate-500 hover:bg-slate-300'
+                      }`}
+                    >
+                      {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                    </button>
+                  </div>
+
                   {/* Tag Header */}
-                  <div className="border-b border-slate-300 pb-2 text-center">
+                  <div className="border-b border-slate-300 pb-2 text-center pr-8">
                     <div className="text-[10px] font-bold text-slate-900 uppercase tracking-tight">
                       {eq.org.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM'}
                     </div>
@@ -597,12 +1049,12 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                   </div>
 
                   {/* Tag Body */}
-                  <div className="flex items-center gap-3">
-                    <div className="shrink-0 p-1 bg-white border border-slate-300 rounded">
+                  <div className="flex items-center gap-3 my-2">
+                    <div className="shrink-0 p-1.5 bg-white border border-slate-300 rounded-lg shadow-2xs">
                       {eqQr ? (
                         <img src={eqQr} alt="QR" className="w-24 h-24 object-contain" />
                       ) : (
-                        <div className="w-24 h-24 flex items-center justify-center text-[10px] text-slate-400">Loading...</div>
+                        <div className="w-24 h-24 flex items-center justify-center text-[10px] text-slate-400">Đang tạo...</div>
                       )}
                     </div>
                     <div className="text-xs space-y-0.5 flex-1 min-w-0">
@@ -629,8 +1081,8 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
 
                   {/* Tag Footer */}
                   <div className="border-t border-dashed border-slate-300 pt-1.5 text-center text-[9px] text-slate-500 uppercase font-medium flex items-center justify-between">
-                    <span>SỔ LÝ LỊCH CNS &bull; PDF / DOC</span>
-                    <span className="font-mono font-bold text-blue-700">{eq.id}</span>
+                    <span className="text-blue-700 font-bold">✓ TRUY XUẤT FILE PDF SỔ LÝ LỊCH</span>
+                    <span className="font-mono font-bold text-slate-800">{eq.id}</span>
                   </div>
                 </div>
               );

@@ -701,7 +701,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {/* SUB-TAB 5: QR CODE & MOBILE LOOKUP */}
       {activeSubTab === 'qr' && (
         <div className="enterprise-card p-6 space-y-5">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
               <h2 className="text-slate-900 font-bold text-base flex items-center gap-2">
                 <QrCode className="w-5 h-5 text-blue-600" />
@@ -711,33 +711,36 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 Tự động sinh mã QR Vector có logo CNS để dán trực tiếp lên mặt máy, tủ rack trạm kỹ thuật.
               </p>
             </div>
-            <button
-              onClick={() => onNavigateTab('qrCode')}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs shadow-xs transition-all cursor-pointer"
-            >
-              <QrCode className="w-4 h-4" />
-              <span>Đi đến Quản lý Mã QR & In Tem Nhãn</span>
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onNavigateTab('qrCode')}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs shadow-xs transition-all cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>In Danh Sách Mã QR Truy Xuất PDF All Thiết Bị</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-              <span className="text-xs font-bold text-blue-700">Chế độ 1: Mở PDF trực tiếp</span>
-              <p className="text-[11px] text-slate-500">
-                Khi kỹ sư quét mã QR bằng camera điện thoại, hệ thống sẽ tự động mở xem ngay toàn bộ file PDF Sổ Lý Lịch của thiết bị.
+              <span className="text-xs font-bold text-blue-700">Chế độ 1: Mở PDF trực tiếp (Mặc định cho tem)</span>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Khi kỹ sư quét mã QR bằng camera điện thoại, hệ thống sẽ tự động mở xem ngay toàn bộ file PDF Sổ Lý Lịch A4 của thiết bị.
               </p>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
               <span className="text-xs font-bold text-blue-700">Chế độ 2: Mở Hồ sơ Điện tử</span>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 leading-relaxed">
                 Tự động kích hoạt hồ sơ thiết bị trên ứng dụng Web với đầy đủ 6 mục thông tin, lịch sử bảo dưỡng và linh kiện.
               </p>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
               <span className="text-xs font-bold text-blue-700">Chế độ 3: Mở Google Docs</span>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 leading-relaxed">
                 Chuyển thẳng đến tài liệu Google Docs trực tuyến được lưu trữ tập trung trên Google Drive của đài trạm.
               </p>
             </div>

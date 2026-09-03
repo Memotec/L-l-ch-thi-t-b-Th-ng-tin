@@ -651,6 +651,8 @@ export default function App() {
                   onUpdateEquipment={handleUpdateCurrent}
                   isReadOnly={isReadOnly}
                   onOpenLoginModal={() => setIsLoginModalOpen(true)}
+                  currentUser={currentUser}
+                  initialSubTab="batch"
                 />
               )}
 
