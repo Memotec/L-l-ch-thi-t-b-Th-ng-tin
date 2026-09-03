@@ -246,18 +246,18 @@ export const RepairTab: React.FC<RepairTabProps> = ({
         </div>
 
         {/* Table View */}
-        <div className="border border-slate-200 rounded-lg overflow-x-auto">
-          <table className={`w-full text-left border-collapse min-w-[950px] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
+        <div className="border border-slate-200 rounded-lg overflow-x-auto shadow-xs bg-white">
+          <table className={`w-full text-left border-collapse min-w-[1200px] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
+            <thead className="bg-slate-100/90 text-slate-800 border-b border-slate-200 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-2.5 w-32">Thời gian phát sinh</th>
-                <th className="p-2.5 w-32">Thời gian hoàn thành</th>
-                <th className="p-2.5 w-36">Phân loại</th>
-                <th className="p-2.5">Mô tả hiện tượng & Nguyên nhân</th>
-                <th className="p-2.5">Biện pháp xử lý & Vật tư thay thế</th>
-                <th className="p-2.5 w-36">Người thực hiện</th>
-                <th className="p-2.5 w-32">Trạng thái</th>
-                {!isReadOnly && <th className="p-2.5 w-10 text-center">Xóa</th>}
+                <th className="p-2.5 w-36 whitespace-nowrap">Thời gian phát sinh</th>
+                <th className="p-2.5 w-36 whitespace-nowrap">Thời gian hoàn thành</th>
+                <th className="p-2.5 w-40 whitespace-nowrap">Phân loại</th>
+                <th className="p-2.5 min-w-[240px]">Mô tả hiện tượng & Nguyên nhân</th>
+                <th className="p-2.5 min-w-[240px]">Biện pháp xử lý & Vật tư thay thế</th>
+                <th className="p-2.5 min-w-[200px]">Người thực hiện</th>
+                <th className="p-2.5 w-40 whitespace-nowrap">Trạng thái</th>
+                {!isReadOnly && <th className="p-2.5 w-12 text-center whitespace-nowrap">Xóa</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -271,8 +271,8 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                 </tr>
               ) : (
                 filteredRepairs.map(({ rp, originalIndex }) => (
-                  <tr key={`repair-${rp.id || originalIndex}-${originalIndex}`} className="hover:bg-slate-50 bg-white">
-                    <td className="p-2">
+                  <tr key={`repair-${rp.id || originalIndex}-${originalIndex}`} className="hover:bg-blue-50/30 bg-white transition-colors">
+                    <td className="p-2 align-top">
                       <input
                         type="text"
                         disabled={isReadOnly}
@@ -282,7 +282,7 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                         className={`form-input-standard font-mono ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <input
                         type="text"
                         disabled={isReadOnly}
@@ -292,12 +292,12 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                         className={`form-input-standard font-mono ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <select
                         disabled={isReadOnly}
                         value={rp.type}
                         onChange={(e) => updateRepair(originalIndex, 'type', e.target.value as RepairType)}
-                        className={`form-input-standard font-medium ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard font-medium bg-white ${isCompact ? 'py-0.5' : 'py-1'}`}
                       >
                         <option value="Sửa chữa khắc phục sự cố">Sửa chữa sự cố</option>
                         <option value="Sửa chữa đột xuất">Sửa chữa đột xuất</option>
@@ -306,14 +306,14 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                         <option value="Hiệu chuẩn lại tham số">Hiệu chuẩn tham số</option>
                       </select>
                     </td>
-                    <td className="p-2 space-y-1">
+                    <td className="p-2 align-top space-y-1">
                       <textarea
                         rows={isCompact ? 1 : 2}
                         disabled={isReadOnly}
                         placeholder="Hiện tượng bất thường / cảnh báo..."
                         value={rp.incidentDescription}
                         onChange={(e) => updateRepair(originalIndex, 'incidentDescription', e.target.value)}
-                        className={`form-input-standard font-medium text-slate-900 ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard font-medium text-slate-900 resize-y ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                       <input
                         type="text"
@@ -324,14 +324,14 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                         className={`form-input-standard text-rose-600 font-mono text-[11px] ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2 space-y-1">
+                    <td className="p-2 align-top space-y-1">
                       <textarea
                         rows={isCompact ? 1 : 2}
                         disabled={isReadOnly}
                         placeholder="Nội dung thao tác khắc phục..."
                         value={rp.actionTaken}
                         onChange={(e) => updateRepair(originalIndex, 'actionTaken', e.target.value)}
-                        className={`form-input-standard text-slate-800 ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard text-slate-800 resize-y ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                       <input
                         type="text"
@@ -342,7 +342,7 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                         className={`form-input-standard text-blue-600 font-mono text-[11px] ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2 min-w-[180px]">
+                    <td className="p-2 align-top">
                       <PerformerSelect
                         value={rp.person}
                         onChange={(val) => updateRepair(originalIndex, 'person', val)}
@@ -350,12 +350,12 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                         placeholder="KTV xử lý..."
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <select
                         disabled={isReadOnly}
                         value={rp.status}
                         onChange={(e) => updateRepair(originalIndex, 'status', e.target.value as RepairStatus)}
-                        className={`w-full border rounded p-1.5 font-semibold focus:outline-none ${getStatusBadge(rp.status)} ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`w-full border rounded-md p-1.5 font-semibold focus:outline-none ${getStatusBadge(rp.status)} ${isCompact ? 'py-0.5' : 'py-1'}`}
                       >
                         <option value="Đã xử lý dứt điểm">✓ Đã xử lý xong</option>
                         <option value="Đang theo dõi">⚠ Đang theo dõi</option>
@@ -363,10 +363,10 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                       </select>
                     </td>
                     {!isReadOnly && (
-                      <td className="p-2 text-center">
+                      <td className="p-2 align-top text-center">
                         <button
                           onClick={() => removeRepair(originalIndex)}
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                           title="Xóa sự vụ này"
                         >
                           <Trash2 className="w-4 h-4" />

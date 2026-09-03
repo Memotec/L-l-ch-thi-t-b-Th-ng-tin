@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { AppLogo } from './AppLogo';
 import { 
   Building2, 
   MapPin, 
@@ -311,6 +312,40 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* UNIT OFFICIAL BANNER WITH LOGO */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] border border-slate-700/80 p-5 shadow-lg text-white">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-4">
+            <AppLogo size="lg" subTitle="TRUNG TÂM BẢO ĐẢM KỸ THUẬT" badge="CNS / ATM" />
+            <div className="hidden lg:block h-10 w-px bg-slate-700/80"></div>
+            <div className="hidden lg:block text-xs text-slate-300 space-y-0.5">
+              <div className="font-semibold text-slate-200">HỆ THỐNG SỔ LÝ LỊCH THIẾT BỊ ĐIỆN TỬ</div>
+              <div className="text-slate-400">Đơn vị quản lý: Đội Thông Tin &bull; Đài/Trạm Kỹ thuật CNS</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 self-end md:self-center">
+            <button
+              onClick={() => handleOpenQuickLog()}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold rounded-lg text-xs shadow-md transition-all cursor-pointer"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span>Ghi Nhật Ký Ca Trực</span>
+            </button>
+            {onNewEquipment && currentUser?.permissions.canCreateEquipment && (
+              <button
+                onClick={onNewEquipment}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold rounded-lg text-xs transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-emerald-400" />
+                <span>Thêm Thiết Bị</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* SECTION 1: SYSTEM KPI METRICS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="enterprise-card p-4 flex items-center justify-between">

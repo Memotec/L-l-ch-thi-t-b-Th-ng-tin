@@ -237,18 +237,18 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
         </div>
 
         {/* Table View */}
-        <div className="border border-slate-200 rounded-lg overflow-x-auto">
-          <table className={`w-full text-left border-collapse min-w-[850px] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
-            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
+        <div className="border border-slate-200 rounded-lg overflow-x-auto shadow-xs bg-white">
+          <table className={`w-full text-left border-collapse min-w-[1100px] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
+            <thead className="bg-slate-100/90 text-slate-800 border-b border-slate-200 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-2.5 w-28">Ngày TH</th>
-                <th className="p-2.5 w-28">Chu kỳ</th>
-                <th className="p-2.5">Nội dung công việc bảo dưỡng</th>
-                <th className="p-2.5 w-44">Thông số kỹ thuật đo đạc</th>
-                <th className="p-2.5 w-36">Kết luận</th>
-                <th className="p-2.5 w-36">Người thực hiện</th>
-                <th className="p-2.5 w-32">Người kiểm tra</th>
-                {!isReadOnly && <th className="p-2.5 w-12 text-center">Xóa</th>}
+                <th className="p-2.5 w-36 whitespace-nowrap">Ngày TH</th>
+                <th className="p-2.5 w-36 whitespace-nowrap">Chu kỳ</th>
+                <th className="p-2.5 min-w-[220px]">Nội dung công việc bảo dưỡng</th>
+                <th className="p-2.5 min-w-[200px]">Thông số kỹ thuật đo đạc</th>
+                <th className="p-2.5 w-44 whitespace-nowrap">Kết luận</th>
+                <th className="p-2.5 min-w-[200px]">Người thực hiện</th>
+                <th className="p-2.5 w-36 whitespace-nowrap">Người kiểm tra</th>
+                {!isReadOnly && <th className="p-2.5 w-12 text-center whitespace-nowrap">Xóa</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -262,22 +262,22 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                 </tr>
               ) : (
                 filteredMaintenance.map(({ mt, originalIndex }) => (
-                  <tr key={`maint-${mt.id || originalIndex}-${originalIndex}`} className="hover:bg-slate-50 bg-white">
-                    <td className="p-2">
+                  <tr key={`maint-${mt.id || originalIndex}-${originalIndex}`} className="hover:bg-blue-50/30 bg-white transition-colors">
+                    <td className="p-2 align-top">
                       <input
                         type="date"
                         disabled={isReadOnly}
                         value={mt.date}
                         onChange={(e) => updateMaintenance(originalIndex, 'date', e.target.value)}
-                        className={`form-input-standard ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard font-mono ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <select
                         disabled={isReadOnly}
                         value={mt.cycle}
                         onChange={(e) => updateMaintenance(originalIndex, 'cycle', e.target.value as MaintenanceCycle)}
-                        className={`form-input-standard font-semibold ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard font-medium bg-white ${isCompact ? 'py-0.5' : 'py-1'}`}
                       >
                         <option value="Hàng tuần">Hàng tuần</option>
                         <option value="Hàng tháng">Hàng tháng</option>
@@ -287,39 +287,39 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                         <option value="Đột xuất">Đột xuất</option>
                       </select>
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <textarea
                         rows={isCompact ? 1 : 2}
                         disabled={isReadOnly}
                         placeholder="Chi tiết công việc..."
                         value={mt.content}
                         onChange={(e) => updateMaintenance(originalIndex, 'content', e.target.value)}
-                        className={`form-input-standard font-medium ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard font-medium resize-y ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <textarea
                         rows={isCompact ? 1 : 2}
                         disabled={isReadOnly}
                         placeholder="Thông số đo đạc RF/nguồn..."
                         value={mt.measuredParams}
                         onChange={(e) => updateMaintenance(originalIndex, 'measuredParams', e.target.value)}
-                        className={`form-input-standard font-mono text-blue-600 ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`form-input-standard font-mono text-blue-700 resize-y ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <select
                         disabled={isReadOnly}
                         value={mt.result}
                         onChange={(e) => updateMaintenance(originalIndex, 'result', e.target.value as MaintenanceResult)}
-                        className={`w-full border rounded p-1.5 font-semibold focus:outline-none ${getResultBadge(mt.result)} ${isCompact ? 'py-0.5' : 'py-1'}`}
+                        className={`w-full border rounded-md p-1.5 font-semibold focus:outline-none ${getResultBadge(mt.result)} ${isCompact ? 'py-0.5' : 'py-1'}`}
                       >
                         <option value="Đạt yêu cầu kỹ thuật">Đạt yêu cầu kỹ thuật</option>
                         <option value="Cần hiệu chỉnh/theo dõi">Cần hiệu chỉnh / theo dõi</option>
                         <option value="Không đạt">Không đạt</option>
                       </select>
                     </td>
-                    <td className="p-2 min-w-[180px]">
+                    <td className="p-2 align-top">
                       <PerformerSelect
                         value={mt.person}
                         onChange={(val) => updateMaintenance(originalIndex, 'person', val)}
@@ -327,21 +327,21 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                         placeholder="KTV thực hiện..."
                       />
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top">
                       <input
                         type="text"
                         disabled={isReadOnly}
-                        placeholder="Người giám sát..."
+                        placeholder="Người kiểm tra..."
                         value={mt.supervisor || ''}
                         onChange={(e) => updateMaintenance(originalIndex, 'supervisor', e.target.value)}
                         className={`form-input-standard ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
                     </td>
                     {!isReadOnly && (
-                      <td className="p-2 text-center">
+                      <td className="p-2 align-top text-center">
                         <button
                           onClick={() => removeMaintenance(originalIndex)}
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                           title="Xóa kỳ bảo dưỡng này"
                         >
                           <Trash2 className="w-4 h-4" />

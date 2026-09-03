@@ -14,21 +14,21 @@ export const PerformerSelect: React.FC<PerformerSelectProps> = ({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Chọn hoặc nhập Kíp / Người thực hiện...',
+  placeholder = 'Chọn hoặc nhập...',
   className = '',
   showQuickPills = false
 }) => {
   return (
-    <div className="space-y-1.5 w-full">
-      <div className="flex gap-1.5 items-center w-full">
+    <div className="space-y-1 w-full">
+      <div className="flex gap-1 items-center w-full">
         <select
           disabled={disabled}
           value={PERFORMER_OPTIONS.includes(value as any) ? value : ''}
           onChange={(e) => onChange(e.target.value)}
-          className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg px-2 py-1.5 font-semibold text-slate-800 text-xs focus:ring-2 focus:ring-blue-500 cursor-pointer shrink-0 max-w-[170px] sm:max-w-[210px] truncate"
-          title="Dropdown danh sách Kíp / Người thực hiện"
+          className="bg-white hover:bg-slate-50 border border-slate-300 rounded-md px-2 py-1 font-medium text-slate-800 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer shrink-0 max-w-[150px] truncate"
+          title="Chọn Kíp trực"
         >
-          <option value="" disabled>-- Chọn Kíp --</option>
+          <option value="" disabled>-- Kíp trực --</option>
           {PERFORMER_OPTIONS.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
@@ -41,7 +41,7 @@ export const PerformerSelect: React.FC<PerformerSelectProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           list="performer-datalist"
-          className={`w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs ${className}`}
+          className={`w-full bg-white border border-slate-300 rounded-md px-2 py-1 font-normal text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs ${className}`}
         />
 
         <datalist id="performer-datalist">

@@ -5,11 +5,11 @@
     --primary: #2563EB;
     --primary-hover: #1D4ED8;
     --secondary: #0F172A;
-    --bg-main: #cacccf;
-    --surface: #cbc4c4;
-    --border: #E5E7EB;
-    --text-primary: #000103;
-    --text-secondary: #0538ce;
+    --bg-main: #F1F5F9;
+    --surface: #FFFFFF;
+    --border: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
     --success: #16A34A;
     --warning: #D97706;
     --danger: #DC2626;
@@ -32,7 +32,7 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #e19d50;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
@@ -44,38 +44,46 @@
 
 /* Enterprise Card utilities */
 .enterprise-card {
-  background: #b7b2b2;
-  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
 .enterprise-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Standard Input Styling */
 .form-input-standard {
   width: 100%;
-  background-color: #b0a6a6;
-  border: 1px solid #E5E7EB;
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  color: #111827;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: #0F172A;
   transition: all 0.15s ease-in-out;
 }
 
 .form-input-standard:focus {
   outline: none;
+  background-color: #FFFFFF;
   border-color: #2563EB;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.form-input-standard:disabled {
+  background-color: #F8FAFC;
+  color: #64748B;
+  cursor: not-allowed;
+}
+
 @media print {
   body {
-    background-color: #e7dede !important;
+    background-color: #FFFFFF !important;
     color: #111827 !important;
   }
 
@@ -100,10 +108,11 @@
     margin: 0 auto !important;
     box-sizing: border-box !important;
     page-break-after: always !important;
-    background: #ffffff !important;
+    background: #FFFFFF !important;
   }
 
   .paper:last-child {
     page-break-after: auto !important;
   }
 }
+

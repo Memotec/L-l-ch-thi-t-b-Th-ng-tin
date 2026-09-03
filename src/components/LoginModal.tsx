@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AppLogo } from './AppLogo';
 import { 
   X, 
   ShieldCheck, 
@@ -68,16 +69,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-white border border-slate-200 rounded-xl w-full max-w-sm overflow-hidden shadow-lg text-slate-900 flex flex-col">
         {/* Header */}
-        <div className="bg-slate-900 px-5 py-4 flex items-center justify-between text-white">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-400/30">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-bold text-sm text-white">Đăng Nhập Quản Trị</h3>
-              <p className="text-[11px] text-slate-300">Xác thực quyền & Đồng bộ dữ liệu Cloud</p>
-            </div>
-          </div>
+        <div className="bg-slate-900 px-5 py-4 flex items-center justify-between text-white border-b border-slate-800">
+          <AppLogo size="sm" subTitle="ĐĂNG NHẬP HỆ THỐNG" badge="ADMIN" />
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"

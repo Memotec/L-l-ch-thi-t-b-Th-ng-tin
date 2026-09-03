@@ -1,4 +1,5 @@
 import React from 'react';
+import doiThongTinLogoImg from '../assets/images/doi_thong_tin_logo_1788449249724.jpg';
 import { 
   Save, 
   Printer, 
@@ -104,8 +105,17 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
     <header className="bg-[#0F172A] border-b border-slate-800 px-5 py-3 sticky top-0 z-10 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-3 shrink-0 text-slate-100">
       {/* Left: Current Equipment Profile Badge */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="p-2.5 bg-slate-800 rounded-lg border border-slate-700 shrink-0">
-          {getCategoryIcon(currentEquipment.general.category)}
+        <div className="relative group shrink-0">
+          <img 
+            src={doiThongTinLogoImg} 
+            alt="Logo Đội Thông Tin - TT BĐKT"
+            referrerPolicy="no-referrer"
+            className="w-10 h-10 rounded-full object-cover border-2 border-blue-400/60 shadow-md bg-slate-900"
+            title="Đội Thông Tin - Trung Tâm Bảo Đảm Kỹ Thuật"
+          />
+          <div className="absolute -bottom-1 -right-1 p-0.5 bg-slate-900 rounded-full">
+            {getCategoryIcon(currentEquipment.general.category)}
+          </div>
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

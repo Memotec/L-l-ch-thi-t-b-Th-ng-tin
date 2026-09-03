@@ -1,4 +1,5 @@
 import React from 'react';
+import doiThongTinLogoImg from '../assets/images/doi_thong_tin_logo_1788449249724.jpg';
 import { 
   EquipmentData, 
   ComponentRow, 
@@ -89,9 +90,15 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
             minHeight: '272mm'
           }}
         >
-          {/* Top Unit / Company */}
+          {/* Top Unit / Company & Official Logo */}
           <div>
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <img 
+                src={doiThongTinLogoImg} 
+                alt="Logo Đội Thông Tin - TT BĐKT" 
+                referrerPolicy="no-referrer"
+                className="w-16 h-16 rounded-full object-cover border-2 border-black/80 shadow-xs mb-1"
+              />
               <div className="w-full text-center">
                 <h1 
                   className="text-xl font-bold uppercase tracking-wider text-black"
@@ -99,6 +106,9 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
                 >
                   {companyName}
                 </h1>
+                <div className="text-xs font-bold uppercase tracking-widest text-gray-800 mt-0.5">
+                  TRUNG TÂM BẢO ĐẢM KỸ THUẬT &bull; ĐỘI THÔNG TIN
+                </div>
               </div>
               {coverNote && (
                 <div className="absolute right-8 top-8 text-right font-semibold text-xs text-black opacity-80">

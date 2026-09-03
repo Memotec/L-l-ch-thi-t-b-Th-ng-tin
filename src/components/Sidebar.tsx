@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppLogo } from './AppLogo';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -180,22 +181,9 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
   return (
     <aside className="w-72 bg-[#0F172A] text-slate-100 flex flex-col h-screen sticky top-0 border-r border-slate-800 shadow-xl select-none z-20 shrink-0">
-      {/* Brand Header */}
+      {/* Brand Header with Professional Emblem Logo */}
       <div className="p-3.5 border-b border-slate-800 bg-[#0F172A] flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shrink-0">
-            <Radio className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <div className="font-bold text-sm tracking-wide text-white flex items-center gap-1.5">
-              <span className="truncate">Sổ Lý Lịch Thiết Bị</span>
-              <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 shrink-0">
-                CNS v3.0
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-tight mt-0.5 font-medium truncate">Đội Thông Tin &bull; Quản lý điện tử</p>
-          </div>
-        </div>
+        <AppLogo size="sm" subTitle="ĐỘI THÔNG TIN - TT BĐKT" badge="CNS v3.0" />
       </div>
 
       {/* Equipment Selector Card */}

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import doiThongTinLogoImg from '../assets/images/doi_thong_tin_logo_1788449249724.jpg';
 import { EquipmentData } from '../types';
 
 interface TeamInventoryPrintViewProps {
@@ -83,16 +84,26 @@ export const TeamInventoryPrintView: React.FC<TeamInventoryPrintViewProps> = ({
                     <tbody>
                       <tr>
                         <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'center', padding: 0 }}>
-                          <div className="font-bold uppercase text-[11pt] tracking-tight leading-tight text-black">
-                            {companyName}
+                          <div className="flex items-center justify-center gap-2 mb-1">
+                            <img 
+                              src={doiThongTinLogoImg} 
+                              alt="Logo Đội Thông Tin - TT BĐKT" 
+                              referrerPolicy="no-referrer"
+                              className="w-10 h-10 rounded-full object-cover border border-black/80 shadow-2xs"
+                            />
+                            <div className="text-center">
+                              <div className="font-bold uppercase text-[10.5pt] tracking-tight leading-tight text-black">
+                                {companyName}
+                              </div>
+                              <div className="font-bold uppercase text-[9.5pt] tracking-tight text-black mt-0.5">
+                                TRUNG TÂM BẢO ĐẢM KỸ THUẬT
+                              </div>
+                            </div>
                           </div>
-                          <div className="font-bold uppercase text-[10.5pt] tracking-tight text-black mt-0.5">
-                            TRUNG TÂM BẢO ĐẢM KỸ THUẬT
-                          </div>
-                          <div className="font-semibold text-[10pt] text-slate-800 mt-0.5">
+                          <div className="font-semibold text-[9.5pt] text-slate-800">
                             ĐỘI THIẾT BỊ THÔNG TIN (CNS)
                           </div>
-                          <div className="w-24 mx-auto border-b border-black mt-1.5"></div>
+                          <div className="w-24 mx-auto border-b border-black mt-1"></div>
                         </td>
                         <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'center', padding: 0 }}>
                           <div className="font-bold uppercase text-[11pt] tracking-tight leading-tight text-black">

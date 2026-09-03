@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AppLogo } from './AppLogo';
 import {
   Settings,
   Database,
@@ -612,6 +613,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {activeSubTab === 'organization' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="enterprise-card p-5 space-y-4">
+            {/* Logo Preview Banner */}
+            <div className="p-4 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-between">
+              <AppLogo size="md" subTitle="ĐỘI THÔNG TIN - TT BĐKT" badge="OFFICIAL" />
+            </div>
+
             <div>
               <h2 className="text-slate-900 font-bold text-sm flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-blue-600" />
