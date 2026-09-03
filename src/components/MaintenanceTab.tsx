@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { EquipmentData, MaintenanceRow, MaintenanceCycle, MaintenanceResult } from '../types';
 import { PerformerSelect } from './PerformerSelect';
+import { notificationService } from '../utils/notificationService';
 
 interface MaintenanceTabProps {
   data: EquipmentData;
@@ -40,6 +41,16 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
     onChange({
       ...data,
       maintenance: [newRow, ...data.maintenance]
+    });
+
+    notificationService.notify({
+      title: 'Đã thêm nhật ký bảo dưỡng',
+      message: `Đã thêm một phiên bảo dưỡng (${presetCycle}) cho thiết bị "${data.general.name}".`,
+      type: 'maintenance',
+      targetEquipmentId: data.id,
+      targetEquipmentName: data.general.name,
+      targetTab: 'maintenance',
+      actor: 'Cán bộ kỹ thuật'
     });
   };
 

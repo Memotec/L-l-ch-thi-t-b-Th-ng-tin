@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 import { CloudSyncState } from '../utils/cloudSyncService';
+import { NotificationBell } from './NotificationBell';
 
 interface TopbarProps {
   currentEquipment: EquipmentData;
@@ -43,6 +44,7 @@ interface TopbarProps {
   onOpenSearchModal?: () => void;
   cloudSyncState?: CloudSyncState;
   onTriggerCloudSync?: () => void;
+  onNavigateToEquipment?: (equipmentId: string, tabName?: string) => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = React.memo(({
@@ -62,7 +64,8 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
   searchTerm = '',
   onOpenSearchModal,
   cloudSyncState,
-  onTriggerCloudSync
+  onTriggerCloudSync,
+  onNavigateToEquipment
 }) => {
   const isAdmin = currentUser.role === 'admin';
 
@@ -298,6 +301,9 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
               )}
             </button>
           )}
+
+          {/* Notification Bell with alerts for Add, Delete, Updates */}
+          <NotificationBell onNavigateToEquipment={onNavigateToEquipment} />
 
           {/* User Account / Role Badge */}
           <button

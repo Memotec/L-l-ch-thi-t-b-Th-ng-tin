@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { EquipmentData, RepairRow, RepairType, RepairStatus } from '../types';
 import { PerformerSelect } from './PerformerSelect';
+import { notificationService } from '../utils/notificationService';
 
 interface RepairTabProps {
   data: EquipmentData;
@@ -38,6 +39,16 @@ export const RepairTab: React.FC<RepairTabProps> = ({
     onChange({
       ...data,
       repair: [newRow, ...data.repair]
+    });
+
+    notificationService.notify({
+      title: 'Ghi nhận sự cố & sửa chữa',
+      message: `Đã thêm một sự vụ kỹ thuật (${presetType}) cho thiết bị "${data.general.name}".`,
+      type: 'repair',
+      targetEquipmentId: data.id,
+      targetEquipmentName: data.general.name,
+      targetTab: 'repair',
+      actor: 'Cán bộ kỹ thuật'
     });
   };
 

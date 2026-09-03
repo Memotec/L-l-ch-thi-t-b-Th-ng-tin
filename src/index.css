@@ -6,10 +6,10 @@
     --primary-hover: #1D4ED8;
     --secondary: #0F172A;
     --bg-main: #cacccf;
-    --surface: #f5eeee;
+    --surface: #cbc4c4;
     --border: #E5E7EB;
-    --text-primary: #111827;
-    --text-secondary: #ced0d6;
+    --text-primary: #000103;
+    --text-secondary: #0538ce;
     --success: #16A34A;
     --warning: #D97706;
     --danger: #DC2626;
@@ -32,7 +32,7 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #e19d50;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;

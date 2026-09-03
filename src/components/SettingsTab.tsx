@@ -413,8 +413,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
                 <button
                   onClick={onDeleteEquipment}
-                  disabled={isAdmin && allEquipments.length <= 1}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-all cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-all cursor-pointer shadow-xs"
                   title="Chuyển sổ lý lịch thiết bị vào Thùng rác"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

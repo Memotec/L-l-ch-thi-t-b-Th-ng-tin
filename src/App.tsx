@@ -5,6 +5,7 @@ import { authService } from './utils/authService';
 import { googleDriveDocsService } from './utils/googleDriveDocsService';
 import { storageService } from './utils/storageService';
 import { cloudSyncService, CloudSyncState } from './utils/cloudSyncService';
+import { notificationService } from './utils/notificationService';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardTab } from './components/DashboardTab';
@@ -17,6 +18,7 @@ import { RepairTab } from './components/RepairTab';
 import { SectionNavRibbon } from './components/SectionNavRibbon';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
+import { ConfirmModal } from './components/ConfirmModal';
 
 // Lazy load heavy components and modals on demand
 const PrintPreviewTab = lazy(() => import('./components/PrintPreviewTab').then(m => ({ default: m.PrintPreviewTab })));
@@ -64,6 +66,12 @@ export default function App() {
 
   // Cross-Device Cloud Sync State
   const [cloudSyncState, setCloudSyncState] = useState<CloudSyncState>(() => cloudSyncService.getState());
+
+  // Confirmation Modals State (Guarantees reliability inside iframe environments)
+  const [equipmentToDelete, setEquipmentToDelete] = useState<EquipmentData | null>(null);
+  const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<TrashEquipmentItem | null>(null);
+  const [isConfirmEmptyTrashOpen, setIsConfirmEmptyTrashOpen] = useState<boolean>(false);
+  const [isConfirmResetOpen, setIsConfirmResetOpen] = useState<boolean>(false);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -131,9 +139,11 @@ export default function App() {
           if (res.trash) setTrashList(res.trash);
           storageService.saveImmediate(res.equipments);
           showToast(`✓ Đã tự động nạp ${res.equipments.length} thiết bị từ Cloud cho thiết bị này.`);
+          notificationService.checkEquipmentHealthAlerts(res.equipments);
         } else if (!isCancelled && !res.success && equipments.length > 0) {
           // Initialize server cloud database with current dataset if server has no records yet
           cloudSyncService.pushToCloud(equipments, trashList, currentUser);
+          notificationService.checkEquipmentHealthAlerts(equipments);
         }
       } catch (e) {
         console.warn('Initial cloud sync check error:', e);
@@ -149,6 +159,12 @@ export default function App() {
         if (newTrash) setTrashList(newTrash);
         storageService.saveImmediate(newEquipments);
         showToast(msg);
+        notificationService.notify({
+          title: 'Đồng bộ dữ liệu đa thiết bị',
+          message: msg || `Đã cập nhật ${newEquipments.length} sổ lý lịch từ thiết bị khác.`,
+          type: 'sync',
+          actor: 'Cloud Real-time'
+        });
       }
     });
 
@@ -288,6 +304,13 @@ export default function App() {
     cloudSyncService.pushToCloud(gasEquipments, undefined, currentUser);
     const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setLastSaved(`Đã lưu lúc ${timeStr}`);
+
+    notificationService.notify({
+      title: 'Đồng bộ từ Google Sheets',
+      message: `Đã nạp và đồng bộ ${gasEquipments.length} sổ lý lịch từ Google Sheets thành công.`,
+      type: 'sync',
+      actor: 'Google Apps Script'
+    });
   }, [currentId, currentUser]);
 
   // Manual save trigger
@@ -297,6 +320,16 @@ export default function App() {
     const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setLastSaved(`Đã lưu lúc ${timeStr}`);
     showToast('✓ Đã lưu toàn bộ cơ sở dữ liệu & đồng bộ lên Cloud!');
+
+    notificationService.notify({
+      title: 'Đã lưu & đồng bộ hồ sơ',
+      message: `Đã lưu các thông tin cập nhật mới nhất cho thiết bị "${currentEquipment.general.name}" và đồng bộ Cloud.`,
+      type: 'update',
+      targetEquipmentId: currentEquipment.id,
+      targetEquipmentName: currentEquipment.general.name,
+      targetTab: activeTab,
+      actor: currentUser.displayName || 'Hệ thống'
+    });
 
     // Check if auto-sync to Google Docs on change is enabled
     const autoSync = localStorage.getItem('cns_auto_sync_gdoc_on_change_v1') === 'true';
@@ -314,7 +347,7 @@ export default function App() {
         console.warn('Auto sync Google Doc error:', err);
       }
     }
-  }, [equipments, trashList, currentUser, currentEquipment, handleUpdateCurrent, showToast]);
+  }, [equipments, trashList, currentUser, currentEquipment, activeTab, handleUpdateCurrent, showToast]);
 
   // Create new equipment
   const handleCreateNew = useCallback((newEq: EquipmentData) => {
@@ -327,6 +360,17 @@ export default function App() {
     setCurrentId(newEq.id);
     setActiveTab('general');
     showToast(`✓ Đã tạo hồ sơ cho thiết bị: ${newEq.general.name}`);
+    
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã thêm Sổ lý lịch mới',
+      message: `Đã khởi tạo hồ sơ sổ lý lịch thiết bị: "${newEq.general.name}" (Model: ${newEq.general.model || 'N/A'}, Serial: ${newEq.general.serial || 'N/A'}).`,
+      type: 'create',
+      targetEquipmentId: newEq.id,
+      targetEquipmentName: newEq.general.name,
+      targetTab: 'general',
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
   }, [trashList, currentUser, showToast]);
 
   // Clone equipment
@@ -355,13 +399,24 @@ export default function App() {
     });
     setCurrentId(cloned.id);
     showToast(`✓ Đã sao chép hồ sơ mới thành công!`);
+
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã nhân bản Sổ lý lịch',
+      message: `Đã tạo bản sao mới từ "${currentEquipment.general.name}" thành "${cloned.general.name}".`,
+      type: 'create',
+      targetEquipmentId: cloned.id,
+      targetEquipmentName: cloned.general.name,
+      targetTab: 'general',
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
   }, [currentUser, currentEquipment, trashList, showToast]);
 
-  // Delete equipment -> Move to Trash
+  // Trigger Delete Equipment -> Open Confirm Modal
   const handleDeleteCurrent = useCallback((targetEqId?: string) => {
     if (!currentUser.permissions.canDelete) {
       setIsLoginModalOpen(true);
-      showToast('Cần quyền Quản trị viên (Admin) để xóa sổ lý lịch thiết bị.');
+      showToast('Vui lòng đăng nhập Quản trị viên (Admin) để xóa sổ lý lịch thiết bị.');
       return;
     }
     
@@ -369,10 +424,13 @@ export default function App() {
       ? equipments.find(e => e.id === targetEqId) || currentEquipment 
       : currentEquipment;
 
-    const confirmDelete = window.confirm(
-      `⚠️ CHUYỂN VÀO THÙNG RÁC:\n\nBạn có chắc chắn muốn chuyển Sổ lý lịch thiết bị vào Thùng Rác?\n• Tên thiết bị: "${target.general.name}"\n• Model: ${target.general.model || 'N/A'}\n• Mã Serial: ${target.general.serial || 'N/A'}\n• Mã TS: ${target.general.assetNo || 'N/A'}\n\nSổ lý lịch sẽ được lưu giữ trong Thùng Rác trong 30 ngày và có thể khôi phục bất kỳ lúc nào.`
-    );
-    if (!confirmDelete) return;
+    setEquipmentToDelete(target);
+  }, [currentUser, equipments, currentEquipment, showToast]);
+
+  // Execute actual move to Trash
+  const handleConfirmDeleteEquipment = useCallback(() => {
+    if (!equipmentToDelete) return;
+    const target = equipmentToDelete;
 
     // Add to trash list
     const trashItem: TrashEquipmentItem = {
@@ -401,8 +459,18 @@ export default function App() {
     
     storageService.saveImmediate(remaining);
     cloudSyncService.pushToCloud(remaining, updatedTrash, currentUser);
+    setEquipmentToDelete(null);
     showToast(`✓ Đã chuyển Sổ lý lịch "${target.general.name}" vào Thùng Rác (Lưu giữ 30 ngày).`);
-  }, [currentUser, equipments, currentEquipment, currentId, trashList, showToast]);
+
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã chuyển Sổ lý lịch vào Thùng Rác',
+      message: `Sổ lý lịch thiết bị "${target.general.name}" (Model: ${target.general.model || 'N/A'}, Serial: ${target.general.serial || 'N/A'}) đã được chuyển vào Thùng Rác an toàn 30 ngày.`,
+      type: 'delete',
+      targetEquipmentName: target.general.name,
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
+  }, [equipmentToDelete, currentUser, trashList, equipments, currentId, showToast]);
 
   // Restore equipment from trash
   const handleRestoreFromTrash = useCallback((targetEqId: string) => {
@@ -432,6 +500,17 @@ export default function App() {
     cloudSyncService.pushToCloud(updatedActive, updatedTrash, currentUser);
     setCurrentId(trashItem.equipment.id);
     showToast(`✓ Đã khôi phục thành công Sổ lý lịch "${trashItem.equipment.general.name}"!`);
+
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã khôi phục Sổ lý lịch',
+      message: `Đã phục hồi thành công sổ lý lịch "${trashItem.equipment.general.name}" từ Thùng rác về danh mục quản lý.`,
+      type: 'restore',
+      targetEquipmentId: trashItem.equipment.id,
+      targetEquipmentName: trashItem.equipment.general.name,
+      targetTab: 'general',
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
   }, [currentUser, trashList, showToast]);
 
   // Permanently delete equipment from trash
@@ -443,21 +522,34 @@ export default function App() {
     }
 
     const trashItem = trashList.find(t => t.equipment.id === targetEqId);
-    const eqName = trashItem?.equipment?.general?.name || 'thiết bị';
+    if (!trashItem) return;
+    setPermanentDeleteTarget(trashItem);
+  }, [currentUser, trashList, showToast]);
 
-    const confirmPermanent = window.confirm(
-      `⚠️ CẢNH BÁO XÓA VĨNH VIỄN (ADMIN):\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN Sổ lý lịch:\n"${eqName}"?\n\nHành động này dữ liệu sẽ bị xóa hoàn toàn khỏi hệ thống và KHÔNG THỂ KHÔI PHỤC LẠI!`
-    );
-    if (!confirmPermanent) return;
+  // Execute actual permanent delete from trash
+  const handleConfirmPermanentDelete = useCallback(() => {
+    if (!permanentDeleteTarget) return;
+    const targetEqId = permanentDeleteTarget.equipment.id;
+    const eqName = permanentDeleteTarget.equipment.general.name;
 
     const updatedTrash = trashList.filter(t => t.equipment.id !== targetEqId);
     setTrashList(updatedTrash);
     storageService.saveTrash(updatedTrash);
     cloudSyncService.pushToCloud(equipments, updatedTrash, currentUser);
+    setPermanentDeleteTarget(null);
     showToast(`✓ Đã xóa vĩnh viễn Sổ lý lịch "${eqName}".`);
-  }, [currentUser, trashList, equipments, showToast]);
 
-  // Empty entire trash
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã xóa vĩnh viễn Sổ lý lịch',
+      message: `Sổ lý lịch "${eqName}" đã bị xóa vĩnh viễn khỏi toàn bộ hệ thống cơ sở dữ liệu và Cloud.`,
+      type: 'delete',
+      targetEquipmentName: eqName,
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
+  }, [permanentDeleteTarget, trashList, equipments, currentUser, showToast]);
+
+  // Trigger Empty entire trash
   const handleEmptyTrash = useCallback(() => {
     if (!currentUser.permissions.canDelete) {
       setIsLoginModalOpen(true);
@@ -465,18 +557,31 @@ export default function App() {
       return;
     }
 
-    if (trashList.length === 0) return;
+    if (trashList.length === 0) {
+      showToast('Thùng rác hiện đang trống.');
+      return;
+    }
 
-    const confirmEmpty = window.confirm(
-      `⚠️ CẢNH BÁO DỌN SẠCH THÙNG RÁC:\n\nBạn có chắc chắn muốn DỌN SẠCH toàn bộ ${trashList.length} sổ lý lịch trong Thùng Rác?\n\nTất cả dữ liệu trong thùng rác sẽ bị XÓA VĨNH VIỄN và KHÔNG THỂ KHÔI PHỤC!`
-    );
-    if (!confirmEmpty) return;
+    setIsConfirmEmptyTrashOpen(true);
+  }, [currentUser, trashList, showToast]);
 
+  // Execute Empty entire trash
+  const handleConfirmEmptyTrash = useCallback(() => {
+    const count = trashList.length;
     setTrashList([]);
     storageService.saveTrash([]);
     cloudSyncService.pushToCloud(equipments, [], currentUser);
-    showToast(`✓ Đã dọn sạch thùng rác.`);
-  }, [currentUser, trashList, equipments, showToast]);
+    setIsConfirmEmptyTrashOpen(false);
+    showToast(`✓ Đã dọn sạch toàn bộ thùng rác.`);
+
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã dọn sạch Thùng Rác',
+      message: `Đã dọn sạch và xóa vĩnh viễn toàn bộ ${count} sổ lý lịch trong Thùng rác.`,
+      type: 'delete',
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
+  }, [trashList, equipments, currentUser, showToast]);
 
   // Export current equipment JSON
   const handleExportCurrent = useCallback(() => {
@@ -527,6 +632,13 @@ export default function App() {
           storageService.saveImmediate(parsed);
           cloudSyncService.pushToCloud(parsed, trashList, currentUser);
           showToast(`✓ Đã nhập thành công ${parsed.length} thiết bị từ file backup!`);
+          
+          notificationService.notify({
+            title: 'Đã nhập dữ liệu sao lưu',
+            message: `Đã nạp thành công toàn bộ cơ sở dữ liệu ${parsed.length} sổ lý lịch thiết bị từ tệp JSON.`,
+            type: 'sync',
+            actor: currentUser.displayName || 'Quản trị viên'
+          });
         } else if (parsed && parsed.general && parsed.org) {
           let updatedList: EquipmentData[] = [];
           setEquipments(prev => {
@@ -542,6 +654,16 @@ export default function App() {
           cloudSyncService.pushToCloud(updatedList, trashList, currentUser);
           setCurrentId(parsed.id);
           showToast(`✓ Đã nhập hồ sơ thiết bị: ${parsed.general.name}`);
+
+          notificationService.notify({
+            title: 'Đã nhập hồ sơ thiết bị',
+            message: `Đã nạp thành công hồ sơ thiết bị "${parsed.general.name}" từ tệp sao lưu.`,
+            type: 'sync',
+            targetEquipmentId: parsed.id,
+            targetEquipmentName: parsed.general.name,
+            targetTab: 'general',
+            actor: currentUser.displayName || 'Quản trị viên'
+          });
         } else {
           alert('Định dạng file JSON không hợp lệ với cấu trúc Sổ Lý Lịch CNS.');
         }
@@ -554,21 +676,33 @@ export default function App() {
     e.target.value = '';
   }, [currentUser, trashList, showToast]);
 
-  // Reset to default sample
+  // Reset to default sample - Trigger Confirm Modal
   const handleResetDefaults = useCallback(() => {
     if (!currentUser.permissions.canResetDatabase) {
       setIsLoginModalOpen(true);
       showToast('Cần quyền Quản trị viên (Admin) để khôi phục dữ liệu mẫu ban đầu.');
       return;
     }
-    const confirmReset = window.confirm('Khôi phục lại toàn bộ dữ liệu mẫu ban đầu? Các thay đổi chưa lưu có thể bị ghi đè.');
-    if (!confirmReset) return;
+    setIsConfirmResetOpen(true);
+  }, [currentUser, showToast]);
+
+  // Execute actual Reset
+  const handleConfirmResetDefaults = useCallback(() => {
     setEquipments(sampleEquipments);
     setCurrentId(sampleEquipments[0].id);
     storageService.saveImmediate(sampleEquipments);
     cloudSyncService.pushToCloud(sampleEquipments, trashList, currentUser);
+    setIsConfirmResetOpen(false);
     showToast('✓ Đã khôi phục dữ liệu mẫu ban đầu và đồng bộ lên Cloud!');
-  }, [currentUser, trashList, showToast]);
+
+    // Trigger notification
+    notificationService.notify({
+      title: 'Đã khôi phục dữ liệu mẫu',
+      message: 'Hệ thống đã được thiết lập lại về danh mục 5 thiết bị CNS mẫu tiêu chuẩn.',
+      type: 'warning',
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
+  }, [trashList, currentUser, showToast]);
 
   // Handle direct print
   const handlePrintDirect = useCallback(() => {
@@ -577,6 +711,18 @@ export default function App() {
       window.print();
     }, 400);
   }, []);
+
+  // Navigate to target equipment and tab (e.g. from Notification item click)
+  const handleNavigateToEquipment = useCallback((equipmentId: string, tabName?: string) => {
+    const found = equipments.find(e => e.id === equipmentId);
+    if (found) {
+      setCurrentId(found.id);
+      if (tabName) {
+        setActiveTab(tabName);
+      }
+      showToast(`✓ Đã chuyển đến hồ sơ: ${found.general.name}`);
+    }
+  }, [equipments, showToast]);
 
   // If Full-Screen PDF Mode is active (e.g. from scanning QR Code or direct link)
   if (isPdfFullscreen && (pdfFullscreenEquipment || currentEquipment)) {
@@ -661,6 +807,7 @@ export default function App() {
           onOpenSearchModal={() => setIsSearchModalOpen(true)}
           cloudSyncState={cloudSyncState}
           onTriggerCloudSync={handleTriggerCloudSync}
+          onNavigateToEquipment={handleNavigateToEquipment}
         />
 
         {/* Tab Body Viewports with ErrorBoundary and Suspense */}
@@ -864,6 +1011,79 @@ export default function App() {
             onPermanentDeleteItem={handlePermanentDeleteFromTrash}
             onEmptyTrash={handleEmptyTrash}
             currentUser={currentUser}
+          />
+        )}
+
+        {/* Confirmation Modal: Delete Equipment -> Move to Trash */}
+        {equipmentToDelete && (
+          <ConfirmModal
+            isOpen={!!equipmentToDelete}
+            onClose={() => setEquipmentToDelete(null)}
+            onConfirm={handleConfirmDeleteEquipment}
+            title="Xác nhận Xóa Sổ (Chuyển vào Thùng Rác)"
+            description="Bạn có chắc chắn muốn chuyển Sổ lý lịch thiết bị này vào Thùng Rác? Sổ lý lịch sẽ được lưu giữ an toàn trong Thùng Rác trong 30 ngày và bạn có thể khôi phục lại bất kỳ lúc nào."
+            equipmentDetails={{
+              name: equipmentToDelete.general.name,
+              model: equipmentToDelete.general.model || 'N/A',
+              serial: equipmentToDelete.general.serial || 'N/A',
+              assetNo: equipmentToDelete.general.assetNo || 'N/A',
+              location: equipmentToDelete.general.manufacturer ? `${equipmentToDelete.general.manufacturer} (${equipmentToDelete.general.origin || 'N/A'})` : undefined
+            }}
+            confirmText="Xác nhận Chuyển vào Thùng Rác"
+            cancelText="Hủy bỏ"
+            variant="danger"
+            iconType="trash"
+          />
+        )}
+
+        {/* Confirmation Modal: Permanent Delete Item from Trash */}
+        {permanentDeleteTarget && (
+          <ConfirmModal
+            isOpen={!!permanentDeleteTarget}
+            onClose={() => setPermanentDeleteTarget(null)}
+            onConfirm={handleConfirmPermanentDelete}
+            title="Cảnh báo: Xóa vĩnh viễn Sổ Lý Lịch"
+            description="Hành động này sẽ xóa vĩnh viễn sổ lý lịch này khỏi toàn bộ hệ thống và Cloud. Dữ liệu sẽ KHÔNG THỂ KHÔI PHỤC lại được nữa!"
+            equipmentDetails={{
+              name: permanentDeleteTarget.equipment.general.name,
+              model: permanentDeleteTarget.equipment.general.model || 'N/A',
+              serial: permanentDeleteTarget.equipment.general.serial || 'N/A',
+              assetNo: permanentDeleteTarget.equipment.general.assetNo || 'N/A'
+            }}
+            confirmText="Xóa vĩnh viễn ngay"
+            cancelText="Hủy bỏ"
+            variant="danger"
+            iconType="warning"
+          />
+        )}
+
+        {/* Confirmation Modal: Empty Entire Trash */}
+        {isConfirmEmptyTrashOpen && (
+          <ConfirmModal
+            isOpen={isConfirmEmptyTrashOpen}
+            onClose={() => setIsConfirmEmptyTrashOpen(false)}
+            onConfirm={handleConfirmEmptyTrash}
+            title="Dọn sạch toàn bộ Thùng Rác"
+            description={`Bạn có chắc chắn muốn dọn sạch toàn bộ ${trashList.length} sổ lý lịch trong Thùng Rác? Tất cả dữ liệu trong thùng rác sẽ bị xóa vĩnh viễn khỏi hệ thống.`}
+            confirmText="Dọn sạch thùng rác"
+            cancelText="Hủy bỏ"
+            variant="danger"
+            iconType="trash"
+          />
+        )}
+
+        {/* Confirmation Modal: Reset Defaults */}
+        {isConfirmResetOpen && (
+          <ConfirmModal
+            isOpen={isConfirmResetOpen}
+            onClose={() => setIsConfirmResetOpen(false)}
+            onConfirm={handleConfirmResetDefaults}
+            title="Khôi phục Dữ liệu Gốc Ban Đầu"
+            description="Bạn có chắc chắn muốn khôi phục lại toàn bộ dữ liệu mẫu mặc định của hệ thống? Tất cả các thay đổi chưa lưu có thể bị ghi đè."
+            confirmText="Xác nhận Khôi phục"
+            cancelText="Hủy bỏ"
+            variant="warning"
+            iconType="refresh"
           />
         )}
       </Suspense>

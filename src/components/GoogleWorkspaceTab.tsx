@@ -283,11 +283,6 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
       return;
     }
 
-    const confirmBatch = window.confirm(
-      `Bạn có muốn đồng bộ/ghi đè toàn bộ ${allEquipments.length} thiết bị vào thư mục tập trung "CNS_SoLyLich_GoogleDocs" trên Google Drive?`
-    );
-    if (!confirmBatch) return;
-
     setIsBatchSyncingDocs(true);
     setBatchProgress({ current: 0, total: allEquipments.length, name: 'Bắt đầu...' });
     setLastActionStatus('Đang tiến hành đồng bộ toàn bộ hồ sơ thiết bị vào Google Drive...');
@@ -430,15 +425,9 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
           return;
         }
 
-        const confirmUpdate = window.confirm(
-          `Tìm thấy ${result.data.length} thiết bị từ Google Sheet. Bạn có muốn tải về và nạp vào ứng dụng để tra cứu/làm việc?`
-        );
-
-        if (confirmUpdate) {
-          onSyncFromGas(result.data);
-          setLastActionStatus(`✓ Đã nạp thành công ${result.data.length} thiết bị từ Google Sheet (Chế độ Chỉ đọc)!`);
-          onShowToast(`✓ Đã tải về thành công ${result.data.length} thiết bị từ Google Sheet (Chỉ đọc)!`);
-        }
+        onSyncFromGas(result.data);
+        setLastActionStatus(`✓ Đã nạp thành công ${result.data.length} thiết bị từ Google Sheet!`);
+        onShowToast(`✓ Đã tải về thành công ${result.data.length} thiết bị từ Google Sheet!`);
       } else {
         throw new Error(result.message || 'Dữ liệu không hợp lệ từ Google Sheet');
       }

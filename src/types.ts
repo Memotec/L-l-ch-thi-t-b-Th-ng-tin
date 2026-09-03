@@ -216,3 +216,29 @@ export interface AppUser {
   permissions: UserPermissions;
 }
 
+export type NotificationType = 
+  | 'create' 
+  | 'delete' 
+  | 'update' 
+  | 'restore' 
+  | 'sync' 
+  | 'maintenance' 
+  | 'repair' 
+  | 'warning' 
+  | 'info';
+
+export type NotificationCategory = 'all' | 'unread' | 'ledger' | 'maintenance_repair' | 'sync';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  type: NotificationType;
+  isRead: boolean;
+  targetEquipmentId?: string;
+  targetEquipmentName?: string;
+  targetTab?: string;
+  actor?: string;
+}
+
