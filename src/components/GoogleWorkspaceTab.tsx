@@ -680,12 +680,12 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
               </div>
               <div className="space-y-0.5">
                 <div className="font-bold text-amber-950 flex items-center gap-2 flex-wrap">
-                  <span>Gặp lỗi &quot;Đã chặn quyền truy cập: Lỗi uỷ quyền&quot; từ Google?</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-amber-200/70 text-amber-900 font-semibold">Lỗi Google OAuth 403 / 400</span>
+                  <span>Gặp lỗi &quot;Access blocked / The OAuth client was not found (Error 401: invalid_client)&quot;?</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] bg-amber-200/70 text-amber-900 font-semibold">Lỗi Google OAuth 401 / 403</span>
                 </div>
                 <p className="text-[11.5px] text-slate-600 leading-relaxed">
-                  Nguyên nhân do Google yêu cầu thêm domain vào <b>Nguồn gốc JavaScript</b> hoặc tài khoản chưa nằm trong danh sách <b>Người dùng thử nghiệm (Test users)</b>. 
-                  Hãy dùng <b>Google Apps Script Web App</b> để đồng bộ tự động 100% không bao giờ bị chặn, hoặc bấm nút bên dưới để cấu hình Client ID.
+                  Lỗi này xảy ra khi Google Client ID mặc định chưa được ủy quyền domain trên Cloud Console. 
+                  Hãy dùng <b>Tab Google Apps Script &amp; Sheets</b> để tự động tạo Doc 8 trang, xuất PDF, lưu Drive và đồng bộ 100% không cần Client ID, hoặc cấu hình Client ID riêng của bạn bên dưới.
                 </p>
               </div>
             </div>
@@ -715,7 +715,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
               <div className="flex items-start justify-between gap-2 border-b border-amber-200 pb-3">
                 <div className="flex items-center gap-2 text-amber-950 font-bold text-sm">
                   <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-                  <span>Hướng Dẫn Khắc Phục Triệt Để: &quot;Đã chặn quyền truy cập: Lỗi uỷ quyền&quot;</span>
+                  <span>Hướng Dẫn Khắc Phục: &quot;Error 401: invalid_client&quot; hoặc &quot;Lỗi uỷ quyền&quot;</span>
                 </div>
                 <button
                   onClick={() => setShowOAuthTroubleshooter(false)}
@@ -736,9 +736,12 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
               <div className="space-y-2 text-[11.5px] leading-relaxed bg-white/70 p-3.5 rounded-lg border border-amber-200/80">
                 <div className="font-bold text-amber-950 flex items-center gap-1.5">
                   <Info className="w-4 h-4 text-amber-700" />
-                  Tại sao Google hiển thị thông báo &quot;Đã chặn quyền truy cập: Lỗi uỷ quyền&quot;?
+                  Tại sao Google hiển thị thông báo &quot;The OAuth client was not found / Error 401: invalid_client&quot;?
                 </div>
                 <ul className="list-disc list-inside space-y-1.5 pl-1 text-slate-700">
+                  <li>
+                    <b>Lỗi Client ID không tồn tại hoặc chưa cấu hình (Error 401: invalid_client):</b> Google không tìm thấy Client ID hoặc Client ID chưa được gán quyền cho tên miền này trong Google Cloud Console.
+                  </li>
                   <li>
                     <b>Lỗi nguồn gốc JavaScript (Origin Mismatch):</b> Tên miền của ứng dụng (<code>{typeof window !== 'undefined' ? window.location.origin : ''}</code>) chưa được thêm vào ô <b>&quot;Nguồn gốc JavaScript đã ủy quyền&quot; (Authorized JavaScript origins)</b> trong Google Cloud Console.
                   </li>

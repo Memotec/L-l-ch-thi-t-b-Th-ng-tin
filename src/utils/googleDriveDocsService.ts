@@ -1,11 +1,29 @@
 import { EquipmentData } from '../types';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import firebaseConfig from '../../firebase-applet-config.json';
 
 declare const google: any;
 
-const DEFAULT_CLIENT_ID = '509124400040-o4n2t7b64qj7216l37861pkvlh3k46d3.apps.googleusercontent.com';
+const DEFAULT_CLIENT_ID = (firebaseConfig && firebaseConfig.oAuthClientId) 
+  ? firebaseConfig.oAuthClientId 
+  : '509124400040-81hi6p9lgil2mb19llfo2f0fju01pqlj.apps.googleusercontent.com';
 const CUSTOM_CLIENT_ID_KEY = 'cns_google_oauth_client_id_v1';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/documents';
 const FOLDER_NAME = 'CNS_SoLyLich_GoogleDocs';
+
+// Initialize Firebase App safely if config is present
+let firebaseAppInstance: any = null;
+let firebaseAuthInstance: any = null;
+
+try {
+  if (firebaseConfig && firebaseConfig.apiKey) {
+    firebaseAppInstance = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    firebaseAuthInstance = getAuth(firebaseAppInstance);
+  }
+} catch (e) {
+  console.warn('Firebase init notice:', e);
+}
 
 export interface GoogleDriveFolder {
   id: string;
@@ -146,8 +164,29 @@ class GoogleDriveDocsService {
     localStorage.removeItem(TOKEN_EXPIRY_KEY);
   }
 
-  // Request token with popup
+  // Request token with popup (tries Firebase Auth first, falls back to Google Identity Services)
   public async requestAccessToken(): Promise<string> {
+    // 1. Try Firebase Auth popup if custom Client ID is not manually specified
+    if (!this.hasCustomClientId() && firebaseAuthInstance) {
+      try {
+        const provider = new GoogleAuthProvider();
+        provider.addScope('https://www.googleapis.com/auth/drive.file');
+        provider.addScope('https://www.googleapis.com/auth/documents');
+        provider.setCustomParameters({ prompt: 'select_account' });
+        
+        const result = await signInWithPopup(firebaseAuthInstance, provider);
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential?.accessToken) {
+          this.setToken(credential.accessToken, 3599);
+          return credential.accessToken;
+        }
+      } catch (fbErr: any) {
+        console.warn('Firebase Auth popup attempt failed, trying GIS fallback:', fbErr);
+        // If it's a critical popup closed by user, don't fail immediately, try GIS
+      }
+    }
+
+    // 2. Google Identity Services (GIS) Flow
     await this.loadScripts();
 
     return new Promise((resolve, reject) => {
@@ -156,16 +195,23 @@ class GoogleDriveDocsService {
       }
 
       if (!this.tokenClient) {
-        reject(new Error('Thư viện Google Identity Services chưa tải xong. Vui lòng thử lại sau vài giây.'));
+        reject(new Error('Thư viện Google Identity Services chưa tải xong. Vui lòng thử lại sau vài giây hoặc chuyển sang dùng Google Apps Script Web App.'));
         return;
       }
 
       this.tokenClient.callback = (tokenResponse: any) => {
         if (tokenResponse.error) {
-          const rawErr = tokenResponse.error_description || tokenResponse.error;
+          const rawErr = (tokenResponse.error_description || tokenResponse.error || '').toString();
           let friendlyMsg = rawErr;
-          if (rawErr.includes('access_denied') || rawErr.includes('unauthorized_client') || rawErr.includes('redirect_uri_mismatch') || rawErr.includes('origin_mismatch')) {
-            friendlyMsg = `Đã chặn quyền truy cập: Lỗi uỷ quyền từ Google. Vui lòng cấu hình OAuth Client ID hợp lệ hoặc chuyển sang dùng Google Apps Script Web App (Không cần Client ID, không bao giờ bị chặn).`;
+          if (
+            rawErr.includes('invalid_client') || 
+            rawErr.includes('OAuth client was not found') ||
+            rawErr.includes('access_denied') || 
+            rawErr.includes('unauthorized_client') || 
+            rawErr.includes('redirect_uri_mismatch') || 
+            rawErr.includes('origin_mismatch')
+          ) {
+            friendlyMsg = `Lỗi ủy quyền Google (${rawErr}): Client ID chưa được ủy quyền cho tên miền này. Vui lòng chuyển sang tab "Apps Script & Sheets" để đồng bộ tự động 100% không cần cấu hình Client ID, hoặc cập nhật Authorized JavaScript Origin.`;
           }
           reject(new Error(friendlyMsg));
           return;
