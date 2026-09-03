@@ -13,7 +13,10 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canImportData: true,
   canExportData: true,
   canResetDatabase: true,
-  canSyncGas: true
+  canSyncGas: true,
+  canAccessCloudDrive: true,
+  canDownloadCloudDatabase: true,
+  canUploadCloudDatabase: true
 };
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -27,7 +30,10 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   canImportData: false,
   canExportData: true,
   canResetDatabase: false,
-  canSyncGas: false
+  canSyncGas: true,
+  canAccessCloudDrive: true,
+  canDownloadCloudDatabase: true,
+  canUploadCloudDatabase: false
 };
 
 export const ADMIN_USER: AppUser = {
@@ -40,7 +46,7 @@ export const ADMIN_USER: AppUser = {
 
 export const DEFAULT_USER: AppUser = {
   username: 'viewer',
-  displayName: 'Khách / Kỹ Thuật Viên (Chỉ Xem & Quét QR)',
+  displayName: 'Người Xem (Viewer - Mặc định)',
   role: 'default',
   avatarColor: 'bg-slate-600',
   permissions: DEFAULT_PERMISSIONS
@@ -131,5 +137,13 @@ export const authService = {
 
   isReadOnly(user: AppUser): boolean {
     return user.role !== 'admin' || !user.permissions.canEditDetails;
+  },
+
+  canUploadCloud(user: AppUser): boolean {
+    return user.role === 'admin' || user.permissions.canUploadCloudDatabase === true;
+  },
+
+  canDownloadCloud(user: AppUser): boolean {
+    return user.permissions.canDownloadCloudDatabase !== false;
   }
 };

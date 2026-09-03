@@ -41,7 +41,7 @@ interface TopbarProps {
   onOpenSearchModal?: () => void;
 }
 
-export const Topbar: React.FC<TopbarProps> = ({
+export const Topbar: React.FC<TopbarProps> = React.memo(({
   currentEquipment,
   currentUser,
   onOpenLoginModal,
@@ -285,4 +285,4 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
     </header>
   );
-};
+});

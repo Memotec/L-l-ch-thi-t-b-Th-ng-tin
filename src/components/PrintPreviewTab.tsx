@@ -1,57 +1,214 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { 
   Printer, 
   Download, 
   Settings2,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Check,
+  FileText,
+  Search,
+  BookOpen,
+  ClipboardList,
+  Layers,
+  QrCode,
+  SlidersHorizontal,
+  Table
 } from 'lucide-react';
-import { 
-  EquipmentData, 
-  ComponentRow, 
-  DocRow, 
-  MaintenanceRow, 
-  RepairRow, 
-  OrgTransferRow,
-  SimpleLicenseRow
-} from '../types';
+import { EquipmentData } from '../types';
 import { generateEquipmentQrDataUrl } from '../utils/qrCodeService';
+import { googleDriveDocsService } from '../utils/googleDriveDocsService';
+import { TeamInventoryPrintView } from './TeamInventoryPrintView';
+import { EquipmentLogbookPrintPages } from './EquipmentLogbookPrintPages';
 
 interface PrintPreviewTabProps {
   data: EquipmentData;
+  allEquipments?: EquipmentData[];
+  onSelectEquipment?: (id: string) => void;
 }
 
-export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({ data }) => {
+export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({ 
+  data, 
+  allEquipments, 
+  onSelectEquipment 
+}) => {
   const printRef = useRef<HTMLDivElement>(null);
+
+  // View modes:
+  // 'single_logbook': Sổ lý lịch 8 trang của thiết bị đang chọn
+  // 'team_inventory': Bảng tổng hợp kiểm kê toàn bộ thiết bị hiện có (PDF khổ ngang/dọc)
+  // 'all_logbooks': In gộp toàn bộ 8 trang sổ lý lịch của tất cả thiết bị
+  const [viewMode, setViewMode] = useState<'single_logbook' | 'team_inventory' | 'all_logbooks'>('single_logbook');
+
+  // Single logbook settings
   const [itemsPerPageMaint, setItemsPerPageMaint] = useState<number>(7);
   const [coverQrUrl, setCoverQrUrl] = useState<string>('');
+  const [copiedStandardDoc, setCopiedStandardDoc] = useState<boolean>(false);
 
+  // Team inventory settings
+  const [inventoryOrientation, setInventoryOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [inventoryRowsPerPage, setInventoryRowsPerPage] = useState<number>(7);
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [inventorySearch, setInventorySearch] = useState<string>('');
+  const [showQrInInventory, setShowQrInInventory] = useState<boolean>(true);
+  const [copiedInventoryTsv, setCopiedInventoryTsv] = useState<boolean>(false);
+
+  // QR Code lookup map for all equipments
+  const [qrCodeMap, setQrCodeMap] = useState<Record<string, string>>({});
+
+  const effectiveEquipments = useMemo(() => {
+    return (allEquipments && allEquipments.length > 0) ? allEquipments : [data];
+  }, [allEquipments, data]);
+
+  // Generate QR codes for all equipments in inventory
   useEffect(() => {
     let isMounted = true;
-    generateEquipmentQrDataUrl(data, {
-      width: 250,
-      margin: 1,
-      color: { dark: '#000000', light: '#ffffff' }
-    }).then(url => {
-      if (isMounted) setCoverQrUrl(url);
+    Promise.all(
+      effectiveEquipments.map(async (eq) => {
+        try {
+          const url = await generateEquipmentQrDataUrl(eq, {
+            width: 140,
+            margin: 1,
+            color: { dark: '#000000', light: '#ffffff' }
+          });
+          return { id: eq.id, url };
+        } catch {
+          return { id: eq.id, url: '' };
+        }
+      })
+    ).then(results => {
+      if (isMounted) {
+        const map: Record<string, string> = {};
+        results.forEach(r => { map[r.id] = r.url; });
+        setQrCodeMap(map);
+        if (map[data.id]) {
+          setCoverQrUrl(map[data.id]);
+        }
+      }
     });
     return () => { isMounted = false; };
-  }, [data]);
+  }, [effectiveEquipments, data.id]);
+
+  // Unique filter sets
+  const uniqueCategories = useMemo(() => {
+    const set = new Set<string>();
+    effectiveEquipments.forEach(e => {
+      if (e.general?.category) set.add(e.general.category);
+    });
+    return Array.from(set);
+  }, [effectiveEquipments]);
+
+  const uniqueStatuses = useMemo(() => {
+    const set = new Set<string>();
+    effectiveEquipments.forEach(e => {
+      if (e.general?.status) set.add(e.general.status);
+    });
+    return Array.from(set);
+  }, [effectiveEquipments]);
+
+  // Filtered inventory list
+  const filteredInventoryEquipments = useMemo(() => {
+    return effectiveEquipments.filter(e => {
+      if (categoryFilter !== 'ALL' && e.general?.category !== categoryFilter) return false;
+      if (statusFilter !== 'ALL' && e.general?.status !== statusFilter) return false;
+      if (inventorySearch.trim()) {
+        const q = inventorySearch.toLowerCase();
+        const matchName = e.general?.name?.toLowerCase().includes(q);
+        const matchModel = e.general?.model?.toLowerCase().includes(q);
+        const matchSerial = e.general?.serial?.toLowerCase().includes(q);
+        const matchAsset = (e.general?.assetNo || e.general?.assetCode || '').toLowerCase().includes(q);
+        const matchMfr = e.general?.manufacturer?.toLowerCase().includes(q);
+        const matchLoc = (e.org?.location || '').toLowerCase().includes(q);
+        if (!matchName && !matchModel && !matchSerial && !matchAsset && !matchMfr && !matchLoc) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [effectiveEquipments, categoryFilter, statusFilter, inventorySearch]);
 
   const handlePrint = () => {
     window.print();
   };
 
+  const handleDownloadStandardGoogleDoc = () => {
+    googleDriveDocsService.downloadStandardGoogleDocHtml(data);
+  };
+
+  const handleCopyStandardGoogleDoc = async () => {
+    const success = await googleDriveDocsService.copyStandardHtmlForGoogleDocs(data);
+    if (success) {
+      setCopiedStandardDoc(true);
+      setTimeout(() => setCopiedStandardDoc(false), 2500);
+    }
+  };
+
+  const handleCopyInventoryTsv = async () => {
+    const headers = [
+      'STT',
+      'Tên thiết bị',
+      'Chủng loại',
+      'Hãng sản xuất',
+      'Model',
+      'Số Serial',
+      'Mã tài sản',
+      'Vị trí lắp đặt',
+      'Đơn vị quản lý',
+      'Năm SX',
+      'Năm SD',
+      'Trạng thái kỹ thuật',
+      'Mức ưu tiên',
+      'Kỹ sư phụ trách',
+      'Ghi chú kiểm kê'
+    ];
+    const rows = filteredInventoryEquipments.map((e, idx) => [
+      idx + 1,
+      e.general?.name || '',
+      e.general?.category || '',
+      e.general?.manufacturer || '',
+      e.general?.model || '',
+      e.general?.serial || '',
+      e.general?.assetNo || e.general?.assetCode || '',
+      e.org?.location || '',
+      e.org?.unit || '',
+      e.general?.yearMade || '',
+      e.general?.commissioned || '',
+      e.general?.status || '',
+      e.general?.priority || '',
+      e.org?.primaryEngineer || '',
+      ''
+    ]);
+    const tsv = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
+    try {
+      await navigator.clipboard.writeText(tsv);
+      setCopiedInventoryTsv(true);
+      setTimeout(() => setCopiedInventoryTsv(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy TSV', err);
+    }
+  };
+
   const handleDownloadHtml = () => {
     if (!printRef.current) return;
     const content = printRef.current.innerHTML;
+    const isInventory = viewMode === 'team_inventory';
+    const isLandscape = isInventory && inventoryOrientation === 'landscape';
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const title = isInventory 
+      ? `Bao_Cao_Kiem_Ke_Thiet_Bi_CNS_${todayStr}`
+      : viewMode === 'all_logbooks'
+      ? `Toan_Bo_So_Ly_Lich_CNS_${todayStr}`
+      : `Ly_Lich_Thiet_Bi_${(data.general?.model || data.general?.serial || 'CNS').replace(/\W/g, '_')}`;
+
     const fullHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Lý Lịch Thiết Bị - ${data.general.name || 'VHF PARK AIR T6T'}</title>
+<title>${title}</title>
 <style>
 @page { 
-  size: A4 portrait; 
+  size: ${isLandscape ? 'A4 landscape' : 'A4 portrait'}; 
   margin: 0; 
 }
 * { box-sizing: border-box; }
@@ -77,48 +234,43 @@ body {
   display: flex;
   flex-direction: column;
 }
-.page-sheet:last-child { 
-  page-break-after: auto; 
-}
-.cover-border {
-  border: 3px double #000;
-  height: 100%;
-  padding: 12mm 10mm 10mm;
+.page-sheet-landscape {
+  width: 297mm;
+  min-height: 210mm;
+  height: 210mm;
+  padding: 8mm 12mm 8mm 12mm;
+  margin: 0 auto;
+  page-break-after: always;
+  page-break-inside: avoid;
+  position: relative;
+  background: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+}
+.page-sheet:last-child, .page-sheet-landscape:last-child { 
+  page-break-after: auto; 
 }
 .pdf-table {
   width: 100%;
   border-collapse: collapse;
   border: 1.5px solid #000;
-  font-size: 11pt;
+  font-size: ${isLandscape ? '9pt' : '11pt'};
 }
 .pdf-table th, .pdf-table td {
   border: 1px solid #000;
-  padding: 6px 8px;
+  padding: 5px 6px;
   vertical-align: middle;
 }
 .pdf-table th {
   font-weight: bold;
   text-transform: uppercase;
   text-align: center;
-  font-size: 11pt;
-}
-.pdf-table td.dotted-cell {
-  background-image: linear-gradient(to bottom, transparent 90%, #666 90%);
-  background-size: 100% 24px;
-}
-.dots-fill {
-  border-bottom: 1px dotted #000;
-  display: inline-block;
-  min-height: 18px;
 }
 .page-num {
   text-align: center;
-  font-size: 12pt;
+  font-size: 11pt;
   margin-top: auto;
-  padding-top: 6mm;
+  padding-top: 4mm;
   font-weight: normal;
 }
 </style>
@@ -131,127 +283,330 @@ ${content}
     const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `Ly_Lich_Thiet_Bi_${(data.general.model || data.general.serial || 'CNS').replace(/\W/g, '_')}.html`;
+    a.download = `${title}.html`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
 
-  const g = data.general;
-  const s = data.spec;
-  const org = data.org;
-
-  // Company Name
-  const companyName = org.companyName || (typeof window !== 'undefined' ? localStorage.getItem('cns_default_company_name') || '' : '');
-  const coverNote = org.coverNote || '';
-
-  // Prepare Licenses for dual table on Page 3
-  const freqList: SimpleLicenseRow[] = (data.freqLicenses && data.freqLicenses.length > 0) 
-    ? data.freqLicenses 
-    : (data.licenses || []).filter(l => l.startNo.includes('/GP') || l.content.toLowerCase().includes('tần số')).map(l => ({
-        id: l.id,
-        no: l.startNo,
-        expiryDate: l.endDate
-      }));
-
-  const exploitList: SimpleLicenseRow[] = (data.exploitLicenses && data.exploitLicenses.length > 0) 
-    ? data.exploitLicenses 
-    : (data.licenses || []).filter(l => l.startNo.includes('/GP-CHK') || l.content.toLowerCase().includes('khai thác') || !l.startNo.includes('/GP')).map(l => ({
-        id: l.id,
-        no: l.startNo,
-        expiryDate: l.endDate
-      }));
-
-  const maxLicRows = Math.max(8, Math.max(freqList.length, exploitList.length));
-  const paddedFreq = Array.from({ length: maxLicRows }, (_, i) => freqList[i] || null);
-  const paddedExploit = Array.from({ length: maxLicRows }, (_, i) => exploitList[i] || null);
-
-  // Chunk maintenance into pages (default 7 records per page like scanned book)
-  const chunkArray = <T extends unknown>(arr: T[], size: number): T[][] => {
-    if (!arr || arr.length === 0) return [[]];
-    const chunks: T[][] = [];
-    for (let i = 0; i < arr.length; i += size) {
-      chunks.push(arr.slice(i, i + size));
-    }
-    return chunks;
-  };
-
-  const maintPages = chunkArray<MaintenanceRow>(data.maintenance || [], itemsPerPageMaint);
-
-  // Helper for empty rows in print
-  function padList<T>(arr: T[] | undefined, minLength: number): (T | null)[] {
-    const list = arr || [];
-    if (list.length >= minLength) return list;
-    return [...list, ...Array.from({ length: minLength - list.length }, () => null)];
-  }
-
   return (
     <div className="space-y-6">
       {/* Top Toolbar / Action Controls (Hidden on Print) */}
-      <div className="p-4 rounded-xl bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 no-print shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-400/30">
-            <Printer className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              Bản In Chuẩn Đề Mục & Form Mẫu "LÝ LỊCH THIẾT BỊ"
-            </h2>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Khung viền đôi, mục lục, bảng 2 cột giấy phép, mã QR thiết bị, kẻ dòng bảo dưỡng & sửa chữa.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg">
-            <Settings2 className="w-3.5 h-3.5 text-blue-400" />
-            <span>Dòng/trang:</span>
-            <select
-              value={itemsPerPageMaint}
-              onChange={(e) => setItemsPerPageMaint(Number(e.target.value))}
-              className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-semibold text-white text-xs focus:outline-none cursor-pointer"
+      <div className="p-4 rounded-xl bg-slate-900 text-white space-y-4 no-print shadow-md">
+        {/* Row 1: Mode Segmented Controls */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800">
+            <button
+              onClick={() => setViewMode('single_logbook')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'single_logbook'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
             >
-              <option value={5}>5 dòng</option>
-              <option value={7}>7 dòng (Chuẩn)</option>
-              <option value={9}>9 dòng</option>
-            </select>
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Sổ Lý Lịch ({data.general?.name || 'Hiện tại'})</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('team_inventory')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'team_inventory'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              <span>Bảng Kiểm Kê Toàn Đội ({effectiveEquipments.length} Thiết bị)</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('all_logbooks')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'all_logbooks'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>In Gộp Toàn Bộ Sổ ({effectiveEquipments.length} Thiết bị)</span>
+            </button>
           </div>
 
-          <a
-            href={data.googleDocUrl || `https://docs.google.com/document/create?title=${encodeURIComponent('Sổ_Lý_Lịch_' + (data.general.name || data.id))}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            title="Mở tài liệu Google Docs trực tuyến"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Mở Google Docs</span>
-          </a>
-
-          <button
-            onClick={handleDownloadHtml}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
-            title="Tải file HTML nguyên bản để lưu trữ hoặc in độc lập"
-          >
-            <Download className="w-3.5 h-3.5 text-blue-400" />
-            <span>Tải file HTML Sổ</span>
-          </button>
-
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>In / Xuất PDF (Ctrl+P)</span>
-          </button>
+          {/* Quick Info Tag */}
+          <div className="text-xs text-slate-400">
+            {viewMode === 'team_inventory' ? (
+              <span className="text-indigo-300 font-medium">
+                Khổ in {inventoryOrientation === 'landscape' ? 'A4 Ngang (297×210mm)' : 'A4 Dọc (210×297mm)'} • {filteredInventoryEquipments.length} thiết bị hiển thị
+              </span>
+            ) : viewMode === 'all_logbooks' ? (
+              <span className="text-emerald-300 font-medium">
+                Ghép liên tục 8 trang của {effectiveEquipments.length} thiết bị (~{effectiveEquipments.length * 8} trang A4)
+              </span>
+            ) : (
+              <span className="text-blue-300 font-medium">
+                Sổ lý lịch 8 trang chuẩn theo quy định Quản lý Kỹ thuật CNS
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* Row 2: Mode-Specific Toolbar Controls */}
+        {viewMode === 'team_inventory' ? (
+          /* ========================================================================= */
+          /* CONTROLS CHO BẢNG KIỂM KÊ TOÀN ĐỘI */
+          /* ========================================================================= */
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 flex-wrap">
+            {/* Search & Filter Group */}
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Tìm tên, serial, model, vị trí..."
+                  value={inventorySearch}
+                  onChange={(e) => setInventorySearch(e.target.value)}
+                  className="pl-8 pr-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder:text-slate-500 w-44 md:w-56 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Category Filter */}
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="ALL">Tất cả chủng loại ({effectiveEquipments.length})</option>
+                {uniqueCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="ALL">Tất cả trạng thái</option>
+                {uniqueStatuses.map(st => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </select>
+
+              {/* Orientation Switch */}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 p-1 rounded-lg">
+                <button
+                  onClick={() => setInventoryOrientation('landscape')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer ${
+                    inventoryOrientation === 'landscape' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ in A4 Ngang (Tối ưu nhất cho nhiều cột kiểm kê)"
+                >
+                  Khổ Ngang
+                </button>
+                <button
+                  onClick={() => setInventoryOrientation('portrait')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer ${
+                    inventoryOrientation === 'portrait' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ in A4 Dọc"
+                >
+                  Khổ Dọc
+                </button>
+              </div>
+
+              {/* Rows Per Page */}
+              <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700 px-2 py-1.5 rounded-lg text-slate-300">
+                <span>Dòng/trang:</span>
+                <select
+                  value={inventoryRowsPerPage}
+                  onChange={(e) => setInventoryRowsPerPage(Number(e.target.value))}
+                  className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-bold text-white text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value={5}>5 dòng</option>
+                  <option value={7}>7 dòng (Chuẩn)</option>
+                  <option value={9}>9 dòng</option>
+                  <option value={12}>12 dòng</option>
+                </select>
+              </div>
+
+              {/* QR Code Toggle */}
+              <button
+                onClick={() => setShowQrInInventory(!showQrInInventory)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-colors ${
+                  showQrInInventory
+                    ? 'bg-indigo-950/70 border-indigo-500/50 text-indigo-300'
+                    : 'bg-slate-950 border-slate-700 text-slate-400 hover:text-slate-200'
+                }`}
+                title="Bật/Tắt cột mã QR tra cứu sổ lý lịch trên bảng in"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span>Mã QR: {showQrInInventory ? 'Bật' : 'Tắt'}</span>
+              </button>
+            </div>
+
+            {/* Export Actions */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleCopyInventoryTsv}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                title="Sao chép dữ liệu danh sách kiểm kê dạng bảng để dán trực tiếp vào Excel hoặc Google Sheets"
+              >
+                {copiedInventoryTsv ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-300">Đã chép TSV!</span>
+                  </>
+                ) : (
+                  <>
+                    <Table className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Sao chép (Excel)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleDownloadHtml}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                title="Tải file HTML bảng kiểm kê hoàn chỉnh để lưu trữ độc lập hoặc mở trên trình duyệt"
+              >
+                <Download className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Tải HTML Báo Cáo</span>
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+                title="Mở hộp thoại in trình duyệt để in trực tiếp hoặc Lưu dưới dạng PDF (Ctrl+P)"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>In / Xuất PDF Toàn Đội</span>
+              </button>
+            </div>
+          </div>
+        ) : viewMode === 'all_logbooks' ? (
+          /* ========================================================================= */
+          /* CONTROLS CHO IN GỘP TOÀN BỘ SỔ LÝ LỊCH */
+          /* ========================================================================= */
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs text-slate-300">
+              <span className="font-semibold text-emerald-400">Chế độ gộp:</span>
+              <span>In nối tiếp toàn bộ {effectiveEquipments.length} sổ lý lịch theo chuẩn Form scan 8 trang/sổ.</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDownloadHtml}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Tải HTML Toàn Bộ Sổ</span>
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>In / Xuất PDF Gộp ({effectiveEquipments.length} Sổ)</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* ========================================================================= */
+          /* CONTROLS CHO SỔ LÝ LỊCH ĐƠN LẺ HIỆN TẠI */
+          /* ========================================================================= */
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg">
+                <Settings2 className="w-3.5 h-3.5 text-blue-400" />
+                <span>Dòng bảo dưỡng/trang:</span>
+                <select
+                  value={itemsPerPageMaint}
+                  onChange={(e) => setItemsPerPageMaint(Number(e.target.value))}
+                  className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-semibold text-white text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value={5}>5 dòng</option>
+                  <option value={7}>7 dòng (Chuẩn)</option>
+                  <option value={9}>9 dòng</option>
+                </select>
+              </div>
+
+              <button
+                onClick={() => setViewMode('team_inventory')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs font-semibold border border-indigo-500/30 shadow-2xs transition-colors cursor-pointer"
+                title="Chuyển nhanh sang chế độ Bảng kiểm kê toàn đội"
+              >
+                <ClipboardList className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Xem Bảng Kiểm Kê Toàn Đội</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleDownloadStandardGoogleDoc}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold border border-blue-200 shadow-2xs transition-colors cursor-pointer"
+                title="Tải file HTML biểu mẫu chuẩn Google Docs (8 trang chuẩn để tải lên hoặc mở bằng Docs)"
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-600" />
+                <span>Tải Google Docs chuẩn</span>
+              </button>
+
+              <button
+                onClick={handleCopyStandardGoogleDoc}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                title="Sao chép toàn bộ nội dung chuẩn 8 trang để dán trực tiếp vào Google Docs"
+              >
+                {copiedStandardDoc ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-300">Đã chép!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-300" />
+                    <span>Sao chép cho Docs</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                href={data.googleDocUrl || `https://docs.google.com/document/create?title=${encodeURIComponent('Sổ_Lý_Lịch_' + (data.general?.name || data.id))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                title="Mở tài liệu Google Docs trực tuyến"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Mở Google Docs</span>
+              </a>
+
+              <button
+                onClick={handleDownloadHtml}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                title="Tải file HTML nguyên bản để lưu trữ hoặc in độc lập"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span>Tải HTML Sổ</span>
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>In / Xuất PDF (Ctrl+P)</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PRINT STYLES INJECTION */}
       <style>{`
         @media print {
           @page {
-            size: A4 portrait;
+            size: ${viewMode === 'team_inventory' && inventoryOrientation === 'landscape' ? 'A4 landscape' : 'A4 portrait'};
             margin: 0;
           }
           body {
@@ -276,7 +631,18 @@ ${content}
             page-break-inside: avoid !important;
             background: #fff !important;
           }
-          .page-sheet:last-child {
+          .page-sheet-landscape {
+            width: 297mm !important;
+            height: 210mm !important;
+            min-height: 210mm !important;
+            padding: 8mm 12mm 8mm 12mm !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            page-break-after: always !important;
+            page-break-inside: avoid !important;
+            background: #fff !important;
+          }
+          .page-sheet:last-child, .page-sheet-landscape:last-child {
             page-break-after: auto !important;
           }
           .pdf-table {
@@ -294,639 +660,39 @@ ${content}
         className="bg-slate-200/80 p-4 md:p-8 rounded-xl overflow-x-auto space-y-8 print:bg-white print:p-0 print:m-0 print:space-y-0 border border-slate-300"
         style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
       >
-        {/* ========================================================================= */}
-        {/* TRANG 1: BÌA SỔ LÝ LỊCH (EXACT SCAN PAGE 1) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 relative flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '12mm 15mm 12mm 18mm' }}
-        >
-          {/* Double Frame Border */}
-          <div 
-            className="h-full flex flex-col justify-between"
-            style={{
-              border: '3px double #000',
-              padding: '14mm 12mm 12mm',
-              minHeight: '272mm'
+        {viewMode === 'team_inventory' ? (
+          <TeamInventoryPrintView
+            equipments={filteredInventoryEquipments}
+            orientation={inventoryOrientation}
+            rowsPerPage={inventoryRowsPerPage}
+            showQr={showQrInInventory}
+            qrCodeMap={qrCodeMap}
+            companyName={data.org?.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM'}
+            onSelectEquipment={(id) => {
+              if (onSelectEquipment) {
+                onSelectEquipment(id);
+                setViewMode('single_logbook');
+              }
             }}
-          >
-            {/* Top Unit / Company */}
-            <div>
-              <div className="flex justify-between items-start">
-                <div className="w-full text-center">
-                  <h1 
-                    className="text-xl font-bold uppercase tracking-wider text-black"
-                    style={{ fontSize: '15pt', lineHeight: 1.4 }}
-                  >
-                    {companyName}
-                  </h1>
-                </div>
-                {coverNote && (
-                  <div className="absolute right-8 top-8 text-right font-semibold text-xs text-black opacity-80">
-                    {coverNote}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Middle Main Title */}
-            <div className="text-center my-auto space-y-8">
-              <div 
-                className="font-bold uppercase tracking-widest text-black"
-                style={{ fontSize: '28pt', letterSpacing: '3px' }}
-              >
-                LÝ LỊCH THIẾT BỊ
-              </div>
-
-              {/* Dotted separator line */}
-              <div className="w-3/4 mx-auto border-b border-dotted border-black pt-4"></div>
-
-              {/* Fillable Metadata Fields with dotted lines matching the scan */}
-              <div className="w-4/5 mx-auto text-left space-y-4 pt-4 text-base" style={{ fontSize: '13pt' }}>
-                <div className="flex items-baseline">
-                  <span className="font-semibold whitespace-nowrap">Tên thiết bị:</span>
-                  <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.name || ''}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline">
-                  <span className="font-semibold whitespace-nowrap">Hãng sản xuất:</span>
-                  <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.manufacturer || ''}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline">
-                  <span className="font-semibold whitespace-nowrap">Số hiệu:</span>
-                  <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.model || ''}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline">
-                  <span className="font-semibold whitespace-nowrap">Mã số:</span>
-                  <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.serial || ''}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline">
-                  <span className="font-semibold whitespace-nowrap">Mã TS:</span>
-                  <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pb-0.5 pl-1">
-                    {g.assetNo || ''}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Number Box & QR Code */}
-            <div className="flex items-end justify-between px-6 pb-2 pt-4">
-              <div className="text-left">
-                {coverQrUrl ? (
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={coverQrUrl} 
-                      alt="Passport QR" 
-                      className="w-20 h-20 border border-black p-0.5 object-contain"
-                    />
-                    <div className="text-[9pt] leading-tight text-black">
-                      <div className="font-bold uppercase tracking-tight">MÃ QR ĐỊNH DANH</div>
-                      <div className="text-[8pt] text-gray-700">Quét để tra cứu nhật ký</div>
-                      <div className="font-mono text-[8pt] font-semibold mt-0.5">ID: {data.id}</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-20 h-20 border border-dashed border-gray-400 flex items-center justify-center text-[8pt]">
-                    QR Code
-                  </div>
-                )}
-              </div>
-
-              <div 
-                className="border border-black px-6 py-2 text-center"
-                style={{ minWidth: '150px' }}
-              >
-                <span className="font-semibold text-sm">Số: </span>
-                <span className="font-bold text-sm font-mono">{g.assetNo || g.serial || '....................'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* TRANG 2: MỤC LỤC & 1- CƠ QUAN, ĐƠN VỊ QUẢN LÝ (EXACT SCAN PAGE 2) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-        >
-          <div>
-            {/* Top Table of Contents */}
-            <div className="text-center mb-8">
-              <h2 className="text-lg font-bold uppercase tracking-wider text-black mb-6" style={{ fontSize: '14pt' }}>
-                MỤC LỤC
-              </h2>
-
-              <div className="space-y-2 text-left font-bold text-black" style={{ fontSize: '11.5pt', lineHeight: 1.8 }}>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5">
-                  <span>1. Cơ quan, đơn vị quản lý</span>
-                  <span className="font-mono">2</span>
-                </div>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5">
-                  <span>2. Sơ lược thiết bị</span>
-                  <span className="font-mono">3</span>
-                </div>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5 pl-4">
-                  <span>2.1. Đặc tính kỹ thuật</span>
-                  <span className="font-mono">4</span>
-                </div>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5 pl-4">
-                  <span>2.2. Thành phần thiết bị</span>
-                  <span className="font-mono">5</span>
-                </div>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5 pl-4">
-                  <span>2.3. Tài liệu kỹ thuật kèm theo</span>
-                  <span className="font-mono">6</span>
-                </div>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5">
-                  <span>3. Bảo dưỡng</span>
-                  <span className="font-mono">7</span>
-                </div>
-                <div className="flex justify-between items-baseline border-b border-dotted border-slate-400 pb-0.5">
-                  <span>4. Kiểm tra - Sửa chữa - Thay thế - Thay đổi</span>
-                  <span className="font-mono">8</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 1 Heading */}
-            <div className="text-center mt-12 mb-4">
-              <h3 className="text-base font-bold uppercase tracking-wide text-black" style={{ fontSize: '13pt' }}>
-                1- CƠ QUAN, ĐƠN VỊ QUẢN LÝ
-              </h3>
-            </div>
-
-            {/* Section 1 Table with 3 columns matching PDF */}
-            <table className="pdf-table w-full border-collapse border border-black text-black">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th style={{ width: '22%', border: '1px solid #000', padding: '8px' }}>
-                    NGÀY THÁNG
-                  </th>
-                  <th style={{ width: '53%', border: '1px solid #000', padding: '8px' }}>
-                    ĐƠN VỊ
-                  </th>
-                  <th style={{ width: '25%', border: '1px solid #000', padding: '8px' }}>
-                    TÌNH TRẠNG
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {padList<OrgTransferRow>(data.orgRows, 14).map((row, i) => (
-                  <tr key={i} style={{ height: '32px' }}>
-                    <td className="text-center font-bold" style={{ border: '1px solid #000', padding: '6px 8px' }}>
-                      {row ? row.date : '\u00A0'}
-                    </td>
-                    <td className="font-semibold" style={{ border: '1px solid #000', padding: '6px 8px' }}>
-                      {row ? row.unit : '\u00A0'}
-                    </td>
-                    <td className="text-center" style={{ border: '1px solid #000', padding: '6px 8px' }}>
-                      {row ? row.status : '\u00A0'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer Page Number 2 */}
-          <div className="page-num">2</div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* TRANG 3: 2 - SƠ LƯỢC THIẾT BỊ (EXACT SCAN PAGE 3) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-        >
-          <div>
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-bold uppercase tracking-wider text-black" style={{ fontSize: '14pt' }}>
-                2 - SƠ LƯỢC THIẾT BỊ
-              </h2>
-            </div>
-
-            {/* General Info Lines with Dotted Underlines */}
-            <div className="space-y-3.5 text-black mb-6" style={{ fontSize: '12pt', lineHeight: 1.8 }}>
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Tên thiết bị:</span>
-                <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.name || ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Hãng sản xuất:</span>
-                <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.manufacturer || ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Ký hiệu (Model):</span>
-                <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.model || ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Mã số (S/N):</span>
-                <span className="ml-2 font-bold font-mono flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.serial || ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Năm sản xuất:</span>
-                <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.yearMade || ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Nước sản xuất:</span>
-                <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.origin || ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Thời gian sử dụng:</span>
-                <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.commissioned ? `Sử dụng từ ${g.commissioned}` : ''}
-                </span>
-              </div>
-
-              <div className="flex items-baseline">
-                <span className="font-semibold whitespace-nowrap">Thời gian bảo hành:</span>
-                <span className="ml-2 font-bold flex-1 border-b border-dotted border-black pl-1 pb-0.5">
-                  {g.warrantyDate || ''}
-                </span>
-              </div>
-            </div>
-
-            {/* Dual License Table (Frequency + Exploitation) */}
-            <table className="pdf-table w-full border-collapse border border-black text-black mt-4">
-              <thead>
-                <tr>
-                  <th colSpan={2} style={{ width: '50%', border: '1px solid #000', padding: '6px' }}>
-                    Giấy phép sử dụng tần số<br />và thiết bị VTĐ
-                  </th>
-                  <th colSpan={2} style={{ width: '50%', border: '1px solid #000', padding: '6px' }}>
-                    Giấy phép khai thác<br />hệ thống kỹ thuật, thiết bị
-                  </th>
-                </tr>
-                <tr className="bg-slate-50 text-xs">
-                  <th style={{ width: '26%', border: '1px solid #000', padding: '4px' }}>Số</th>
-                  <th style={{ width: '24%', border: '1px solid #000', padding: '4px' }}>Ngày hết hạn</th>
-                  <th style={{ width: '26%', border: '1px solid #000', padding: '4px' }}>Số</th>
-                  <th style={{ width: '24%', border: '1px solid #000', padding: '4px' }}>Ngày hết hạn</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paddedFreq.map((freqItem, i) => {
-                  const expItem = paddedExploit[i];
-                  return (
-                    <tr key={i} style={{ height: '30px' }}>
-                      <td className="font-mono font-semibold text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                        {freqItem ? freqItem.no : '\u00A0'}
-                      </td>
-                      <td className="font-mono text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                        {freqItem ? freqItem.expiryDate : '\u00A0'}
-                      </td>
-                      <td className="font-mono font-semibold text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                        {expItem ? expItem.no : '\u00A0'}
-                      </td>
-                      <td className="font-mono text-center text-xs" style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                        {expItem ? expItem.expiryDate : '\u00A0'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer Page Number 3 */}
-          <div className="page-num">3</div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* TRANG 4: 2.1 - ĐẶC TÍNH KỸ THUẬT (EXACT SCAN PAGE 4) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-        >
-          <div>
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-bold uppercase tracking-wider text-black" style={{ fontSize: '14pt' }}>
-                2.1 - ĐẶC TÍNH KỸ THUẬT
-              </h2>
-            </div>
-
-            {/* Ruled / Lined Notebook Sheet for Technical Specifications */}
-            <div 
-              className="w-full space-y-0 text-black leading-relaxed"
-              style={{ fontSize: '12pt', lineHeight: '30px' }}
-            >
-              {s.text && (
-                <div className="border-b border-dotted border-black pb-0.5 font-medium">
-                  {s.text}
-                </div>
-              )}
-
-              {/* Extra spec lines if available */}
-              {s.power && (
-                <div className="border-b border-dotted border-black pb-0.5">
-                  - Nguồn điện cấp: <b>{s.power}</b>
-                </div>
-              )}
-              {s.output && (
-                <div className="border-b border-dotted border-black pb-0.5">
-                  - Công suất phát danh định: <b>{s.output}</b>
-                </div>
-              )}
-              {s.range && (
-                <div className="border-b border-dotted border-black pb-0.5">
-                  - Dải tần số công tác: <b>{s.range}</b>
-                </div>
-              )}
-              {s.channelFreq && (
-                <div className="border-b border-dotted border-black pb-0.5">
-                  - Kênh tần số làm việc: <b>{s.channelFreq}</b>
-                </div>
-              )}
-              {s.interface && (
-                <div className="border-b border-dotted border-black pb-0.5">
-                  - Giao diện kết nối & điều chế: <b>{s.interface}</b>
-                </div>
-              )}
-              {s.mgmtIp && (
-                <div className="border-b border-dotted border-black pb-0.5">
-                  - Địa chỉ IP & Cấu hình mạng: <b>{s.mgmtIp}</b> (Subnet: {s.subnetMask || '255.255.255.0'}, VLAN: {s.vlanId || 'Default'})
-                </div>
-              )}
-
-              {/* Pad with ruled dotted lines to fill the whole page */}
-              {Array.from({ length: 18 }).map((_, idx) => (
-                <div key={idx} className="border-b border-dotted border-black min-h-[30px]">&nbsp;</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer Page Number 4 */}
-          <div className="page-num">4</div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* TRANG 5: 2.2 - THÀNH PHẦN THIẾT BỊ (EXACT SCAN PAGE 5) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-        >
-          <div>
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-bold uppercase tracking-wider text-black" style={{ fontSize: '14pt' }}>
-                2.2 - THÀNH PHẦN THIẾT BỊ
-              </h2>
-            </div>
-
-            {/* Table matching Page 5 in PDF */}
-            <table className="pdf-table w-full border-collapse border border-black text-black">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th style={{ width: '8%', border: '1px solid #000', padding: '8px 4px' }}>TT</th>
-                  <th style={{ width: '48%', border: '1px solid #000', padding: '8px 6px' }}>TÊN THIẾT BỊ</th>
-                  <th style={{ width: '12%', border: '1px solid #000', padding: '8px 4px' }}>ĐVT</th>
-                  <th style={{ width: '12%', border: '1px solid #000', padding: '8px 4px' }}>SL</th>
-                  <th style={{ width: '20%', border: '1px solid #000', padding: '8px 6px' }}>GHI CHÚ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {padList<ComponentRow>(data.components, 20).map((comp, i) => (
-                  <tr key={i} style={{ height: '30px' }}>
-                    <td className="text-center font-bold" style={{ border: '1px solid #000', padding: '4px' }}>
-                      {comp ? (comp.no || (i + 1 < 10 ? `0${i + 1}` : i + 1)) : '\u00A0'}
-                    </td>
-                    <td className="font-semibold" style={{ border: '1px solid #000', padding: '4px 8px' }}>
-                      {comp ? comp.name : '\u00A0'}
-                    </td>
-                    <td className="text-center" style={{ border: '1px solid #000', padding: '4px' }}>
-                      {comp ? comp.unit : '\u00A0'}
-                    </td>
-                    <td className="text-center font-bold" style={{ border: '1px solid #000', padding: '4px' }}>
-                      {comp ? comp.qty : '\u00A0'}
-                    </td>
-                    <td style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                      {comp ? comp.note : '\u00A0'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer Page Number 5 */}
-          <div className="page-num">5</div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* TRANG 6: 2.3 - TÀI LIỆU KỸ THUẬT KÈM THEO (EXACT SCAN PAGE 6) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-        >
-          <div>
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-bold uppercase tracking-wider text-black" style={{ fontSize: '14pt' }}>
-                2.3 - TÀI LIỆU KỸ THUẬT KÈM THEO
-              </h2>
-            </div>
-
-            {/* Table matching Page 6 in PDF */}
-            <table className="pdf-table w-full border-collapse border border-black text-black">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th style={{ width: '8%', border: '1px solid #000', padding: '8px 4px' }}>TT</th>
-                  <th style={{ width: '54%', border: '1px solid #000', padding: '8px 6px' }}>TÊN TÀI LIỆU</th>
-                  <th style={{ width: '14%', border: '1px solid #000', padding: '8px 4px' }}>SL</th>
-                  <th style={{ width: '24%', border: '1px solid #000', padding: '8px 6px' }}>GHI CHÚ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {padList<DocRow>(data.docs, 20).map((doc, i) => (
-                  <tr key={i} style={{ height: '30px' }}>
-                    <td className="text-center font-bold" style={{ border: '1px solid #000', padding: '4px' }}>
-                      {doc ? (doc.no || (i + 1 < 10 ? `0${i + 1}` : i + 1)) : '\u00A0'}
-                    </td>
-                    <td className="font-semibold" style={{ border: '1px solid #000', padding: '4px 8px' }}>
-                      {doc ? doc.name : '\u00A0'}
-                    </td>
-                    <td className="text-center font-bold" style={{ border: '1px solid #000', padding: '4px' }}>
-                      {doc ? doc.qty : '\u00A0'}
-                    </td>
-                    <td style={{ border: '1px solid #000', padding: '4px 6px' }}>
-                      {doc ? (doc.note || doc.location) : '\u00A0'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer Page Number 6 */}
-          <div className="page-num">6</div>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* TRANG 7, 8, 9...: 3 - BẢO DƯỠNG (EXACT SCAN PAGES 7, 8, 9) */}
-        {/* ========================================================================= */}
-        {maintPages.map((pageRows, pageIdx) => {
-          const paddedMaint = padList<MaintenanceRow>(pageRows, itemsPerPageMaint);
-          const pageNum = 7 + pageIdx;
-
-          return (
-            <div 
-              key={`maint-page-${pageIdx}`}
-              className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-              style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-            >
-              <div>
-                <div className="text-center mb-6">
-                  <h2 className="text-lg font-bold uppercase tracking-wider text-black" style={{ fontSize: '14pt' }}>
-                    3 - BẢO DƯỠNG
-                  </h2>
-                </div>
-
-                {/* Table matching Page 7, 8, 9 in PDF */}
-                <table className="pdf-table w-full border-collapse border border-black text-black text-sm">
-                  <thead>
-                    <tr className="bg-slate-50">
-                      <th style={{ width: '20%', border: '1px solid #000', padding: '8px 4px' }}>
-                        THỜI GIAN
-                      </th>
-                      <th style={{ width: '56%', border: '1px solid #000', padding: '8px 6px' }}>
-                        KẾT LUẬN KẾT QUẢ BẢO DƯỠNG
-                      </th>
-                      <th style={{ width: '24%', border: '1px solid #000', padding: '8px 4px' }}>
-                        NGƯỜI THỰC HIỆN
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paddedMaint.map((mt, i) => (
-                      <tr key={i} style={{ height: '70px' }}>
-                        <td 
-                          className="text-center font-bold align-middle text-xs" 
-                          style={{ border: '1px solid #000', padding: '6px 4px' }}
-                        >
-                          {mt ? mt.date : '\u00A0'}
-                        </td>
-                        <td 
-                          className="align-middle text-xs leading-relaxed" 
-                          style={{ border: '1px solid #000', padding: '6px 8px', whiteSpace: 'pre-line' }}
-                        >
-                          {mt ? mt.content : '\u00A0'}
-                        </td>
-                        <td 
-                          className="text-center font-semibold align-middle text-xs" 
-                          style={{ border: '1px solid #000', padding: '6px 4px' }}
-                        >
-                          {mt ? mt.person : '\u00A0'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Footer Page Number 7, 8, 9... */}
-              <div className="page-num">{pageNum}</div>
-            </div>
-          );
-        })}
-
-        {/* ========================================================================= */}
-        {/* TRANG CUỐI: 4 - KIỂM TRA - SỬA CHỮA - THAY THẾ - THAY ĐỔI (EXACT SCAN PAGE 10) */}
-        {/* ========================================================================= */}
-        <div 
-          className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-          style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
-        >
-          <div>
-            <div className="text-center mb-6">
-              <h2 className="text-lg font-bold uppercase tracking-wider text-black" style={{ fontSize: '13.5pt' }}>
-                4 - KIỂM TRA - SỬA CHỮA - THAY THẾ - THAY ĐỔI
-              </h2>
-            </div>
-
-            {/* Table matching Page 10 in PDF */}
-            <table className="pdf-table w-full border-collapse border border-black text-black text-sm">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th style={{ width: '20%', border: '1px solid #000', padding: '8px 4px' }}>
-                    THỜI GIAN
-                  </th>
-                  <th style={{ width: '56%', border: '1px solid #000', padding: '8px 6px' }}>
-                    NỘI DUNG THỰC HIỆN
-                  </th>
-                  <th style={{ width: '24%', border: '1px solid #000', padding: '8px 4px' }}>
-                    NGƯỜI THỰC HIỆN
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {padList<RepairRow>(data.repair, 12).map((rp, i) => (
-                  <tr key={i} style={{ height: '45px' }}>
-                    <td 
-                      className="text-center font-bold align-middle text-xs" 
-                      style={{ border: '1px solid #000', padding: '6px 4px' }}
-                    >
-                      {rp ? rp.date : '\u00A0'}
-                    </td>
-                    <td 
-                      className="align-middle text-xs leading-relaxed" 
-                      style={{ border: '1px solid #000', padding: '6px 8px' }}
-                    >
-                      {rp ? (
-                        <div>
-                          <div className="font-semibold">{rp.incidentDescription || rp.actionTaken}</div>
-                          {rp.actionTaken && rp.actionTaken !== rp.incidentDescription && (
-                            <div className="text-slate-700 mt-0.5">{rp.actionTaken}</div>
-                          )}
-                        </div>
-                      ) : '\u00A0'}
-                    </td>
-                    <td 
-                      className="text-center font-semibold align-middle text-xs" 
-                      style={{ border: '1px solid #000', padding: '6px 4px' }}
-                    >
-                      {rp ? rp.person : '\u00A0'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer Page Number 8 or next */}
-          <div className="page-num">{7 + maintPages.length}</div>
-        </div>
+          />
+        ) : viewMode === 'all_logbooks' ? (
+          effectiveEquipments.map((eq, i) => (
+            <EquipmentLogbookPrintPages
+              key={eq.id}
+              equipment={eq}
+              coverQrUrl={qrCodeMap[eq.id] || coverQrUrl}
+              itemsPerPageMaint={itemsPerPageMaint}
+              keyPrefix={`all-${eq.id}-${i}`}
+            />
+          ))
+        ) : (
+          <EquipmentLogbookPrintPages
+            equipment={data}
+            coverQrUrl={coverQrUrl}
+            itemsPerPageMaint={itemsPerPageMaint}
+            keyPrefix="single"
+          />
+        )}
       </div>
     </div>
   );

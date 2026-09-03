@@ -9,6 +9,7 @@ export type EquipmentCategory =
   | 'Ghép Kênh'
   | 'VIBA' 
   | 'VSAT' 
+  | 'VCCS' 
   | 'VOICE' 
   | 'POWER' 
   | 'IT'  
@@ -47,6 +48,16 @@ export interface GeneralInfo {
   estimatedLifespanYears: number | string;
   notes: string;
 }
+
+export const PERFORMER_OPTIONS = [
+  'Kíp Tô Minh Tâm',
+  'Kíp Nhâm Mạnh Đạt',
+  'Kíp Nguyễn Tá Đại Phước',
+  'Kíp Phan Trọng Nhân',
+  'Kíp Đặng Chí Thanh',
+  'Kíp Lê Công Quan Nhựt',
+  'Hành Chính Đội TT'
+] as const;
 
 export interface OrgInfo {
   companyName?: string; // Default: 'CÔNG TY QUẢN LÝ BAY MIỀN NAM'
@@ -192,6 +203,9 @@ export interface UserPermissions {
   canExportData: boolean;
   canResetDatabase: boolean;
   canSyncGas: boolean;
+  canAccessCloudDrive?: boolean;
+  canDownloadCloudDatabase?: boolean;
+  canUploadCloudDatabase?: boolean;
 }
 
 export interface AppUser {

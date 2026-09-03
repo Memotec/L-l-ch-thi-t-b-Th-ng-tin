@@ -7,6 +7,7 @@ import {
   Filter
 } from 'lucide-react';
 import { EquipmentData, MaintenanceRow, MaintenanceCycle, MaintenanceResult } from '../types';
+import { PerformerSelect } from './PerformerSelect';
 
 interface MaintenanceTabProps {
   data: EquipmentData;
@@ -201,7 +202,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                 filteredMaintenance.map((mt) => {
                   const actualIdx = data.maintenance.findIndex(item => item.id === mt.id);
                   return (
-                    <tr key={mt.id || actualIdx} className="hover:bg-slate-50 bg-white">
+                    <tr key={`maint-${mt.id || actualIdx}-${actualIdx}`} className="hover:bg-slate-50 bg-white">
                       <td className="p-2">
                         <input
                           type="date"
@@ -258,14 +259,12 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                           <option value="Không đạt">Không đạt</option>
                         </select>
                       </td>
-                      <td className="p-2">
-                        <input
-                          type="text"
+                      <td className="p-2 min-w-[180px]">
+                        <PerformerSelect
+                          value={mt.person}
+                          onChange={(val) => updateMaintenance(actualIdx, 'person', val)}
                           disabled={isReadOnly}
                           placeholder="KTV thực hiện..."
-                          value={mt.person}
-                          onChange={(e) => updateMaintenance(actualIdx, 'person', e.target.value)}
-                          className="form-input-standard"
                         />
                       </td>
                       <td className="p-2">

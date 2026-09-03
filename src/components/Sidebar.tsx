@@ -48,7 +48,7 @@ interface SidebarProps {
   lastSaved: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar: React.FC<SidebarProps> = React.memo(({
   equipments,
   currentEquipmentId,
   activeTab,
@@ -443,4 +443,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </aside>
   );
-};
+});

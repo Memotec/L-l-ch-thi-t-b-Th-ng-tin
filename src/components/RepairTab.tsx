@@ -6,6 +6,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { EquipmentData, RepairRow, RepairType, RepairStatus } from '../types';
+import { PerformerSelect } from './PerformerSelect';
 
 interface RepairTabProps {
   data: EquipmentData;
@@ -141,7 +142,7 @@ export const RepairTab: React.FC<RepairTabProps> = ({
           ) : (
             data.repair.map((rp, idx) => (
               <div 
-                key={rp.id || idx}
+                key={`repair-${rp.id || idx}-${idx}`}
                 className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all space-y-3 shadow-xs"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
@@ -262,14 +263,13 @@ export const RepairTab: React.FC<RepairTabProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-slate-700">Nhân Kỹ thuật & Đơn vị phối hợp thực hiện</label>
-                    <input
-                      type="text"
-                      disabled={isReadOnly}
-                      placeholder="VD: KS. Nguyễn Chí Thanh, Nhân Viên Kỹ Thuật..."
+                    <label className="text-[11px] font-medium text-slate-700">Kíp / Nhân Kỹ thuật thực hiện</label>
+                    <PerformerSelect
                       value={rp.person}
-                      onChange={(e) => updateRepair(idx, 'person', e.target.value)}
-                      className="form-input-standard font-medium"
+                      onChange={(val) => updateRepair(idx, 'person', val)}
+                      disabled={isReadOnly}
+                      placeholder="Chọn Kíp hoặc tự nhập..."
+                      showQuickPills={true}
                     />
                   </div>
                 </div>

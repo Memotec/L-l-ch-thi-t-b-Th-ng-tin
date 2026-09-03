@@ -585,42 +585,32 @@ function generateGoogleDocForEquipment(eq) {
   body.setMarginRight(36);
 
   const companyName = (o.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM').toUpperCase();
-  const unitName = (o.unit || 'TRUNG TÂM BẢO ĐẢM KỸ THUẬT').toUpperCase();
 
   // =========================================================================
   // TRANG 1: BÌA SỔ LÝ LỊCH THIẾT BỊ
   // =========================================================================
-  const coverAgencyTable = body.appendTable([
-    [
-      companyName + '\n' + unitName + '\n-------------------------'
-    ]
-  ]);
-  coverAgencyTable.setBorderWidth(0);
-  const coverAgencyCell = coverAgencyTable.getCell(0, 0);
-  coverAgencyCell.getChild(0).asParagraph().setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(11);
+  const agencyP = body.appendParagraph(companyName);
+  agencyP.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  agencyP.setFontSize(14);
+  agencyP.setBold(true);
 
-  body.appendParagraph('\n\n\n\n');
+  body.appendParagraph('\n\n\n\n\n\n');
 
   const coverTitleP = body.appendParagraph('LÝ LỊCH THIẾT BỊ');
   coverTitleP.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-  coverTitleP.setFontSize(24);
+  coverTitleP.setFontSize(26);
   coverTitleP.setBold(true);
   coverTitleP.setForegroundColor('#000000');
 
-  const coverSubP = body.appendParagraph('(Ban hành kèm theo Quy trình Quản lý kỹ thuật thiết bị CNS)');
-  coverSubP.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-  coverSubP.setFontSize(10);
-  coverSubP.setItalic(true);
+  body.appendParagraph('\n\n\n\n\n\n');
 
-  body.appendParagraph('\n\n\n');
-
-  // Khung thông tin bìa
+  // Khung thông tin bìa chuẩn
   const coverMetaTable = body.appendTable([
-    ['Tên thiết bị:', g.name || '---'],
-    ['Hãng sản xuất:', g.manufacturer || '---'],
-    ['Số hiệu (Model):', g.model || '---'],
-    ['Mã số (Serial):', g.serial || '---'],
-    ['Mã tài sản (Mã TS):', g.assetNo || g.assetCode || '---']
+    ['Tên thiết bị:', g.name || ''],
+    ['Hãng sản xuất:', g.manufacturer || ''],
+    ['Số hiệu:', g.model || ''],
+    ['Mã số:', g.serial || ''],
+    ['Mã TS:', g.assetNo || '']
   ]);
   coverMetaTable.setBorderWidth(0);
   for (let r = 0; r < 5; r++) {
@@ -628,81 +618,62 @@ function generateGoogleDocForEquipment(eq) {
     const labelCell = row.getCell(0);
     const valCell = row.getCell(1);
     labelCell.setWidth(130);
-    labelCell.getChild(0).asParagraph().setBold(true).setFontSize(11);
-    valCell.getChild(0).asParagraph().setFontSize(11);
+    labelCell.getChild(0).asParagraph().setBold(true).setFontSize(12);
+    valCell.getChild(0).asParagraph().setFontSize(12);
   }
 
-  body.appendParagraph('\n\n\n\n');
+  body.appendParagraph('\n\n\n\n\n');
 
-  // Khung Số hiệu sổ
-  const docNoTable = body.appendTable([
-    ['Số: ' + (g.assetNo || g.serial || '....................')]
-  ]);
-  docNoTable.setBorderWidth(1);
-  docNoTable.setBorderColor('#000000');
-  docNoTable.getCell(0, 0).getChild(0).asParagraph().setBold(true).setFontSize(10).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  // Khung Số hiệu sổ bên phải
+  const docNoP = body.appendParagraph('Số: ' + (g.assetNo || g.serial || '....................'));
+  docNoP.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+  docNoP.setFontSize(12);
+  docNoP.setBold(true);
 
   // NGẮT TRANG BÌA
   body.appendPageBreak();
 
   // =========================================================================
-  // TRANG 2: QUỐC HIỆU & MỤC LỤC
+  // TRANG 2: MỤC LỤC & 1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ
   // =========================================================================
-  const headerTable = body.appendTable([
-    [
-      companyName + '\n' + unitName + '\n------------------',
-      'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n-------------------------'
-    ]
-  ]);
-  headerTable.setBorderWidth(0);
-  const cell0 = headerTable.getCell(0, 0);
-  cell0.getChild(0).asParagraph().setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(9.5);
-  const cell1 = headerTable.getCell(0, 1);
-  cell1.getChild(0).asParagraph().setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(9.5);
-
-  body.appendParagraph('');
-
   const tocTitle = body.appendParagraph('MỤC LỤC');
   tocTitle.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-  tocTitle.setFontSize(13);
+  tocTitle.setFontSize(14);
   tocTitle.setBold(true);
 
   const tocTable = body.appendTable([
-    ['1. Cơ quan, đơn vị quản lý', 'Trang 2'],
-    ['2. Sơ lược thiết bị (Thông tin chung & Giấy phép)', 'Trang 3'],
-    ['3. Đặc tính kỹ thuật & Cấu hình IP', 'Trang 4'],
-    ['4. Thành phần linh kiện & Khối máy', 'Trang 5'],
-    ['5. Lịch sử bảo dưỡng kỹ thuật', 'Trang 6'],
-    ['6. Theo dõi sửa chữa, sự cố, biến động', 'Trang 7']
+    ['1. Cơ quan, đơn vị quản lý', '2'],
+    ['2. Sơ lược thiết bị', '3'],
+    ['   2.1 Đặc tính kỹ thuật', '4'],
+    ['   2.2. Thành phần thiết bị', '5'],
+    ['   2.3. Tài liệu kỹ thuật kèm theo', '6'],
+    ['3. Bảo dưỡng', '7'],
+    ['4. Kiểm tra – Sửa chữa – Thay thế - Thay đổi', '8']
   ]);
   tocTable.setBorderWidth(0);
-  for (let r = 0; r < 6; r++) {
+  for (let r = 0; r < 7; r++) {
     const row = tocTable.getRow(r);
-    row.getCell(0).getChild(0).asParagraph().setFontSize(10.5).setBold(true);
-    row.getCell(1).getChild(0).asParagraph().setFontSize(10.5).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
+    const isMain = r === 0 || r === 1 || r === 5 || r === 6;
+    row.getCell(0).getChild(0).asParagraph().setFontSize(11).setBold(isMain);
+    row.getCell(1).getChild(0).asParagraph().setFontSize(11).setBold(isMain).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   }
 
-  body.appendParagraph('');
+  body.appendParagraph('\n');
 
-  // =========================================================================
   // 1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ
-  // =========================================================================
   addSectionHeader(body, '1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ');
-  const orgHeader = ['STT', 'Ngày tháng', 'Tên cơ quan, đơn vị quản lý', 'Vị trí lắp đặt / Khai thác', 'Căn cứ điều chuyển / Quyết định', 'Ghi chú'];
+  const orgHeader = ['NGÀY THÁNG', 'ĐƠN VỊ', 'TÌNH TRẠNG'];
   const orgRows = [orgHeader];
   const listOrg = eq.orgRows || [];
-  listOrg.forEach(function(r, i) {
+  listOrg.forEach(function(r) {
     orgRows.push([
-      String(i + 1),
       r.date || '',
-      r.toUnit || unitName,
-      o.location || '---',
-      r.decisionNo || r.reason || 'Bàn giao đưa vào khai thác',
-      r.signer || ''
+      r.unit || r.toUnit || o.unit || '',
+      r.status || ''
     ]);
   });
-  if (orgRows.length === 1) {
-    orgRows.push(['1', g.commissioned || '', unitName, o.location || '---', 'Quyết định đưa vào khai thác chính thức', o.supervisor || '']);
+  while (orgRows.length <= 10) {
+    orgRows.push(['', '', '']);
   }
   createFormattedTable(body, orgRows, false);
 
@@ -710,101 +681,82 @@ function generateGoogleDocForEquipment(eq) {
   body.appendPageBreak();
 
   // =========================================================================
-  // 2. SƠ LƯỢC THIẾT BỊ
+  // TRANG 3: 2. SƠ LƯỢC THIẾT BỊ
   // =========================================================================
   addSectionHeader(body, '2. SƠ LƯỢC THIẾT BỊ');
-  body.appendParagraph('2.1. Thông tin chung').setBold(true).setFontSize(11);
-  const genTableData = [
-    ['Tên thiết bị:', g.name || '', 'Chủng loại:', g.category || ''],
-    ['Ký hiệu / Model:', g.model || '', 'Số Serial:', g.serial || ''],
-    ['Hãng sản xuất:', g.manufacturer || '', 'Nước sản xuất:', g.origin || ''],
-    ['Năm sản xuất:', String(g.yearMade || ''), 'Mã thẻ tài sản:', g.assetNo || g.assetCode || ''],
-    ['Ngày đưa vào sử dụng:', g.commissioned || '', 'Hạn bảo hành:', g.warrantyDate || ''],
-    ['Trạng thái vận hành:', g.status || 'Đang khai thác', 'Mức độ ưu tiên:', g.priority || ''],
-    ['Đài / Trạm quản lý:', o.unit || '', 'Vị trí lắp đặt:', o.location || ''],
-    ['Kỹ sư phụ trách:', (o.primaryEngineer || '') + ' (SĐT: ' + (o.phoneContact || '') + ')', 'Cán bộ phụ trách:', o.supervisor || '']
+  const metaLines = [
+    'Tên thiết bị: ' + (g.name || ''),
+    'Hãng sản xuất: ' + (g.manufacturer || ''),
+    'Ký hiệu (Model): ' + (g.model || ''),
+    'Mã số (S/N): ' + (g.serial || ''),
+    'Năm sản xuất: ' + (g.yearMade || ''),
+    'Nước sản xuất: ' + (g.origin || ''),
+    'Thời gian sử dụng: ' + (g.commissioned || ''),
+    'Thời gian bảo hành: ' + (g.warrantyDate || '')
   ];
-  createFormattedTable(body, genTableData, true);
-
-  body.appendParagraph('2.2. Giấy phép').setBold(true).setFontSize(11);
-  const freqHeader = ['STT', 'Số giấy phép tần số', 'Thời hạn hiệu lực'];
-  const freqRows = [freqHeader];
-  (eq.freqLicenses || []).forEach(function(f, i) {
-    freqRows.push([String(i + 1), f.licenseNo || f.no || '---', f.expiryDate || '---']);
+  metaLines.forEach(function(line) {
+    const p = body.appendParagraph(line);
+    p.setFontSize(11);
   });
-  if (freqRows.length === 1) {
-    freqRows.push(['1', 'GP-TS-' + (g.model || 'CNS'), 'Còn hiệu lực']);
-  }
-  createFormattedTable(body, freqRows, false);
 
-  const expHeader = ['STT', 'Số giấy phép khai thác thiết bị', 'Thời hạn hiệu lực'];
-  const expRows = [expHeader];
-  (eq.exploitLicenses || []).forEach(function(e, i) {
-    expRows.push([String(i + 1), e.licenseNo || e.no || '---', e.expiryDate || '---']);
-  });
-  if (expRows.length === 1) {
-    expRows.push(['1', 'GP-KT-' + (g.category || 'VHF'), 'Còn hiệu lực']);
+  body.appendParagraph('');
+
+  const freqList = eq.freqLicenses || [];
+  const expList = eq.exploitLicenses || [];
+  const licTableData = [
+    ['Giấy phép sử dụng tần số và thiết bị VTĐ', '', 'Giấy phép khai thác hệ thống kỹ thuật, thiết bị', ''],
+    ['Số', 'Ngày hết hạn', 'Số', 'Ngày hết hạn']
+  ];
+  const maxLic = Math.max(freqList.length, expList.length, 4);
+  for (let i = 0; i < maxLic; i++) {
+    const f = freqList[i] || {};
+    const e = expList[i] || {};
+    licTableData.push([
+      f.no || f.licenseNo || '',
+      f.expiryDate || '',
+      e.no || e.licenseNo || '',
+      e.expiryDate || ''
+    ]);
   }
-  createFormattedTable(body, expRows, false);
+  const licTable = createFormattedTable(body, licTableData, false);
+  licTable.getRow(0).getCell(0).setColumnSpan(2);
+  licTable.getRow(0).getCell(2).setColumnSpan(2);
 
   // NGẮT TRANG
   body.appendPageBreak();
 
   // =========================================================================
-  // 3. ĐẶC TÍNH KỸ THUẬT
+  // TRANG 4: 1. ĐẶC TÍNH KỸ THUẬT (2.1)
   // =========================================================================
-  addSectionHeader(body, '3. ĐẶC TÍNH KỸ THUẬT');
-  body.appendParagraph('3.1. Thông số kỹ thuật chính').setBold(true).setFontSize(11);
-  const specData = [
-    ['Công suất phát (Tx Power):', s.power || '---', 'Mức ngõ ra / Độ nhạy:', s.output || s.sensitivity || '---'],
-    ['Dải tần số / Kênh công tác:', s.channelFreq || s.range || s.frequency || '---', 'Giao diện kết nối (Interface):', s.interface || '---']
-  ];
-  createFormattedTable(body, specData, true);
+  addSectionHeader(body, '   1. ĐẶC TÍNH KỸ THUẬT');
+  const specP = body.appendParagraph(s.text || 'Điều khiển chuyển mạch thoại, kết nối các bàn làm việc (CWP) và máy thu phát VHF, trực thoại, điện thoại phục vụ điều hành bay.');
+  specP.setFontSize(11);
 
-  body.appendParagraph('3.2. Cấu hình mạng & Địa chỉ IP').setBold(true).setFontSize(11);
-  const netData = [
-    ['Địa chỉ Quản trị IP:', s.mgmtIp || '---', 'Subnet Mask / Gateway:', (s.subnetMask || '---') + ' / ' + (s.gateway || '---')],
-    ['VLAN ID / SNMP Community:', (s.vlanId || '---') + ' / ' + (s.snmpCommunity || '---'), 'Phiên bản Firmware:', s.firmware || '---']
-  ];
-  createFormattedTable(body, netData, true);
-
-  if (s.text) {
-    body.appendParagraph('Mô tả đặc tính bổ sung: ' + s.text).setFontSize(10).setItalic(true);
+  // Dòng kẻ sổ
+  for (let i = 0; i < 16; i++) {
+    body.appendParagraph('.........................................................................................................................................................').setFontSize(9);
   }
-
-  body.appendParagraph('3.3. Tài liệu kỹ thuật kèm theo thiết bị').setBold(true).setFontSize(11);
-  const docHeader = ['STT', 'Tên tài liệu / Manual', 'Ký hiệu / Mã hiệu', 'Ngôn ngữ', 'Nơi lưu trữ'];
-  const docRows = [docHeader];
-  (eq.docs || []).forEach(function(d, i) {
-    docRows.push([String(i + 1), d.name || '', d.code || '---', d.language || 'Tiếng Anh/Việt', d.storageLocation || 'Phòng KT']);
-  });
-  if (docRows.length === 1) {
-    docRows.push(['1', 'Tài liệu Hướng dẫn Vận hành & Bảo dưỡng (User & Maintenance Manual)', 'OM-' + (g.model || 'CNS'), 'Tiếng Anh', 'Phòng Kỹ Thuật']);
-  }
-  createFormattedTable(body, docRows, false);
 
   // NGẮT TRANG
   body.appendPageBreak();
 
   // =========================================================================
-  // 4. DANH MỤC CÁC KHỐI, BO MẠCH VÀ LINH KIỆN THAY THẾ
+  // TRANG 5: 2. THÀNH PHẦN THIẾT BỊ (2.2)
   // =========================================================================
-  addSectionHeader(body, '4. THÀNH PHẦN LINH KIỆN, KHỐI MÁY & BO MẠCH');
-  const compHeader = ['STT', 'Tên Khối / Bo Mạch / Module', 'Mã Part No.', 'Số Serial', 'ĐVT', 'SL', 'Tình Trạng'];
+  addSectionHeader(body, '   2. THÀNH PHẦN THIẾT BỊ');
+  const compHeader = ['TT', 'TÊN THIẾT BỊ', 'ĐVT', 'SL', 'GHI CHÚ'];
   const compRows = [compHeader];
   (eq.components || []).forEach(function(c, i) {
     compRows.push([
-      String(c.no || (i + 1)),
+      String(c.no || (i + 1) < 10 ? '0' + (c.no || i + 1) : (c.no || i + 1)),
       c.name || '',
-      c.partNo || '---',
-      c.serial || '---',
-      c.unit || 'Bộ',
-      String(c.qty || 1),
-      c.healthStatus || 'Tốt'
+      c.unit || 'Cái',
+      String(c.qty || 1 < 10 ? '0' + (c.qty || 1) : (c.qty || 1)),
+      c.note || ''
     ]);
   });
-  if (compRows.length === 1) {
-    compRows.push(['1', 'Khối máy chính đồng bộ theo thiết bị', '---', g.serial || '---', 'Bộ', '1', 'Tốt']);
+  while (compRows.length <= 10) {
+    compRows.push(['', '', '', '', '']);
   }
   createFormattedTable(body, compRows, false);
 
@@ -812,24 +764,42 @@ function generateGoogleDocForEquipment(eq) {
   body.appendPageBreak();
 
   // =========================================================================
-  // 5. NHẬT KÝ BẢO DƯỠNG KỸ THUẬT ĐỊNH KỲ
+  // TRANG 6: 3. TÀI LIỆU KỸ THUẬT KÈM THEO (2.3)
   // =========================================================================
-  addSectionHeader(body, '5. LỊCH SỬ BẢO DƯỠNG KỸ THUẬT ĐỊNH KỲ');
-  const maintHeader = ['STT', 'Ngày TH', 'Chu Kỳ', 'Nội Dung Bảo Dưỡng / Đo Đạc', 'Kết Quả Kỹ Thuật', 'Người TH', 'KTV Giám Sát'];
-  const maintRows = [maintHeader];
-  (eq.maintenance || []).forEach(function(m, i) {
-    maintRows.push([
-      String(i + 1),
-      m.date || '',
-      m.cycle || '',
-      (m.content || '') + (m.measuredParams ? '\n[Thông số: ' + m.measuredParams + ']' : ''),
-      m.result || 'Đạt',
-      m.person || '',
-      m.supervisor || ''
+  addSectionHeader(body, '   3. TÀI LIỆU KỸ THUẬT KÈM THEO');
+  const docHeader = ['TT', 'TÊN TÀI LIỆU', 'SL', 'GHI CHÚ'];
+  const docRows = [docHeader];
+  (eq.docs || []).forEach(function(d, i) {
+    docRows.push([
+      String(d.no || (i + 1) < 10 ? '0' + (d.no || i + 1) : (d.no || i + 1)),
+      d.name || '',
+      String(d.qty || 1 < 10 ? '0' + (d.qty || 1) : (d.qty || 1)),
+      d.note || ''
     ]);
   });
-  if (maintRows.length === 1) {
-    maintRows.push(['1', '---', '---', 'Chưa có ghi nhận nhật ký bảo dưỡng định kỳ', '---', '---', '---']);
+  while (docRows.length <= 6) {
+    docRows.push(['', '', '', '']);
+  }
+  createFormattedTable(body, docRows, false);
+
+  // NGẮT TRANG
+  body.appendPageBreak();
+
+  // =========================================================================
+  // TRANG 7: 3. BẢO DƯỠNG
+  // =========================================================================
+  addSectionHeader(body, '3. BẢO DƯỠNG');
+  const maintHeader = ['THỜI GIAN', 'KẾT LUẬN KẾT QUẢ BẢO DƯỠNG', 'NGƯỜI THỰC HIỆN'];
+  const maintRows = [maintHeader];
+  (eq.maintenance || []).forEach(function(m) {
+    maintRows.push([
+      m.date || '',
+      (m.result || '') + (m.content ? ' - ' + m.content : ''),
+      m.person || ''
+    ]);
+  });
+  while (maintRows.length <= 12) {
+    maintRows.push(['', '', '']);
   }
   createFormattedTable(body, maintRows, false);
 
@@ -837,44 +807,22 @@ function generateGoogleDocForEquipment(eq) {
   body.appendPageBreak();
 
   // =========================================================================
-  // 6. THEO DÕI SỬA CHỮA, KHẮC PHỤC SỰ CỐ & BIẾN ĐỘNG
+  // TRANG 8: 4. KIỂM TRA – SỬA CHỮA – THAY THẾ - THAY ĐỔI
   // =========================================================================
-  addSectionHeader(body, '6. THEO DÕI SỬA CHỮA, BIẾN ĐỘNG & KHẮC PHỤC SỰ CỐ');
-  const repHeader = ['STT', 'Ngày tháng', 'Phân Loại', 'Hiện Tượng / Nguyên Nhân', 'Biện Pháp Xử Lý & Vật Tư', 'Người TH', 'Tình Trạng'];
+  addSectionHeader(body, '4. KIỂM TRA – SỬA CHỮA – THAY THẾ - THAY ĐỔI');
+  const repHeader = ['THỜI GIAN', 'NỘI DUNG THỰC HIỆN', 'NGƯỜI THỰC HIỆN'];
   const repRows = [repHeader];
-  (eq.repair || []).forEach(function(r, i) {
+  (eq.repair || []).forEach(function(r) {
     repRows.push([
-      String(i + 1),
       r.date || '',
-      r.type || 'Sự cố',
-      (r.incidentDescription || '') + (r.rootCause ? '\n[Nguyên nhân: ' + r.rootCause + ']' : ''),
-      (r.actionTaken || '') + (r.replacedParts ? '\n[Thay thế: ' + r.replacedParts + ']' : ''),
-      r.person || '',
-      r.status || 'Đã xử lý'
+      [r.incidentDescription, r.actionTaken, r.replacedParts].filter(Boolean).join('; ') || '',
+      r.person || ''
     ]);
   });
-  if (repRows.length === 1) {
-    repRows.push(['1', '---', '---', 'Không có ghi nhận sự cố hư hỏng hoặc biến động bất thường', '---', '---', '---']);
+  while (repRows.length <= 12) {
+    repRows.push(['', '', '']);
   }
   createFormattedTable(body, repRows, false);
-
-  body.appendParagraph('\n');
-
-  // =========================================================================
-  // KHỐI CHỮ KÝ PHÊ DUYỆT (3 CỘT CHUẨN)
-  // =========================================================================
-  const signTable = body.appendTable([
-    [
-      'NGƯỜI LẬP SỔ\n(Ký và ghi rõ họ tên)\n\n\n\n\n' + (o.primaryEngineer || 'Kỹ sư phụ trách'),
-      'CÁN BỘ PHỤ TRÁCH ĐÀI/TRẠM\n(Ký và ghi rõ họ tên)\n\n\n\n\n' + (o.supervisor || 'Trưởng đài/trạm'),
-      'LÃNH ĐẠO ĐƠN VỊ DUYỆT\n(Ký tên và đóng dấu)\n\n\n\n\nTrưởng phòng / Giám đốc'
-    ]
-  ]);
-  signTable.setBorderWidth(0);
-  for (let c = 0; c < 3; c++) {
-    const cell = signTable.getCell(0, c);
-    cell.getChild(0).asParagraph().setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(10);
-  }
   
   doc.saveAndClose();
   

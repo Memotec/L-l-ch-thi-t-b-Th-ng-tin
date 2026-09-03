@@ -22,9 +22,12 @@ import {
   FolderArchive,
   FolderCheck,
   KeyRound,
-  FileCheck2
+  FileCheck2,
+  Lock,
+  UserCheck,
+  Eye
 } from 'lucide-react';
-import { EquipmentData } from '../types';
+import { EquipmentData, AppUser } from '../types';
 import { generateGasCode, generateGasHtml, generateAppsscriptJson } from '../utils/gasGenerator';
 import { googleDriveDocsService, GoogleDocSyncResult } from '../utils/googleDriveDocsService';
 
@@ -34,6 +37,8 @@ interface GoogleWorkspaceTabProps {
   onSyncFromGas: (equipments: EquipmentData[]) => void;
   onUpdateCurrentEquipment?: (eq: EquipmentData) => void;
   onShowToast: (msg: string) => void;
+  currentUser?: AppUser;
+  onOpenLoginModal?: () => void;
 }
 
 const GAS_URL_STORAGE_KEY = 'cns_gas_webapp_url_v1';
@@ -44,8 +49,13 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
   allEquipments,
   onSyncFromGas,
   onUpdateCurrentEquipment,
-  onShowToast
+  onShowToast,
+  currentUser,
+  onOpenLoginModal
 }) => {
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.permissions?.canUploadCloudDatabase === true;
+  const isViewer = !isAdmin;
+
   const [gasUrl, setGasUrl] = useState<string>(() => {
     return localStorage.getItem(GAS_URL_STORAGE_KEY) || '';
   });
@@ -61,6 +71,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
   const [isBatchSyncingDocs, setIsBatchSyncingDocs] = useState<boolean>(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; name: string } | null>(null);
   const [directDocResult, setDirectDocResult] = useState<GoogleDocSyncResult | null>(null);
+  const [copiedDocStandard, setCopiedDocStandard] = useState<boolean>(false);
 
   // Google Apps Script Web App State
   const [isConnecting, setIsConnecting] = useState(false);
@@ -93,12 +104,21 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
 
   // Save GAS URL to local storage
   const handleSaveGasUrl = (url: string) => {
+    if (isViewer) {
+      onShowToast('URL Web App Google Apps Script được cố định bởi Quản trị viên. Người xem không được thay đổi.');
+      return;
+    }
     setGasUrl(url);
     localStorage.setItem(GAS_URL_STORAGE_KEY, url);
   };
 
   // Toggle auto-sync setting
   const handleToggleAutoSync = (val: boolean) => {
+    if (isViewer && val) {
+      onShowToast('Tài khoản Người Xem có quyền Chỉ đọc tài nguyên Cloud. Vui lòng đăng nhập Admin để bật tự động ghi đè lên Google Drive.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
     setAutoSyncOnChange(val);
     localStorage.setItem(AUTO_SYNC_STORAGE_KEY, String(val));
     onShowToast(val 
@@ -107,7 +127,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     );
   };
 
-  // Connect / Authorize Direct Google Drive & Docs API
+  // Connect / Authorize Direct Google Drive & Docs API (Both Viewer & Admin can view and download)
   const handleAuthorizeDrive = async () => {
     setIsAuthorizingDrive(true);
     try {
@@ -123,8 +143,14 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
   };
 
-  // Direct Sync current equipment to Google Doc (Central Folder on Google Drive)
+  // Direct Sync current equipment to Google Doc (Central Folder on Google Drive) - PROTECTED FOR ADMIN
   const handleDirectSyncDoc = async () => {
+    if (isViewer) {
+      onShowToast('Tài khoản Người Xem có quyền Chỉ đọc tài nguyên Cloud. Vui lòng đăng nhập Admin để ghi đè Google Doc.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
+
     setIsSyncingDirectDoc(true);
     setLastActionStatus(`Đang tạo/đồng bộ Google Doc tập trung cho "${currentEquipment.general.name}"...`);
     try {
@@ -156,8 +182,32 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
   };
 
-  // Direct Batch Sync all equipments to central Google Drive folder
+  // Download Standard Google Doc formatted HTML file (ALLOWED FOR VIEWER)
+  const handleDownloadStandardDoc = () => {
+    googleDriveDocsService.downloadStandardGoogleDocHtml(currentEquipment);
+    onShowToast('✓ Đã tải xuống file HTML chuẩn Google Docs (8 trang chuẩn)!');
+  };
+
+  // Copy Standard HTML to clipboard for direct paste into Google Docs (ALLOWED FOR VIEWER)
+  const handleCopyStandardDoc = async () => {
+    const success = await googleDriveDocsService.copyStandardHtmlForGoogleDocs(currentEquipment);
+    if (success) {
+      setCopiedDocStandard(true);
+      setTimeout(() => setCopiedDocStandard(false), 2500);
+      onShowToast('✓ Đã sao chép nội dung chuẩn Google Docs! Nhấn Ctrl+V vào Google Docs để dán giữ nguyên định dạng.');
+    } else {
+      onShowToast('Không thể tự động ghi vào bộ nhớ tạm, vui lòng dùng nút Tải file HTML');
+    }
+  };
+
+  // Direct Batch Sync all equipments to central Google Drive folder - PROTECTED FOR ADMIN
   const handleBatchSyncAllDocs = async () => {
+    if (isViewer) {
+      onShowToast('Tài khoản Người Xem có quyền Chỉ đọc tài nguyên Cloud. Chỉ Quản trị viên mới được phép đồng bộ & ghi đè hàng loạt lên Google Drive của chủ sở hữu.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
+
     const confirmBatch = window.confirm(
       `Bạn có muốn đồng bộ/ghi đè toàn bộ ${allEquipments.length} thiết bị vào thư mục tập trung "CNS_SoLyLich_GoogleDocs" trên Google Drive?`
     );
@@ -233,8 +283,14 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
   };
 
-  // Upload (Push) all equipment data to Google Sheets via GAS
+  // Upload (Push) all equipment data to Google Sheets via GAS - PROTECTED FOR ADMIN
   const handleSyncUpToSheets = async () => {
+    if (isViewer) {
+      onShowToast('Tài khoản Người Xem có quyền Chỉ đọc tài nguyên Cloud. Vui lòng đăng nhập Admin để đẩy/ghi đè lên Google Sheets của chủ sở hữu.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
+
     if (!gasUrl.trim()) {
       onShowToast('Vui lòng nhập URL Google Apps Script Web App trước khi đồng bộ.');
       return;
@@ -271,7 +327,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
   };
 
-  // Download (Pull) equipment data from Google Sheets via GAS
+  // Download (Pull) equipment data from Google Sheets via GAS - ALLOWED FOR VIEWER!
   const handleSyncDownFromSheets = async () => {
     if (!gasUrl.trim()) {
       onShowToast('Vui lòng nhập URL Google Apps Script Web App.');
@@ -279,7 +335,7 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
 
     setIsSyncingDown(true);
-    setLastActionStatus('Đang tải dữ liệu thiết bị từ Google Sheets...');
+    setLastActionStatus('Đang tải dữ liệu thiết bị từ Google Sheets (Chế độ Chỉ đọc)...');
 
     try {
       const pullUrl = gasUrl.includes('?') 
@@ -300,13 +356,13 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
         }
 
         const confirmUpdate = window.confirm(
-          `Tìm thấy ${result.data.length} thiết bị từ Google Sheet. Bạn có muốn cập nhật vào ứng dụng?`
+          `Tìm thấy ${result.data.length} thiết bị từ Google Sheet. Bạn có muốn tải về và nạp vào ứng dụng để tra cứu/làm việc?`
         );
 
         if (confirmUpdate) {
           onSyncFromGas(result.data);
-          setLastActionStatus(`✓ Đã nạp thành công ${result.data.length} thiết bị từ Google Sheet!`);
-          onShowToast(`✓ Đã cập nhật ${result.data.length} thiết bị từ Google Sheet!`);
+          setLastActionStatus(`✓ Đã nạp thành công ${result.data.length} thiết bị từ Google Sheet (Chế độ Chỉ đọc)!`);
+          onShowToast(`✓ Đã tải về thành công ${result.data.length} thiết bị từ Google Sheet (Chỉ đọc)!`);
         }
       } else {
         throw new Error(result.message || 'Dữ liệu không hợp lệ từ Google Sheet');
@@ -320,8 +376,14 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
   };
 
-  // Generate Google Doc via GAS
+  // Generate Google Doc via GAS - PROTECTED FOR ADMIN
   const handleGenerateGoogleDocGas = async () => {
+    if (isViewer) {
+      onShowToast('Tài khoản Người Xem có quyền Chỉ đọc tài nguyên Cloud. Cần quyền Quản trị viên để xuất bản Google Doc lên Google Drive.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
+
     if (!gasUrl.trim()) {
       onShowToast('Vui lòng kết nối Google Apps Script Web App để tạo Google Doc.');
       return;
@@ -374,8 +436,14 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     }
   };
 
-  // Create Backup in Google Drive via GAS
+  // Create Backup in Google Drive via GAS - PROTECTED FOR ADMIN
   const handleBackupToDrive = async () => {
+    if (isViewer) {
+      onShowToast('Tài khoản Người Xem có quyền Chỉ đọc tài nguyên Cloud. Cần quyền Quản trị viên để sao lưu cơ sở dữ liệu lên Google Drive của chủ sở hữu.');
+      if (onOpenLoginModal) onOpenLoginModal();
+      return;
+    }
+
     if (!gasUrl.trim()) {
       onShowToast('Vui lòng kết nối Google Apps Script Web App để sao lưu Drive.');
       return;
@@ -489,6 +557,54 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
         </div>
       </div>
 
+      {/* Role & Access Permissions Callout Banner */}
+      <div className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs transition-colors ${
+        isViewer 
+          ? 'bg-blue-50/90 border-blue-200 text-blue-900' 
+          : 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+      }`}>
+        <div className="flex items-start sm:items-center gap-3">
+          <div className={`p-2 rounded-lg shrink-0 ${isViewer ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'}`}>
+            {isViewer ? <Eye className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-slate-900">
+                Tài khoản: {currentUser?.displayName || (isViewer ? 'Người Xem (Viewer - Mặc định)' : 'Quản Trị Viên (Admin)')}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                isViewer 
+                  ? 'bg-blue-100 text-blue-800 border-blue-300' 
+                  : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+              }`}>
+                {isViewer ? 'Chế Độ: Truy Cập, Tải Về & Chỉ Đọc CSDL Cloud' : 'Toàn Quyền Quản Trị & Ghi Đè Cloud'}
+              </span>
+            </div>
+            <p className="text-[11px] mt-0.5 text-slate-600 leading-relaxed">
+              {isViewer ? (
+                <>
+                  ✓ Được cấp quyền <b>truy cập</b>, <b>tải về (Pull)</b> cơ sở dữ liệu thiết bị từ Google Sheets/Google Drive và <b>tải tệp Doc/PDF</b> về máy. Thao tác ghi đè hoặc đẩy dữ liệu (Push) lên Cloud của chủ sở hữu được bảo vệ (yêu cầu Admin).
+                </>
+              ) : (
+                <>
+                  Bạn có toàn quyền ghi đè Google Doc, đồng bộ hàng loạt và đẩy cơ sở dữ liệu lên Google Sheets & Google Drive của chủ sở hữu.
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {isViewer && onOpenLoginModal && (
+          <button
+            onClick={onOpenLoginModal}
+            className="px-3.5 py-1.5 bg-white hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 shadow-2xs"
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Đăng nhập Admin</span>
+          </button>
+        )}
+      </div>
+
       {/* Mode 1: DIRECT GOOGLE DRIVE & GOOGLE DOCS AUTO-OVERWRITE */}
       {activeCodeTab === 'directDrive' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -539,13 +655,20 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
                 <input
                   id="auto-sync-toggle"
                   type="checkbox"
+                  disabled={isViewer}
                   checked={autoSyncOnChange}
                   onChange={(e) => handleToggleAutoSync(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                  className={`w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 ${isViewer ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                 />
               </div>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Khi lưu thông tin thiết bị, hệ thống sẽ tự động cập nhật và <b>chép đè</b> nội dung mới vào chính file Google Doc đã tạo trước đó.
+                {isViewer ? (
+                  <span className="text-amber-700 font-medium">
+                    (Chế độ Người xem: Tự động ghi đè lên Google Drive bị tắt để đảm bảo chỉ đọc)
+                  </span>
+                ) : (
+                  <>Khi lưu thông tin thiết bị, hệ thống sẽ tự động cập nhật và <b>chép đè</b> nội dung mới vào chính file Google Doc đã tạo trước đó.</>
+                )}
               </p>
             </div>
 
@@ -615,20 +738,68 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
                     <div className="p-1.5 bg-blue-100 rounded text-blue-700">
                       <FileText className="w-4 h-4" />
                     </div>
-                    <span>1. Đồng bộ / Ghi đè thiết bị hiện tại</span>
+                    <span>1. Đồng bộ / Ghi đè theo Chuẩn Form (8 trang)</span>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Tạo tài liệu Google Doc hoặc <b>chép đè toàn bộ</b> nội dung (Mục I-VI, linh kiện, bảo dưỡng, sửa chữa) của <b>{currentEquipment.general.name}</b> vào Google Drive.
+                    Tạo tài liệu Google Doc hoặc <b>chép đè toàn bộ</b> nội dung chuẩn 8 trang (Bìa, Mục lục & Cơ quan QL, Sơ lược thiết bị & Giấy phép, Đặc tính kỹ thuật, Thành phần thiết bị, Tài liệu kỹ thuật, Bảo dưỡng, Kiểm tra/sửa chữa) của <b>{currentEquipment.general.name}</b> vào Google Drive.
                   </p>
                 </div>
-                <button
-                  onClick={handleDirectSyncDoc}
-                  disabled={isSyncingDirectDoc}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
-                >
-                  <Sparkles className={`w-3.5 h-3.5 ${isSyncingDirectDoc ? 'animate-spin' : ''}`} />
-                  <span>{isSyncingDirectDoc ? 'Đang đồng bộ Drive...' : 'Đồng bộ / Ghi đè Google Doc này'}</span>
-                </button>
+
+                <div className="space-y-2 pt-1">
+                  <button
+                    onClick={handleDirectSyncDoc}
+                    disabled={isSyncingDirectDoc}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer ${
+                      isViewer
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                        : 'bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 text-white'
+                    }`}
+                    title={isViewer ? 'Chế độ Người xem (Chỉ đọc) - Cần quyền Admin để ghi đè lên Google Drive của chủ sở hữu' : 'Đồng bộ & ghi đè Google Doc'}
+                  >
+                    {isViewer ? (
+                      <>
+                        <Lock className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Ghi đè Google Doc (Chỉ Admin)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className={`w-3.5 h-3.5 ${isSyncingDirectDoc ? 'animate-spin' : ''}`} />
+                        <span>{isSyncingDirectDoc ? 'Đang đồng bộ Drive...' : 'Đồng bộ / Ghi đè Google Doc này'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleDownloadStandardDoc}
+                      className="flex items-center justify-center gap-1 py-1.5 px-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-medium rounded-md shadow-2xs transition-colors cursor-pointer"
+                      title="Tải file HTML biểu mẫu chuẩn 8 trang để mở hoặc nhập trực tiếp vào Google Docs"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Tải file Doc chuẩn</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyStandardDoc}
+                      className="flex items-center justify-center gap-1 py-1.5 px-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-medium rounded-md shadow-2xs transition-colors cursor-pointer"
+                      title="Sao chép nội dung chuẩn để dán trực tiếp (Ctrl+V) vào tài liệu Google Docs mới"
+                    >
+                      {copiedDocStandard ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-700 font-semibold">Đã chép!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-slate-600" />
+                          <span>Sao chép Doc chuẩn</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Card 2: Batch Sync All Equipments */}
@@ -647,10 +818,24 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
                 <button
                   onClick={handleBatchSyncAllDocs}
                   disabled={isBatchSyncingDocs}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer ${
+                    isViewer
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-500 text-white'
+                  }`}
+                  title={isViewer ? 'Chế độ Người xem (Chỉ đọc) - Cần quyền Admin để ghi đè hàng loạt lên Google Drive của chủ sở hữu' : `Đồng bộ toàn bộ ${allEquipments.length} thiết bị`}
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isBatchSyncingDocs ? 'animate-spin' : ''}`} />
-                  <span>{isBatchSyncingDocs ? 'Đang đồng bộ hàng loạt...' : `Đồng bộ toàn bộ ${allEquipments.length} thiết bị`}</span>
+                  {isViewer ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Đồng bộ hàng loạt (Chỉ Admin)</span>
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className={`w-3.5 h-3.5 ${isBatchSyncingDocs ? 'animate-spin' : ''}`} />
+                      <span>{isBatchSyncingDocs ? 'Đang đồng bộ hàng loạt...' : `Đồng bộ toàn bộ ${allEquipments.length} thiết bị`}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -767,20 +952,30 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-700 block">
-                Google Apps Script Web App URL:
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Google Apps Script Web App URL:
+                </label>
+                {isViewer && (
+                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium border border-slate-200">
+                    Chỉ đọc (Cố định bởi Admin)
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <input
                   type="text"
                   value={gasUrl}
+                  readOnly={isViewer}
                   onChange={(e) => handleSaveGasUrl(e.target.value)}
                   placeholder="https://script.google.com/macros/s/.../exec"
-                  className="form-input-standard font-mono"
+                  className={`form-input-standard font-mono ${isViewer ? 'bg-slate-50 cursor-not-allowed text-slate-600' : ''}`}
                 />
               </div>
               <p className="text-[11px] text-slate-500">
-                Nhận URL này sau khi bấm <i>Deploy &gt; New deployment &gt; Web app (Anyone)</i> trên Google Apps Script.
+                {isViewer
+                  ? 'Đường dẫn Web App được cấu hình kết nối tới kho dữ liệu Google Drive của chủ sở hữu.'
+                  : 'Nhận URL này sau khi bấm Deploy > New deployment > Web app (Anyone) trên Google Apps Script.'}
               </p>
             </div>
 
@@ -831,87 +1026,143 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Card 1: Push to Google Sheets */}
-              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2">
-                <div className="flex items-center gap-2.5 text-blue-700 font-bold text-xs">
-                  <div className="p-1.5 bg-blue-100 rounded text-blue-700">
-                    <FileSpreadsheet className="w-4 h-4" />
+              {/* Card 1: Push to Google Sheets - Protected for Admin */}
+              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2.5 text-blue-700 font-bold text-xs">
+                    <div className="p-1.5 bg-blue-100 rounded text-blue-700">
+                      <FileSpreadsheet className="w-4 h-4" />
+                    </div>
+                    <span>1. Đồng bộ lên Google Sheets</span>
                   </div>
-                  <span>1. Đồng bộ lên Google Sheets</span>
+                  <p className="text-[11px] text-slate-600">
+                    Ghi toàn bộ {allEquipments.length} thiết bị vào các bảng <i>ThongTinChung, ThanhPhan, BaoDuong, SuaChua</i>.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  Ghi toàn bộ {allEquipments.length} thiết bị vào các bảng <i>ThongTinChung, ThanhPhan, BaoDuong, SuaChua</i>.
-                </p>
                 <button
                   onClick={handleSyncUpToSheets}
                   disabled={isSyncingUp || !gasUrl.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer ${
+                    isViewer
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 text-white'
+                  }`}
+                  title={isViewer ? 'Chế độ Người xem (Chỉ đọc) - Cần quyền Admin để ghi đè lên Google Sheets của chủ sở hữu' : 'Lưu lên Google Sheets'}
                 >
-                  <Send className={`w-3.5 h-3.5 ${isSyncingUp ? 'animate-spin' : ''}`} />
-                  <span>{isSyncingUp ? 'Đang gửi dữ liệu...' : 'Lưu lên Google Sheets'}</span>
+                  {isViewer ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Lưu lên Sheets (Chỉ Admin)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className={`w-3.5 h-3.5 ${isSyncingUp ? 'animate-spin' : ''}`} />
+                      <span>{isSyncingUp ? 'Đang gửi dữ liệu...' : 'Lưu lên Google Sheets'}</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              {/* Card 2: Pull from Google Sheets */}
-              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2">
-                <div className="flex items-center gap-2.5 text-emerald-700 font-bold text-xs">
-                  <div className="p-1.5 bg-emerald-100 rounded text-emerald-700">
-                    <RefreshCw className="w-4 h-4" />
+              {/* Card 2: Pull from Google Sheets - ALLOWED FOR VIEWER */}
+              <div className="p-4 rounded-lg border-2 border-emerald-200 hover:border-emerald-300 transition-all bg-emerald-50/40 space-y-2 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                      <div className="p-1.5 bg-emerald-100 rounded text-emerald-700">
+                        <RefreshCw className="w-4 h-4" />
+                      </div>
+                      <span>2. Tải cơ sở dữ liệu từ Google Sheets</span>
+                    </div>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-300">
+                      Cho phép Người xem
+                    </span>
                   </div>
-                  <span>2. Tải dữ liệu từ Google Sheets</span>
+                  <p className="text-[11px] text-slate-600">
+                    Đọc và tải toàn bộ dữ liệu thiết bị mới nhất từ Google Sheets về ứng dụng cục bộ để tra cứu và làm việc.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  Đọc dữ liệu mới nhất từ Google Sheets và cập nhật vào ứng dụng làm việc cục bộ.
-                </p>
                 <button
                   onClick={handleSyncDownFromSheets}
                   disabled={isSyncingDown || !gasUrl.trim()}
                   className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  title="Tải cơ sở dữ liệu thiết bị từ Google Sheets về máy (Hỗ trợ người xem & quản trị viên)"
                 >
                   <Download className={`w-3.5 h-3.5 ${isSyncingDown ? 'animate-spin' : ''}`} />
-                  <span>{isSyncingDown ? 'Đang đọc Sheets...' : 'Tải về từ Google Sheets'}</span>
+                  <span>{isSyncingDown ? 'Đang đọc Sheets...' : 'Tải về từ Google Sheets (Chỉ đọc)'}</span>
                 </button>
               </div>
 
-              {/* Card 3: Generate Google Doc */}
-              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2">
-                <div className="flex items-center gap-2.5 text-blue-700 font-bold text-xs">
-                  <div className="p-1.5 bg-blue-100 rounded text-blue-700">
-                    <FileText className="w-4 h-4" />
+              {/* Card 3: Generate Google Doc - Protected for Admin */}
+              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2.5 text-blue-700 font-bold text-xs">
+                    <div className="p-1.5 bg-blue-100 rounded text-blue-700">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <span>3. Tạo / Ghi đè Google Doc Sổ Lý Lịch</span>
                   </div>
-                  <span>3. Tạo / Ghi đè Google Doc Sổ Lý Lịch</span>
+                  <p className="text-[11px] text-slate-600">
+                    Sinh file Google Doc đầy đủ 6 mục văn bản chuẩn A4 cho thiết bị đang chọn.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  Sinh file Google Doc đầy đủ 6 mục văn bản chuẩn A4 cho thiết bị đang chọn.
-                </p>
                 <button
                   onClick={handleGenerateGoogleDocGas}
                   disabled={isGeneratingDoc || !gasUrl.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer ${
+                    isViewer
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 text-white'
+                  }`}
+                  title={isViewer ? 'Chế độ Người xem (Chỉ đọc) - Cần quyền Admin để ghi đè Google Doc lên Drive' : 'Xuất Google Doc thiết bị này'}
                 >
-                  <Sparkles className={`w-3.5 h-3.5 ${isGeneratingDoc ? 'animate-spin' : ''}`} />
-                  <span>{isGeneratingDoc ? 'Đang xuất Doc...' : 'Xuất Google Doc thiết bị này'}</span>
+                  {isViewer ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Xuất Doc lên Drive (Chỉ Admin)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className={`w-3.5 h-3.5 ${isGeneratingDoc ? 'animate-spin' : ''}`} />
+                      <span>{isGeneratingDoc ? 'Đang xuất Doc...' : 'Xuất Google Doc thiết bị này'}</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              {/* Card 4: Backup JSON to Drive */}
-              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2">
-                <div className="flex items-center gap-2.5 text-amber-700 font-bold text-xs">
-                  <div className="p-1.5 bg-amber-100 rounded text-amber-700">
-                    <HardDrive className="w-4 h-4" />
+              {/* Card 4: Backup JSON to Drive - Protected for Admin */}
+              <div className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-all bg-slate-50 space-y-2 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2.5 text-amber-700 font-bold text-xs">
+                    <div className="p-1.5 bg-amber-100 rounded text-amber-700">
+                      <HardDrive className="w-4 h-4" />
+                    </div>
+                    <span>4. Sao lưu file JSON vào Google Drive</span>
                   </div>
-                  <span>4. Sao lưu file JSON vào Google Drive</span>
+                  <p className="text-[11px] text-slate-600">
+                    Lưu trữ định kỳ một bản sao JSON của toàn bộ {allEquipments.length} thiết bị vào Google Drive của chủ sở hữu.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  Lưu trữ định kỳ một bản sao JSON của toàn bộ {allEquipments.length} thiết bị vào Google Drive.
-                </p>
                 <button
                   onClick={handleBackupToDrive}
                   disabled={isBackingUpDrive || !gasUrl.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer ${
+                    isViewer
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-amber-600 hover:bg-amber-700 disabled:bg-slate-200 disabled:text-slate-500 text-white'
+                  }`}
+                  title={isViewer ? 'Chế độ Người xem (Chỉ đọc) - Cần quyền Admin để sao lưu lên Drive của chủ sở hữu' : 'Sao lưu JSON lên Google Drive'}
                 >
-                  <Cloud className={`w-3.5 h-3.5 ${isBackingUpDrive ? 'animate-spin' : ''}`} />
-                  <span>{isBackingUpDrive ? 'Đang sao lưu...' : 'Sao lưu JSON lên Google Drive'}</span>
+                  {isViewer ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Sao lưu Drive (Chỉ Admin)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Cloud className={`w-3.5 h-3.5 ${isBackingUpDrive ? 'animate-spin' : ''}`} />
+                      <span>{isBackingUpDrive ? 'Đang sao lưu...' : 'Sao lưu JSON lên Google Drive'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

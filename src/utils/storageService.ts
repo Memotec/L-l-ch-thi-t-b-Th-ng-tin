@@ -1,5 +1,5 @@
 import { EquipmentData, TrashEquipmentItem } from '../types';
-import { createEmptyEquipment } from '../sampleData';
+import { createEmptyEquipment, sampleEquipments } from '../sampleData';
 
 const STORAGE_KEY = 'cns_multi_equipment_data_v2';
 const TRASH_STORAGE_KEY = 'cns_trash_equipment_data_v1';
@@ -8,23 +8,26 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const storageService = {
   /**
-   * Loads equipment data safely from localStorage with fallback to clean empty equipment
+   * Loads equipment data safely from localStorage with fallback to sample equipments
    */
   loadEquipments(): EquipmentData[] {
     try {
-      if (typeof window === 'undefined') return [createEmptyEquipment()];
+      if (typeof window === 'undefined') return sampleEquipments;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.general) {
-          // If all equipments in storage are the old default sample equipments and user never edited, we can check or return
-          return parsed;
+          // If the stored data only has an untitled placeholder, augment with sampleEquipments
+          const hasRealData = parsed.some(p => p.general?.name && p.general?.name !== 'Thiết bị kỹ thuật mới');
+          if (hasRealData) {
+            return parsed;
+          }
         }
       }
     } catch (err) {
       console.error('Failed to load equipments from localStorage:', err);
     }
-    return [createEmptyEquipment()];
+    return sampleEquipments;
   },
 
   /**
@@ -35,8 +38,29 @@ export const storageService = {
       if (typeof window === 'undefined') return false;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save equipments immediately to localStorage:', err);
+      // Fallback if quota exceeded: try saving with pruned heavy binary assets
+      if (err?.name === 'QuotaExceededError' || err?.code === 22 || err?.code === 1014) {
+        try {
+          const lightened = data.map(eq => ({
+            ...eq,
+            docs: (eq.docs || []).map(d => {
+              const docAny = d as any;
+              if (docAny.fileContent && typeof docAny.fileContent === 'string' && docAny.fileContent.length > 250000) {
+                const { fileContent, ...rest } = docAny;
+                return rest;
+              }
+              return d;
+            })
+          }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(lightened));
+          console.warn('Saved lightened equipment payload to localStorage due to quota limits');
+          return true;
+        } catch (innerErr) {
+          console.error('Lightened save also failed:', innerErr);
+        }
+      }
       return false;
     }
   },

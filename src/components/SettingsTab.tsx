@@ -563,6 +563,30 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                       {currentUser.permissions.canResetDatabase ? 'Cho phép' : 'Khóa'}
                     </td>
                   </tr>
+                  <tr>
+                    <td className="p-3 font-medium">Truy cập & Chỉ đọc tài nguyên Cloud Google Drive</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canAccessCloudDrive !== false ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {currentUser.permissions.canAccessCloudDrive !== false ? 'Cho phép' : 'Khóa'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-medium">Tải về (Pull) cơ sở dữ liệu từ Google Sheets/Drive</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canDownloadCloudDatabase !== false ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {currentUser.permissions.canDownloadCloudDatabase !== false ? 'Cho phép' : 'Khóa'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-medium">Đồng bộ & Ghi đè (Push/Batch Sync) lên Cloud của chủ sở hữu</td>
+                    <td className="p-3 text-center text-slate-400 font-mono">--</td>
+                    <td className="p-3 text-center text-emerald-600"><CheckCircle2 className="w-4 h-4 mx-auto" /></td>
+                    <td className={`p-3 text-center font-bold ${currentUser.permissions.canUploadCloudDatabase ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {currentUser.permissions.canUploadCloudDatabase ? 'Cho phép' : 'Khóa'}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -579,6 +603,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             onSyncFromGas={onSyncFromGas}
             onUpdateCurrentEquipment={onUpdateEquipment}
             onShowToast={onShowToast}
+            currentUser={currentUser}
+            onOpenLoginModal={onOpenLoginModal}
           />
         </div>
       )}

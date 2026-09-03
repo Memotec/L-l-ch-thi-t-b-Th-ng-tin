@@ -30,7 +30,7 @@ export function createEmptyEquipment(category = 'VHF/UHF', name = 'Thiết bị 
       location: 'Phòng máy',
       primaryEngineer: 'Kỹ thuật viên',
       phoneContact: '0900000000',
-      supervisor: 'Trưởng đài',
+      supervisor: 'Đội Trưởng',
       coverNote: 'Sổ lý lịch thiết bị'
     },
     orgRows: [],
@@ -58,7 +58,118 @@ export function createEmptyEquipment(category = 'VHF/UHF', name = 'Thiết bị 
   };
 }
 
+export const vccsMainSample: EquipmentData = {
+  id: 'eq-vccs-main-01',
+  createdAt: '2025-01-01T08:00:00Z',
+  updatedAt: '2026-01-15T09:00:00Z',
+  general: {
+    category: 'VOICE',
+    name: 'VCCS Main',
+    manufacturer: 'Sitti S.P.A.',
+    model: 'M800IP',
+    serial: '9333-10-0001/9333-10-0002',
+    assetNo: '',
+    assetCode: 'VCCS-M800IP-01',
+    yearMade: '2025',
+    origin: 'Italia',
+    commissioned: '2025-06-01',
+    acceptanceDate: '2025-05-20',
+    warrantyDate: '36 tháng',
+    nextCalDate: '2026-12-19',
+    status: 'Đang khai thác',
+    priority: 'Hệ thống chính (Level 1)',
+    estimatedLifespanYears: 15,
+    notes: 'Hệ thống VCCS Main chuyển mạch thoại điều hành bay.'
+  },
+  org: {
+    companyName: 'CÔNG TY QUẢN LÝ BAY MIỀN NAM',
+    unit: 'Đội Thông tin',
+    location: 'Phòng máy VCCS',
+    primaryEngineer: 'Kíp Đặng Chí Thanh',
+    phoneContact: '0903888999',
+    supervisor: 'Đội Trưởng Đội TT',
+    coverNote: ''
+  },
+  orgRows: [
+    {
+      id: 'org-vccs-1',
+      date: '01/06/2025',
+      unit: 'Đội Thông tin - Công ty Quản lý bay miền Nam',
+      handoverDocNo: 'Bàn giao đưa vào khai thác chính thức',
+      status: 'Đang khai thác',
+      note: 'Vận hành tốt'
+    }
+  ],
+  licenses: [],
+  freqLicenses: [],
+  exploitLicenses: [
+    {
+      id: 'exp-vccs-1',
+      no: '6304/GP-CHK',
+      expiryDate: '19/12/2027'
+    }
+  ],
+  spec: {
+    text: 'Điều khiển chuyển mạch thoại, kết nối các bàn làm việc (CWP) và máy thu phát VHF, trực thoại, điện thoại phục vụ điều hành bay.',
+    power: '220V AC / 48V DC Redundant',
+    output: 'VoIP ED-137B/C',
+    range: 'Toàn mạng điều hành bay',
+    interface: 'VoIP SIP, Analog 2W FXO/FXS, 4W E&M, VHF Radio IP',
+    mgmtIp: '10.10.80.1',
+    subnetMask: '255.255.255.0',
+    gateway: '10.10.80.254',
+    vlanId: '80',
+    firmware: 'MULTIFONO M800IP v6.2',
+    snmpCommunity: 'sitti_vccs',
+    channelFreq: 'VoIP IP ED-137'
+  },
+  components: [
+    { id: 'c-vccs-1', no: 1, name: 'Tủ chuyển mạch trung tâm, cấu hình chính/dự phòng', partNo: 'M800IP-RACK', serial: 'RACK-01/02', unit: 'Tủ', qty: 2, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-2', no: 2, name: 'Hệ thống giám sát điều khiển: máy chủ', partNo: 'SRV-SITTI', serial: 'SRV-01/02', unit: 'Cái', qty: 2, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-3', no: 3, name: 'Hệ thống giám sát điều khiển: máy trạm;', partNo: 'WS-SITTI', serial: 'WS-01/02', unit: 'Cái', qty: 2, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-4', no: 4, name: 'Giao tiếp vô tuyến VHF IP', partNo: 'IF-VHF-IP', serial: 'VHF-IP-110', unit: 'Cái', qty: 110, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-5', no: 5, name: 'giao tiếp thoại analog 2W FXO', partNo: 'IF-FXO-2W', serial: 'FXO-35', unit: 'Cái', qty: 35, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-6', no: 6, name: 'Giao tiếp thoại analog 2W FXS', partNo: 'IF-FXS-2W', serial: 'FXS-40', unit: 'Cái', qty: 40, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-7', no: 7, name: 'Giao tiếp thoại analog 4W E&M', partNo: 'IF-EM-4W', serial: 'EM-06', unit: 'Cái', qty: 6, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-8', no: 8, name: 'Giao tiếp thoại VoIP', partNo: 'IF-VOIP-ED137', serial: 'VOIP-90', unit: 'Cái', qty: 90, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-9', no: 9, name: 'Hệ thống switch chuyển mạch hoạt động theo cấu hình chính/dự phòng', partNo: 'SW-CORE-RED', serial: 'SW-01/02', unit: 'Hệ', qty: 2, healthStatus: 'Tốt', note: '' },
+    { id: 'c-vccs-10', no: 10, name: 'Bàn điều khiển / vị trí khai thác', partNo: 'CWP-SITTI', serial: 'CWP-01-80', unit: 'Bàn', qty: 80, healthStatus: 'Tốt', note: '' }
+  ],
+  docs: [
+    { id: 'd-vccs-1', no: 1, name: 'Tài liệu hướng dẫn khai thác vận hành thiết bị VCCS SITTI', qty: 1, format: 'Bản in & Điện tử', lang: 'Tiếng Anh/Việt', location: 'Đội Thông tin', note: '' },
+    { id: 'd-vccs-2', no: 2, name: 'Tài liệu hướng dẫn bảo dưỡng thiết bị VCCS SITTI', qty: 1, format: 'Bản in & Điện tử', lang: 'Tiếng Anh/Việt', location: 'Đội Thông tin', note: '' },
+    { id: 'd-vccs-3', no: 3, name: 'Tài liệu hướng dẫn xử lý sự cố kỹ thuật đội Thông tin', qty: 1, format: 'Bản in & Điện tử', lang: 'Tiếng Việt', location: 'Đội Thông tin', note: '' }
+  ],
+  maintenance: [
+    {
+      id: 'm-vccs-1',
+      date: '10/01/2026',
+      cycle: 'Hàng tháng',
+      content: 'Kiểm tra trạng thái máy chủ, chuyển mạch tự động Main/Standby, đo kiểm chất lượng âm thoại',
+      measuredParams: 'Jitter < 2ms, Packet Loss 0%, MOS 4.4',
+      result: 'Hệ thống hoạt động bình thường, thông thoại rõ ràng',
+      person: 'Kíp Đặng Chí Thanh',
+      supervisor: 'Hành Chính Đội TT'
+    }
+  ],
+  repair: [
+    {
+      id: 'r-vccs-1',
+      date: '15/01/2026',
+      resolvedDate: '15/01/2026',
+      type: 'Kiểm tra định kỳ',
+      incidentDescription: 'Kiểm tra đường truyền thoại VoIP và đo điện áp nguồn nuôi tủ chuyển mạch',
+      rootCause: 'Bảo trì ngăn ngừa theo lịch',
+      actionTaken: 'Vệ sinh lưới lọc bụi tủ máy, siết giắc kết nối',
+      replacedParts: 'Không',
+      person: 'Kíp Đặng Chí Thanh',
+      status: 'Đã xử lý dứt điểm'
+    }
+  ]
+};
+
 export const sampleEquipments: EquipmentData[] = [
+  vccsMainSample,
 
   {
     id: 'eq-vhf-01',
@@ -87,9 +198,9 @@ export const sampleEquipments: EquipmentData[] = [
       companyName: 'CÔNG TY QUẢN LÝ BAY MIỀN NAM',
       unit: 'Đài Kỹ thuật Trạm Ra-đa / VHF TSN',
       location: 'Phòng máy VHF - Tòa nhà Khai thác TNS',
-      primaryEngineer: 'Nguyễn Văn An',
+      primaryEngineer: 'Nguyễn Chí Thanh',
       phoneContact: '0903123456',
-      supervisor: 'Trần Văn Bình',
+      supervisor: 'Nguyễn Tá Đại Phước',
       coverNote: '120.9 MHz - Kênh tiếp cận'
     },
     orgRows: [

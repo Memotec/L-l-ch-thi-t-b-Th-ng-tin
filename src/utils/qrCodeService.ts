@@ -140,7 +140,7 @@ export async function generateEquipmentQrSvg(
   options?: QrRenderOptions
 ): Promise<string> {
   const { targetUrl } = buildEquipmentQrData(equipment, undefined, options?.targetMode || 'pdf');
-  const cacheKey = `${targetUrl}_${options?.width || 320}_${options?.margin ?? 2}_${options?.errorCorrectionLevel || 'M'}_${options?.color?.dark || '#0f172a'}_${options?.color?.light || '#ffffff'}`;
+  const cacheKey = `${targetUrl}_${options?.width || 320}_${options?.margin ?? 2}_${options?.errorCorrectionLevel || 'M'}_${options?.color?.dark || '#0f172a'}_${options?.color?.light || '#B9ADAD'}`;
 
   if (qrSvgCache.has(cacheKey)) {
     return qrSvgCache.get(cacheKey)!;

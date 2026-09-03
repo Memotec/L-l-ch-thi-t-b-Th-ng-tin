@@ -29,9 +29,17 @@ import {
   Check,
   LayoutGrid,
   List,
-  Activity
+  Activity,
+  ClipboardList,
+  FileEdit,
+  Clock,
+  Sparkles,
+  X,
+  Send,
+  History
 } from 'lucide-react';
-import { EquipmentData, OrgTransferRow, EquipmentCategory, EquipmentStatus, EquipmentPriority, AppUser } from '../types';
+import { EquipmentData, OrgTransferRow, EquipmentCategory, EquipmentStatus, EquipmentPriority, AppUser, MaintenanceRow } from '../types';
+import { PerformerSelect } from './PerformerSelect';
 
 interface DashboardTabProps {
   data: EquipmentData;
@@ -66,6 +74,92 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedPriority, setSelectedPriority] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  // Quick Operation Log (Nhật ký vận hành nhanh) State
+  const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
+  const [selectedEqIdForLog, setSelectedEqIdForLog] = useState<string>('');
+  const [logType, setLogType] = useState<string>('Nhật ký ca trực');
+  const [logDate, setLogDate] = useState<string>('');
+  const [logPerson, setLogPerson] = useState<string>('');
+  const [logContent, setLogContent] = useState<string>('');
+  const [updateStatusCheckbox, setUpdateStatusCheckbox] = useState<boolean>(false);
+  const [newStatus, setNewStatus] = useState<EquipmentStatus>('Đang khai thác');
+  const [quickLogToast, setQuickLogToast] = useState<string | null>(null);
+  const [showRecentLogs, setShowRecentLogs] = useState<boolean>(true);
+
+  const handleOpenQuickLog = useCallback((eqId?: string) => {
+    const targetId = eqId || data.id;
+    setSelectedEqIdForLog(targetId);
+    const target = allEquipments.find(e => e.id === targetId) || data;
+    setLogPerson(currentUser?.displayName || target.org.primaryEngineer || 'Kỹ thuật viên ca trực');
+    setLogDate(new Date().toISOString().split('T')[0]);
+    setLogContent('');
+    setLogType('Nhật ký ca trực');
+    setUpdateStatusCheckbox(false);
+    setNewStatus(target.general.status || 'Đang khai thác');
+    setIsQuickLogOpen(true);
+  }, [data, allEquipments, currentUser]);
+
+  const handleSaveQuickLog = useCallback(() => {
+    if (!logContent.trim()) {
+      alert('Vui lòng nhập nội dung ghi chú nhật ký vận hành!');
+      return;
+    }
+
+    const target = allEquipments.find(e => e.id === selectedEqIdForLog) || data;
+    const newLogEntry: MaintenanceRow = {
+      id: `log-${Date.now()}`,
+      date: logDate || new Date().toISOString().split('T')[0],
+      cycle: logType,
+      content: logContent.trim(),
+      result: 'Đạt yêu cầu kỹ thuật',
+      person: logPerson.trim() || 'Kỹ thuật viên',
+      supervisor: target.org.supervisor || ''
+    };
+
+    const updatedMaint = [newLogEntry, ...(target.maintenance || [])];
+    const updatedGeneral = updateStatusCheckbox 
+      ? { ...target.general, status: newStatus }
+      : target.general;
+
+    const updatedTarget: EquipmentData = {
+      ...target,
+      general: updatedGeneral,
+      maintenance: updatedMaint,
+      updatedAt: new Date().toISOString()
+    };
+
+    onChange(updatedTarget);
+    setIsQuickLogOpen(false);
+    setLogContent('');
+    setQuickLogToast(`✓ Đã lưu nhật ký vận hành cho thiết bị "${target.general.name}"`);
+    setTimeout(() => setQuickLogToast(null), 3500);
+  }, [selectedEqIdForLog, data, allEquipments, logContent, logDate, logType, logPerson, updateStatusCheckbox, newStatus, onChange]);
+
+  // Aggregated recent operation logs across all equipments
+  const recentLogs = useMemo(() => {
+    const list: Array<{
+      log: MaintenanceRow;
+      eqId: string;
+      eqName: string;
+      eqCategory: EquipmentCategory;
+      eqLocation: string;
+    }> = [];
+
+    allEquipments.forEach(eq => {
+      (eq.maintenance || []).forEach(m => {
+        list.push({
+          log: m,
+          eqId: eq.id,
+          eqName: eq.general.name || 'Thiết bị',
+          eqCategory: eq.general.category,
+          eqLocation: eq.org.location || 'N/A'
+        });
+      });
+    });
+
+    return list.sort((a, b) => (b.log.date || '').localeCompare(a.log.date || '')).slice(0, 6);
+  }, [allEquipments]);
 
   const updateGeneral = (field: string, value: any) => {
     onChange({
@@ -264,6 +358,86 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       </div>
 
+      {/* SECTION: RECENT OPERATION LOGS STREAM (NHẬT KÝ VẬN HÀNH MỚI NHẤT) */}
+      <div className="enterprise-card p-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700/80">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/30 shrink-0">
+              <History className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                Nhật Ký Vận Hành Mới Nhất Toàn Đài
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  {recentLogs.length} ghi chú gần nhất
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Các ghi chú vận hành ca trực, đo thông số & kiểm tra kỹ thuật được ghi nhận
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleOpenQuickLog()}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-xs cursor-pointer"
+              title="Ghi nhật ký vận hành nhanh ngay tại Dashboard"
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              <span>+ Ghi Nhật Ký Nhanh</span>
+            </button>
+
+            <button
+              onClick={() => setShowRecentLogs(prev => !prev)}
+              className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+            >
+              {showRecentLogs ? 'Thu gọn' : 'Mở rộng'}
+            </button>
+          </div>
+        </div>
+
+        {showRecentLogs && (
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in duration-150">
+            {recentLogs.length === 0 ? (
+              <div className="col-span-full py-4 text-center text-slate-400 text-xs italic">
+                Chưa có nhật ký vận hành nào. Bấm nút "+ Ghi Nhật Ký Nhanh" để thêm ghi chú ca trực đầu tiên.
+              </div>
+            ) : (
+              recentLogs.map((item, idx) => (
+                <div
+                  key={`recent-log-${item.eqId}-${item.log.id || idx}-${idx}`}
+                  onClick={() => handleSelectAndOpen(item.eqId, 'maintenance')}
+                  className="p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-emerald-500/50 transition-all cursor-pointer group space-y-1.5"
+                >
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="font-mono text-emerald-400 font-semibold">{item.log.date || 'Hôm nay'}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700 text-slate-300 border border-slate-600">
+                      {item.log.cycle || 'Nhật ký'}
+                    </span>
+                  </div>
+
+                  <div className="font-bold text-xs text-slate-100 group-hover:text-emerald-300 transition-colors line-clamp-1">
+                    {item.eqName}
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed bg-slate-900/50 p-2 rounded-lg border border-slate-800/80 font-sans">
+                    "{item.log.content}"
+                  </p>
+
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                    <span>Thực hiện: <b className="text-slate-200">{item.log.person || 'Kỹ thuật viên'}</b></span>
+                    <span className="text-emerald-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 font-medium">
+                      Xem sổ <ChevronRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       {/* SECTION 2: MAIN EQUIPMENT REGISTRY & MANAGEMENT */}
       <div className="enterprise-card overflow-hidden">
         {/* Header with Title and Action buttons */}
@@ -288,6 +462,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Log Action Button */}
+            <button
+              onClick={() => handleOpenQuickLog()}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
+              title="Ghi chú nhanh tình trạng vận hành thiết bị"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span>Ghi Nhật Ký Nhanh</span>
+            </button>
+
             {/* View Mode Toggle */}
             <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5">
               <button
@@ -533,6 +717,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       </button>
 
                       <button
+                        onClick={() => handleOpenQuickLog(eq.id)}
+                        className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                        title="Ghi nhật ký vận hành nhanh cho thiết bị này"
+                      >
+                        <FileEdit className="w-4 h-4" />
+                      </button>
+
+                      <button
                         onClick={() => handleSelectAndOpen(eq.id, 'printPreview')}
                         className="p-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 transition-colors cursor-pointer"
                         title="In Sổ A4 / Xuất PDF"
@@ -659,6 +851,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                               title="Mở hồ sơ sổ này"
                             >
                               Mở Sổ
+                            </button>
+                            <button
+                              onClick={() => handleOpenQuickLog(eq.id)}
+                              className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 cursor-pointer"
+                              title="Ghi nhật ký vận hành nhanh"
+                            >
+                              <FileEdit className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleSelectAndOpen(eq.id, 'printPreview')}
@@ -991,7 +1190,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     </tr>
                   ) : (
                     data.orgRows.map((row, idx) => (
-                      <tr key={row.id || idx} className="hover:bg-slate-50 bg-white">
+                      <tr key={`org-row-${row.id || idx}-${idx}`} className="hover:bg-slate-50 bg-white">
                         <td className="p-2">
                           <input
                             type="date"
@@ -1051,6 +1250,190 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* QUICK OPERATION LOG MODAL */}
+      {isQuickLogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-8">
+            {/* Modal Header */}
+            <div className="p-5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30 shrink-0">
+                  <ClipboardList className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                    Ghi Nhật Ký Vận Hành Nhanh
+                  </h3>
+                  <p className="text-xs text-slate-400">Ghi chép tình trạng ca trực, kiểm tra kỹ thuật hoặc chuyển luồng tức thì</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsQuickLogOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <div className="p-6 space-y-4 text-xs text-slate-800 max-h-[75vh] overflow-y-auto">
+              {/* Target Equipment Selector */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700 flex items-center justify-between">
+                  <span>Thiết bị ghi nhận nhật ký *</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Tổng số {allEquipments.length} sổ</span>
+                </label>
+                <select
+                  value={selectedEqIdForLog}
+                  onChange={(e) => setSelectedEqIdForLog(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs"
+                >
+                  {allEquipments.map((eq) => (
+                    <option key={eq.id} value={eq.id}>
+                      [{eq.general.category}] {eq.general.name} — Model: {eq.general.model || 'N/A'} (SN: {eq.general.serial || 'N/A'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Log Type */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700">Loại nhật ký *</label>
+                  <select
+                    value={logType}
+                    onChange={(e) => setLogType(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs"
+                  >
+                    <option value="Nhật ký ca trực">📝 Nhật ký ca trực / Vận hành 24/7</option>
+                    <option value="Bảo dưỡng định kỳ">🔧 Bảo dưỡng định kỳ / Kiểm tra kỹ thuật</option>
+                    <option value="Sự cố / Bất thường">⚠️ Sự cố / Bất thường / Đo thông số</option>
+                    <option value="Chuyển luồng / Cấu hình">🔄 Chuyển luồng / Chuyển kênh dự phòng</option>
+                    <option value="Thay thế / Sửa chữa">🛠️ Thay thế linh kiện / Sửa chữa nhanh</option>
+                  </select>
+                </div>
+
+                {/* Date */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700">Ngày ghi nhận *</label>
+                  <input
+                    type="date"
+                    value={logDate}
+                    onChange={(e) => setLogDate(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Performer */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700">Kíp / Người thực hiện *</label>
+                <PerformerSelect
+                  value={logPerson}
+                  onChange={setLogPerson}
+                  placeholder="Chọn từ Drop list hoặc tự nhập..."
+                  showQuickPills={true}
+                />
+              </div>
+
+              {/* Log Content Textarea */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700 flex items-center justify-between">
+                  <span>Nội dung ghi chú nhật ký vận hành *</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Bấm mẫu bên dưới để nhập nhanh
+                  </span>
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Mô tả chi tiết tình trạng ca trực, thông số đo đạc, thay đổi cấu hình hoặc thao tác kỹ thuật..."
+                  value={logContent}
+                  onChange={(e) => setLogContent(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-lg p-3 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs leading-relaxed"
+                />
+
+                {/* Quick Preset Templates */}
+                <div className="space-y-1 pt-1">
+                  <span className="text-[11px] font-semibold text-slate-500">Mẫu ghi chú nhanh (Bấm để chọn):</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      '🟢 Hoạt động bình thường 24/7, thông số công suất đạt chuẩn',
+                      '🔵 Chuyển luồng khai thác sang máy Kênh Dự Phòng',
+                      '🟡 Đo kiểm tra thông số kỹ thuật định kỳ ca trực',
+                      '🧽 Vệ sinh phin lọc bụi và kiểm tra hệ thống làm mát',
+                      '🔴 Phát hiện chỉ số cảnh báo nhẹ, tiếp tục theo dõi trong ca'
+                    ].map((tpl, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setLogContent(prev => prev ? `${prev}\n${tpl}` : tpl)}
+                        className="px-2 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border border-slate-200 hover:border-emerald-300 rounded text-[11px] transition-all text-left cursor-pointer"
+                      >
+                        {tpl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Option to Update Status */}
+              <div className="pt-3 border-t border-slate-200 space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                  <input
+                    type="checkbox"
+                    checked={updateStatusCheckbox}
+                    onChange={(e) => setUpdateStatusCheckbox(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  />
+                  <span>Đồng thời cập nhật trạng thái hoạt động của thiết bị này</span>
+                </label>
+
+                {updateStatusCheckbox && (
+                  <div className="pl-6 animate-in fade-in duration-150">
+                    <select
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value as EquipmentStatus)}
+                      className="w-full bg-emerald-50 border border-emerald-200 rounded-lg p-2 font-bold text-emerald-900 text-xs"
+                    >
+                      <option value="Đang khai thác">Đang khai thác (Active)</option>
+                      <option value="Dự phòng sẵn sàng">Dự phòng sẵn sàng (Standby)</option>
+                      <option value="Đang bảo dưỡng/sửa chữa">Đang bảo dưỡng/sửa chữa (Maintenance)</option>
+                      <option value="Tạm ngừng khai thác">Tạm ngừng khai thác (Suspended)</option>
+                      <option value="Đã thanh lý">Đã thanh lý (Liquidated)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setIsQuickLogOpen(false)}
+                className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={handleSaveQuickLog}
+                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+                <span>Lưu Nhật Ký Nhanh</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK LOG TOAST NOTIFICATION */}
+      {quickLogToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-800 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-400/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+          <span>{quickLogToast}</span>
+        </div>
+      )}
     </div>
   );
 };

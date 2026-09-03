@@ -663,6 +663,8 @@ export default function App() {
                   onSyncFromGas={handleSyncFromGas}
                   onUpdateCurrentEquipment={handleUpdateCurrent}
                   onShowToast={showToast}
+                  currentUser={currentUser}
+                  onOpenLoginModal={() => setIsLoginModalOpen(true)}
                 />
               )}
 
@@ -692,6 +694,8 @@ export default function App() {
               {activeTab === 'printPreview' && (
                 <PrintPreviewTab
                   data={currentEquipment}
+                  allEquipments={equipments}
+                  onSelectEquipment={(id) => setCurrentId(id)}
                 />
               )}
             </Suspense>

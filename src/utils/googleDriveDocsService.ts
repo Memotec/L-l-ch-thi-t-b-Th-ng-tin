@@ -253,6 +253,15 @@ class GoogleDriveDocsService {
 
   /**
    * Tạo mã HTML chuẩn văn bản kỹ thuật "LÝ LỊCH THIẾT BỊ" phục vụ chuyển đổi sang Google Docs
+   * Tuân thủ 100% chuẩn biểu mẫu:
+   * - Bìa: CÔNG TY QUẢN LÝ BAY MIỀN NAM, LÝ LỊCH THIẾT BỊ, Tên thiết bị, Hãng SX, Số hiệu, Mã số, Mã TS, Số
+   * - Mục lục & 1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ (Bảng 3 cột: NGÀY THÁNG | ĐƠN VỊ | TÌNH TRẠNG)
+   * - 2. SƠ LƯỢC THIẾT BỊ (Thông tin & Bảng giấy phép 4 cột)
+   * - 2.1 (1. ĐẶC TÍNH KỸ THUẬT)
+   * - 2.2 (2. THÀNH PHẦN THIẾT BỊ - Bảng 5 cột: TT | TÊN THIẾT BỊ | ĐVT | SL | GHI CHÚ)
+   * - 2.3 (3. TÀI LIỆU KỸ THUẬT KÈM THEO - Bảng 4 cột: TT | TÊN TÀI LIỆU | SL | GHI CHÚ)
+   * - 3. BẢO DƯỠNG (Bảng 3 cột: THỜI GIAN | KẾT LUẬN KẾT QUẢ BẢO DƯỠNG | NGƯỜI THỰC HIỆN)
+   * - 4. KIỂM TRA – SỬA CHỮA – THAY THẾ - THAY ĐỔI (Bảng 3 cột: THỜI GIAN | NỘI DUNG THỰC HIỆN | NGƯỜI THỰC HIỆN)
    */
   public generateStandardPassportHtml(eq: EquipmentData): string {
     const g = eq.general || ({} as any);
@@ -267,45 +276,68 @@ class GoogleDriveDocsService {
     const exploitLicenses = eq.exploitLicenses || [];
 
     const companyName = (o.companyName || 'CÔNG TY QUẢN LÝ BAY MIỀN NAM').toUpperCase();
-    const unitName = (o.unit || 'TRUNG TÂM BẢO ĐẢM KỸ THUẬT').toUpperCase();
+
+    // Helper to pad arrays with empty null slots for notebook paper rows
+    const padItems = <T>(arr: T[], minLength: number): (T | null)[] => {
+      const copy: (T | null)[] = [...arr];
+      while (copy.length < minLength) {
+        copy.push(null);
+      }
+      return copy;
+    };
+
+    const paddedOrg = padItems(orgRows, 10);
+    const maxLic = Math.max(freqLicenses.length, exploitLicenses.length, 4);
+    const paddedLicenses = Array.from({ length: maxLic }).map((_, i) => ({
+      freq: freqLicenses[i] || null,
+      exp: exploitLicenses[i] || null
+    }));
+    const paddedComponents = padItems(components, Math.max(components.length, 10));
+    const paddedDocs = padItems(docs, Math.max(docs.length, 4));
+    const paddedMaint = padItems(maintenance, Math.max(maintenance.length, 8));
+    const paddedRepairs = padItems(repairs, Math.max(repairs.length, 8));
 
     return `<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Lý Lịch Thiết Bị - ${g.name || 'CNS'}</title>
+<title>LÝ LỊCH THIẾT BỊ - ${g.name || 'CNS'}</title>
 <style>
   @page {
     size: A4 portrait;
     margin: 20mm 15mm 20mm 20mm;
   }
   body {
-    font-family: "Times New Roman", Times, serif;
+    font-family: "Times New Roman", Times, "Liberation Serif", serif;
     font-size: 11pt;
     color: #000000;
-    line-height: 1.35;
+    line-height: 1.4;
     background-color: #ffffff;
+    margin: 0;
+    padding: 0;
   }
-  .text-center { text-align: center; }
-  .text-right { text-align: right; }
-  .text-left { text-align: left; }
-  .font-bold { font-weight: bold; }
-  .font-italic { font-style: italic; }
-  .uppercase { text-transform: uppercase; }
-  .page-break { page-break-before: always; margin-top: 30px; }
-
-  /* Bảng chuẩn công văn kỹ thuật */
+  .page {
+    page-break-after: always;
+    break-after: page;
+    min-height: 980px;
+    box-sizing: border-box;
+    padding: 10px 0;
+  }
+  .page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
   table.doc-table {
     width: 100%;
     border-collapse: collapse;
     border: 1px solid #000000;
-    margin-top: 6px;
+    margin-top: 10px;
     margin-bottom: 12px;
     font-size: 10.5pt;
   }
   table.doc-table th, table.doc-table td {
     border: 1px solid #000000;
-    padding: 5px 7px;
+    padding: 6px 8px;
     vertical-align: middle;
   }
   table.doc-table th {
@@ -315,577 +347,334 @@ class GoogleDriveDocsService {
     text-transform: uppercase;
     font-size: 10pt;
   }
-  table.grid-table {
+  .dotted-line {
+    border-bottom: 1px dotted #000000;
+    height: 30px;
     width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #000000;
-    margin-top: 6px;
-    margin-bottom: 12px;
-  }
-  table.grid-table td {
-    border: 1px solid #000000;
-    padding: 5px 8px;
-    font-size: 10.5pt;
-  }
-  table.grid-table td.label-col {
-    background-color: #f8fafc;
-    font-weight: bold;
-    width: 22%;
-  }
-
-  /* Bảng không viền */
-  table.no-border {
-    width: 100%;
-    border-collapse: collapse;
-    border: none;
-    margin-bottom: 12px;
-  }
-  table.no-border td {
-    border: none;
-    padding: 4px 6px;
-    vertical-align: top;
-  }
-
-  .cover-frame {
-    border: 3px double #000000;
-    padding: 24px 18px 20px 18px;
-    min-height: 860px;
-    box-sizing: border-box;
-  }
-  .section-heading {
-    font-size: 12pt;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-top: 14px;
-    margin-bottom: 6px;
-    color: #000000;
-  }
-  .sub-heading {
-    font-size: 11pt;
-    font-weight: bold;
-    margin-top: 10px;
-    margin-bottom: 4px;
   }
 </style>
 </head>
 <body>
 
   <!-- ========================================================================= -->
-  <!-- TRANG 1: BÌA SỔ LÝ LỊCH THIẾT BỊ (CHUẨN FORM HÀNG KHÔNG) -->
+  <!-- TRANG 1: BÌA SỔ LÝ LỊCH THIẾT BỊ -->
   <!-- ========================================================================= -->
-  <div class="cover-frame">
-    <table class="no-border">
+  <div class="page" style="text-align: center; padding-top: 30px;">
+    <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase; margin-bottom: 100px;">
+      ${companyName}
+    </div>
+
+    <h1 style="font-size: 28pt; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 120px;">
+      LÝ LỊCH THIẾT BỊ
+    </h1>
+
+    <div style="width: 82%; margin: 0 auto 120px auto; text-align: left; font-size: 13pt; line-height: 2.2;">
+      <p style="margin: 8px 0;"><b>Tên thiết bị:</b> ${g.name || ''}</p>
+      <p style="margin: 8px 0;"><b>Hãng sản xuất:</b> ${g.manufacturer || ''}</p>
+      <p style="margin: 8px 0;"><b>Số hiệu:</b> ${g.model || ''}</p>
+      <p style="margin: 8px 0;"><b>Mã số:</b> ${g.serial || ''}</p>
+      <p style="margin: 8px 0;"><b>Mã TS:</b> ${g.assetNo || ''}</p>
+    </div>
+
+    <div style="width: 82%; margin: 0 auto; text-align: right; font-size: 13pt;">
+      <p style="margin: 0;"><b>Số:</b> ${g.assetNo || g.serial || '....................'}</p>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TRANG 2: MỤC LỤC & 1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ -->
+  <!-- ========================================================================= -->
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 14pt; font-weight: bold; text-transform: uppercase; text-align: center; margin-bottom: 22px;">
+      MỤC LỤC
+    </h2>
+
+    <table style="width: 100%; border-collapse: collapse; border: none; font-size: 11.5pt; line-height: 2.0; margin-bottom: 35px;">
       <tr>
-        <td style="width: 100%; text-align: center;">
-          <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase;">${companyName}</div>
-          <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; margin-top: 3px;">${unitName}</div>
-          <div style="font-size: 10pt; margin-top: 2px;">-------------------------</div>
-        </td>
+        <td style="border: none; padding: 2px 0; font-weight: bold;">1. Cơ quan, đơn vị quản lý</td>
+        <td style="border: none; padding: 2px 0; text-align: right; font-weight: bold; width: 40px;">2</td>
+      </tr>
+      <tr>
+        <td style="border: none; padding: 2px 0; font-weight: bold;">2. Sơ lược thiết bị</td>
+        <td style="border: none; padding: 2px 0; text-align: right; font-weight: bold; width: 40px;">3</td>
+      </tr>
+      <tr>
+        <td style="border: none; padding: 2px 0 2px 24px;">2.1 Đặc tính kỹ thuật</td>
+        <td style="border: none; padding: 2px 0; text-align: right; width: 40px;">4</td>
+      </tr>
+      <tr>
+        <td style="border: none; padding: 2px 0 2px 24px;">2.2. Thành phần thiết bị</td>
+        <td style="border: none; padding: 2px 0; text-align: right; width: 40px;">5</td>
+      </tr>
+      <tr>
+        <td style="border: none; padding: 2px 0 2px 24px;">2.3. Tài liệu kỹ thuật kèm theo</td>
+        <td style="border: none; padding: 2px 0; text-align: right; width: 40px;">6</td>
+      </tr>
+      <tr>
+        <td style="border: none; padding: 2px 0; font-weight: bold;">3. Bảo dưỡng</td>
+        <td style="border: none; padding: 2px 0; text-align: right; font-weight: bold; width: 40px;">7</td>
+      </tr>
+      <tr>
+        <td style="border: none; padding: 2px 0; font-weight: bold;">4. Kiểm tra – Sửa chữa – Thay thế - Thay đổi</td>
+        <td style="border: none; padding: 2px 0; text-align: right; font-weight: bold; width: 40px;">8</td>
       </tr>
     </table>
 
-    <div style="text-align: center; margin-top: 90px; margin-bottom: 70px;">
-      <h1 style="font-size: 26pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin: 0; padding: 0;">
-        LÝ LỊCH THIẾT BỊ
-      </h1>
-      <div style="width: 200px; margin: 12px auto; border-bottom: 1px dotted #000000;"></div>
-      <div style="font-size: 11pt; font-style: italic; margin-top: 6px;">(Ban hành kèm theo Quy trình Quản lý kỹ thuật thiết bị CNS)</div>
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-top: 30px; margin-bottom: 12px;">
+      1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ
+    </h2>
+
+    <table class="doc-table" border="1" cellpadding="6" cellspacing="0">
+      <thead>
+        <tr>
+          <th style="width: 25%;">NGÀY THÁNG</th>
+          <th style="width: 50%;">ĐƠN VỊ</th>
+          <th style="width: 25%;">TÌNH TRẠNG</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${paddedOrg.map(r => `
+          <tr style="height: 30px;">
+            <td style="text-align: center; font-weight: bold;">${r ? (r.date || '') : '&nbsp;'}</td>
+            <td style="padding-left: 8px;">${r ? (r.unit || o.unit || '') : '&nbsp;'}</td>
+            <td style="text-align: center;">${r ? (r.status || '') : '&nbsp;'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TRANG 3: 2. SƠ LƯỢC THIẾT BỊ -->
+  <!-- ========================================================================= -->
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 20px;">
+      2. SƠ LƯỢC THIẾT BỊ
+    </h2>
+
+    <div style="font-size: 11.5pt; line-height: 2.2; margin-bottom: 28px;">
+      <p style="margin: 5px 0;"><b>Tên thiết bị:</b> ${g.name || ''}</p>
+      <p style="margin: 5px 0;"><b>Hãng sản xuất:</b> ${g.manufacturer || ''}</p>
+      <p style="margin: 5px 0;"><b>Ký hiệu (Model):</b> ${g.model || ''}</p>
+      <p style="margin: 5px 0;"><b>Mã số (S/N):</b> ${g.serial || ''}</p>
+      <p style="margin: 5px 0;"><b>Năm sản xuất:</b> ${g.yearMade || ''}</p>
+      <p style="margin: 5px 0;"><b>Nước sản xuất:</b> ${g.origin || ''}</p>
+      <p style="margin: 5px 0;"><b>Thời gian sử dụng:</b> ${g.commissioned || ''}</p>
+      <p style="margin: 5px 0;"><b>Thời gian bảo hành:</b> ${g.warrantyDate || ''}</p>
     </div>
 
-    <!-- Khung thông tin bìa điền form chuẩn -->
-    <div style="width: 85%; margin: 0 auto; font-size: 12pt; line-height: 2.2;">
-      <div style="display: flex; justify-content: space-between;">
-        <span style="font-weight: bold; width: 140px;">Tên thiết bị:</span>
-        <span style="flex: 1; border-bottom: 1px dotted #000000; font-weight: bold; padding-left: 8px;">
-          ${g.name || '---'}
-        </span>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span style="font-weight: bold; width: 140px;">Hãng sản xuất:</span>
-        <span style="flex: 1; border-bottom: 1px dotted #000000; font-weight: bold; padding-left: 8px;">
-          ${g.manufacturer || '---'}
-        </span>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span style="font-weight: bold; width: 140px;">Số hiệu (Model):</span>
-        <span style="flex: 1; border-bottom: 1px dotted #000000; font-weight: bold; padding-left: 8px;">
-          ${g.model || '---'}
-        </span>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span style="font-weight: bold; width: 140px;">Mã số (Serial):</span>
-        <span style="flex: 1; border-bottom: 1px dotted #000000; font-weight: bold; font-family: monospace; padding-left: 8px;">
-          ${g.serial || '---'}
-        </span>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span style="font-weight: bold; width: 140px;">Mã tài sản (Mã TS):</span>
-        <span style="flex: 1; border-bottom: 1px dotted #000000; font-weight: bold; font-family: monospace; padding-left: 8px;">
-          ${g.assetNo || g.assetCode || '---'}
-        </span>
-      </div>
+    <table class="doc-table" border="1" cellpadding="6" cellspacing="0">
+      <thead>
+        <tr>
+          <th colspan="2" style="width: 50%;">Giấy phép sử dụng tần số và thiết bị VTĐ</th>
+          <th colspan="2" style="width: 50%;">Giấy phép khai thác hệ thống kỹ thuật, thiết bị</th>
+        </tr>
+        <tr style="background-color: #f9f9f9; font-size: 9.5pt;">
+          <th style="width: 27%;">Số</th>
+          <th style="width: 23%;">Ngày hết hạn</th>
+          <th style="width: 27%;">Số</th>
+          <th style="width: 23%;">Ngày hết hạn</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${paddedLicenses.map(item => `
+          <tr style="height: 30px;">
+            <td style="text-align: center;">${item.freq ? (item.freq.no || '') : '&nbsp;'}</td>
+            <td style="text-align: center;">${item.freq ? (item.freq.expiryDate || '') : '&nbsp;'}</td>
+            <td style="text-align: center; font-weight: bold;">${item.exp ? (item.exp.no || '') : '&nbsp;'}</td>
+            <td style="text-align: center;">${item.exp ? (item.exp.expiryDate || '') : '&nbsp;'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TRANG 4: 1. ĐẶC TÍNH KỸ THUẬT (2.1) -->
+  <!-- ========================================================================= -->
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 20px;">
+      &nbsp;&nbsp;&nbsp;1. ĐẶC TÍNH KỸ THUẬT
+    </h2>
+
+    <div style="font-size: 11.5pt; line-height: 1.8; text-align: justify; margin-bottom: 30px;">
+      <p style="margin: 0 0 16px 0;">
+        ${s.text || 'Điều khiển chuyển mạch thoại, kết nối các bàn làm việc (CWP) và máy thu phát VHF, trực thoại, điện thoại phục vụ điều hành bay.'}
+      </p>
     </div>
 
-    <div style="margin-top: 110px; display: flex; justify-content: flex-end;">
-      <div style="border: 1px solid #000000; padding: 6px 18px; text-align: center; min-width: 140px; font-size: 11pt;">
-        <b>Số:</b> <span style="font-family: monospace; font-weight: bold;">${g.assetNo || g.serial || '....................'}</span>
-      </div>
+    <!-- Dòng kẻ chấm trang sổ mẫu -->
+    <div style="width: 100%; margin-top: 40px;">
+      ${Array.from({ length: 18 }).map(() => `
+        <div class="dotted-line"></div>
+      `).join('')}
     </div>
   </div>
 
-  <!-- NGẮT TRANG -->
-  <div class="page-break"></div>
+  <!-- ========================================================================= -->
+  <!-- TRANG 5: 2. THÀNH PHẦN THIẾT BỊ (2.2) -->
+  <!-- ========================================================================= -->
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 16px;">
+      &nbsp;&nbsp;&nbsp;2. THÀNH PHẦN THIẾT BỊ
+    </h2>
 
-  <!-- ========================================================================= -->
-  <!-- HEADER QUỐC GIA & CƠ QUAN -->
-  <!-- ========================================================================= -->
-  <table class="no-border">
-    <tr>
-      <td style="width: 50%; text-align: center;">
-        <div style="font-size: 10pt; font-weight: bold; text-transform: uppercase;">${companyName}</div>
-        <div style="font-size: 10pt; font-weight: bold; text-transform: uppercase;">${unitName}</div>
-        <div style="font-size: 9pt;">-----------------------</div>
-      </td>
-      <td style="width: 50%; text-align: center;">
-        <div style="font-size: 10pt; font-weight: bold;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-        <div style="font-size: 10pt; font-weight: bold;">Độc lập - Tự do - Hạnh phúc</div>
-        <div style="font-size: 9pt;">----------------------------------</div>
-      </td>
-    </tr>
-  </table>
-
-  <!-- ========================================================================= -->
-  <!-- MỤC LỤC -->
-  <!-- ========================================================================= -->
-  <div style="text-align: center; margin: 16px 0 10px 0;">
-    <h2 style="font-size: 13pt; font-weight: bold; text-transform: uppercase; margin: 0;">MỤC LỤC</h2>
+    <table class="doc-table" border="1" cellpadding="6" cellspacing="0">
+      <thead>
+        <tr>
+          <th style="width: 8%;">TT</th>
+          <th style="width: 52%;">TÊN THIẾT BỊ</th>
+          <th style="width: 12%;">ĐVT</th>
+          <th style="width: 10%;">SL</th>
+          <th style="width: 18%;">GHI CHÚ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${paddedComponents.map((c, i) => `
+          <tr style="height: 30px;">
+            <td style="text-align: center;">${c ? String(c.no || i + 1).padStart(2, '0') : '&nbsp;'}</td>
+            <td style="padding-left: 8px;">${c ? c.name : '&nbsp;'}</td>
+            <td style="text-align: center;">${c ? (c.unit || 'Cái') : '&nbsp;'}</td>
+            <td style="text-align: center; font-weight: bold;">${c ? String(c.qty || 1).padStart(2, '0') : '&nbsp;'}</td>
+            <td style="padding-left: 6px;">${c ? (c.note || '') : '&nbsp;'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
   </div>
 
-  <table class="no-border" style="width: 90%; margin: 0 auto 20px auto; font-size: 11pt; line-height: 1.8;">
-    <tr>
-      <td style="border-bottom: 1px dotted #888888;"><b>1. Cơ quan, đơn vị quản lý</b></td>
-      <td style="border-bottom: 1px dotted #888888; text-align: right; width: 40px; font-family: monospace;"><b>Trang 2</b></td>
-    </tr>
-    <tr>
-      <td style="border-bottom: 1px dotted #888888;"><b>2. Sơ lược thiết bị (Thông tin chung & Giấy phép)</b></td>
-      <td style="border-bottom: 1px dotted #888888; text-align: right; width: 40px; font-family: monospace;"><b>Trang 3</b></td>
-    </tr>
-    <tr>
-      <td style="border-bottom: 1px dotted #888888;"><b>3. Đặc tính kỹ thuật & Cấu hình IP</b></td>
-      <td style="border-bottom: 1px dotted #888888; text-align: right; width: 40px; font-family: monospace;"><b>Trang 4</b></td>
-    </tr>
-    <tr>
-      <td style="border-bottom: 1px dotted #888888;"><b>4. Thành phần linh kiện & Khối máy</b></td>
-      <td style="border-bottom: 1px dotted #888888; text-align: right; width: 40px; font-family: monospace;"><b>Trang 5</b></td>
-    </tr>
-    <tr>
-      <td style="border-bottom: 1px dotted #888888;"><b>5. Lịch sử bảo dưỡng kỹ thuật</b></td>
-      <td style="border-bottom: 1px dotted #888888; text-align: right; width: 40px; font-family: monospace;"><b>Trang 6</b></td>
-    </tr>
-    <tr>
-      <td style="border-bottom: 1px dotted #888888;"><b>6. Theo dõi sửa chữa, sự cố, biến động</b></td>
-      <td style="border-bottom: 1px dotted #888888; text-align: right; width: 40px; font-family: monospace;"><b>Trang 7</b></td>
-    </tr>
-  </table>
+  <!-- ========================================================================= -->
+  <!-- TRANG 6: 3. TÀI LIỆU KỸ THUẬT KÈM THEO (2.3) -->
+  <!-- ========================================================================= -->
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 16px;">
+      &nbsp;&nbsp;&nbsp;3. TÀI LIỆU KỸ THUẬT KÈM THEO
+    </h2>
 
-  <!-- ========================================================================= -->
-  <!-- 1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ -->
-  <!-- ========================================================================= -->
-  <div class="section-heading">1. CƠ QUAN, ĐƠN VỊ QUẢN LÝ</div>
-  <table class="doc-table">
-    <thead>
-      <tr>
-        <th style="width: 6%;">STT</th>
-        <th style="width: 14%;">Ngày tháng</th>
-        <th style="width: 25%;">Tên cơ quan, đơn vị quản lý</th>
-        <th style="width: 25%;">Vị trí lắp đặt / Khai thác</th>
-        <th style="width: 20%;">Căn cứ điều chuyển / Quyết định</th>
-        <th style="width: 10%;">Ghi chú</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${orgRows.length > 0 ? orgRows.map((r: any, i: number) => `
+    <table class="doc-table" border="1" cellpadding="6" cellspacing="0">
+      <thead>
         <tr>
-          <td class="text-center">${i + 1}</td>
-          <td class="text-center">${r.date || ''}</td>
-          <td><b>${r.unit || r.toUnit || unitName}</b>${r.fromUnit ? `<br><small>(Từ: ${r.fromUnit})</small>` : ''}</td>
-          <td>${o.location || '---'}</td>
-          <td>${r.handoverDocNo || r.decisionNo || r.reason || 'Bàn giao đưa vào khai thác'}</td>
-          <td>${r.status || r.note || r.signer || ''}</td>
+          <th style="width: 10%;">TT</th>
+          <th style="width: 60%;">TÊN TÀI LIỆU</th>
+          <th style="width: 12%;">SL</th>
+          <th style="width: 18%;">GHI CHÚ</th>
         </tr>
-      `).join('') : `
+      </thead>
+      <tbody>
+        ${paddedDocs.map((d, i) => `
+          <tr style="height: 30px;">
+            <td style="text-align: center;">${d ? String(d.no || i + 1).padStart(2, '0') : '&nbsp;'}</td>
+            <td style="padding-left: 8px;">${d ? d.name : '&nbsp;'}</td>
+            <td style="text-align: center; font-weight: bold;">${d ? String(d.qty || 1).padStart(2, '0') : '&nbsp;'}</td>
+            <td style="padding-left: 6px;">${d ? (d.note || '') : '&nbsp;'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TRANG 7: 3. BẢO DƯỠNG -->
+  <!-- ========================================================================= -->
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 16px;">
+      3. BẢO DƯỠNG
+    </h2>
+
+    <table class="doc-table" border="1" cellpadding="6" cellspacing="0">
+      <thead>
         <tr>
-          <td class="text-center">1</td>
-          <td class="text-center">${g.commissioned || ''}</td>
-          <td><b>${unitName}</b></td>
-          <td>${o.location || '---'}</td>
-          <td>Quyết định đưa vào khai thác chính thức</td>
-          <td>${o.supervisor || ''}</td>
+          <th style="width: 22%;">THỜI GIAN</th>
+          <th style="width: 53%;">KẾT LUẬN KẾT QUẢ BẢO DƯỠNG</th>
+          <th style="width: 25%;">NGƯỜI THỰC HIỆN</th>
         </tr>
-      `}
-    </tbody>
-  </table>
-
-  <!-- NGẮT TRANG -->
-  <div class="page-break"></div>
-
-  <!-- ========================================================================= -->
-  <!-- 2. SƠ LƯỢC THIẾT BỊ -->
-  <!-- ========================================================================= -->
-  <div class="section-heading">2. SƠ LƯỢC THIẾT BỊ</div>
-
-  <div class="sub-heading">2.1. Thông tin chung</div>
-  <table class="grid-table">
-    <tr>
-      <td class="label-col">Tên thiết bị:</td>
-      <td><b>${g.name || '---'}</b></td>
-      <td class="label-col">Chủng loại:</td>
-      <td>${g.category || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Ký hiệu (Model):</td>
-      <td><b>${g.model || '---'}</b></td>
-      <td class="label-col">Số Serial:</td>
-      <td><span style="font-family: monospace; font-weight: bold;">${g.serial || '---'}</span></td>
-    </tr>
-    <tr>
-      <td class="label-col">Hãng sản xuất:</td>
-      <td>${g.manufacturer || '---'}</td>
-      <td class="label-col">Nước sản xuất:</td>
-      <td>${g.origin || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Năm sản xuất:</td>
-      <td>${g.yearMade || '---'}</td>
-      <td class="label-col">Ngày đưa vào SD:</td>
-      <td>${g.commissioned || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Mã thẻ tài sản:</td>
-      <td><span style="font-family: monospace;">${g.assetNo || g.assetCode || '---'}</span></td>
-      <td class="label-col">Hạn bảo hành:</td>
-      <td>${g.warrantyDate || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Trạng thái vận hành:</td>
-      <td><b>${g.status || 'Đang khai thác'}</b></td>
-      <td class="label-col">Mức độ ưu tiên:</td>
-      <td>${g.priority || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Đài / Trạm quản lý:</td>
-      <td>${o.unit || '---'}</td>
-      <td class="label-col">Vị trí lắp đặt:</td>
-      <td>${o.location || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Kỹ sư phụ trách:</td>
-      <td>${o.primaryEngineer || '---'} (SĐT: ${o.phoneContact || '---'})</td>
-      <td class="label-col">Cán bộ phụ trách:</td>
-      <td>${o.supervisor || '---'}</td>
-    </tr>
-  </table>
-
-  <div class="sub-heading">2.2. Giấy phép</div>
-  <table class="no-border" style="margin-bottom: 0;">
-    <tr>
-      <td style="width: 50%; padding-left: 0;">
-        <div style="font-weight: bold; font-size: 10pt; margin-bottom: 3px;">a) Giấy phép tần số vô tuyến điện:</div>
-        <table class="doc-table">
-          <thead>
-            <tr>
-              <th style="width: 15%;">STT</th>
-              <th style="width: 45%;">Số giấy phép</th>
-              <th style="width: 40%;">Thời hạn</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${freqLicenses.length > 0 ? freqLicenses.map((l: any, idx: number) => `
-              <tr>
-                <td class="text-center">${idx + 1}</td>
-                <td><b>${l.no || l.licenseNo || '---'}</b></td>
-                <td class="text-center">${l.expiryDate || '---'}</td>
-              </tr>
-            `).join('') : `
-              <tr>
-                <td class="text-center">1</td>
-                <td>GP-TS-${g.model || 'CNS'}</td>
-                <td class="text-center">Còn hiệu lực</td>
-              </tr>
-            `}
-          </tbody>
-        </table>
-      </td>
-      <td style="width: 50%; padding-right: 0;">
-        <div style="font-weight: bold; font-size: 10pt; margin-bottom: 3px;">b) Giấy phép khai thác thiết bị:</div>
-        <table class="doc-table">
-          <thead>
-            <tr>
-              <th style="width: 15%;">STT</th>
-              <th style="width: 45%;">Số giấy phép</th>
-              <th style="width: 40%;">Thời hạn</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${exploitLicenses.length > 0 ? exploitLicenses.map((l: any, idx: number) => `
-              <tr>
-                <td class="text-center">${idx + 1}</td>
-                <td><b>${l.no || l.licenseNo || '---'}</b></td>
-                <td class="text-center">${l.expiryDate || '---'}</td>
-              </tr>
-            `).join('') : `
-              <tr>
-                <td class="text-center">1</td>
-                <td>GP-KT-${g.category || 'VHF'}</td>
-                <td class="text-center">Còn hiệu lực</td>
-              </tr>
-            `}
-          </tbody>
-        </table>
-      </td>
-    </tr>
-  </table>
-
-  <!-- NGẮT TRANG -->
-  <div class="page-break"></div>
+      </thead>
+      <tbody>
+        ${paddedMaint.map(m => `
+          <tr style="height: 34px;">
+            <td style="text-align: center; font-weight: bold;">${m ? (m.date || '') : '&nbsp;'}</td>
+            <td style="padding-left: 8px;">${m ? ([m.result, m.content].filter(Boolean).join(' - ') || '') : '&nbsp;'}</td>
+            <td style="text-align: center; font-weight: bold;">${m ? (m.person || '') : '&nbsp;'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
 
   <!-- ========================================================================= -->
-  <!-- 3. ĐẶC TÍNH KỸ THUẬT -->
+  <!-- TRANG 8: 4. KIỂM TRA – SỬA CHỮA – THAY THẾ - THAY ĐỔI -->
   <!-- ========================================================================= -->
-  <div class="section-heading">3. ĐẶC TÍNH KỸ THUẬT</div>
+  <div class="page" style="padding-top: 10px;">
+    <h2 style="font-size: 12.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 16px;">
+      4. KIỂM TRA – SỬA CHỮA – THAY THẾ - THAY ĐỔI
+    </h2>
 
-  <div class="sub-heading">3.1. Thông số kỹ thuật chính</div>
-  <table class="grid-table">
-    <tr>
-      <td class="label-col">Công suất phát (Power):</td>
-      <td><b>${s.power || '---'}</b></td>
-      <td class="label-col">Mức ngõ ra / Độ nhạy:</td>
-      <td>${s.output || s.sensitivity || '---'}</td>
-    </tr>
-    <tr>
-      <td class="label-col">Dải tần / Kênh tần số:</td>
-      <td><b>${s.channelFreq || s.frequency || s.range || '---'}</b></td>
-      <td class="label-col">Giao diện kết nối:</td>
-      <td>${s.interface || '---'}</td>
-    </tr>
-  </table>
-
-  <div class="sub-heading">3.2. Cấu hình mạng & Địa chỉ IP</div>
-  <table class="grid-table">
-    <tr>
-      <td class="label-col">Địa chỉ IP Quản trị:</td>
-      <td><span style="font-family: monospace; font-weight: bold;">${s.mgmtIp || '---'}</span></td>
-      <td class="label-col">Subnet Mask / Gateway:</td>
-      <td><span style="font-family: monospace;">${(s.subnetMask || '---') + ' / ' + (s.gateway || '---')}</span></td>
-    </tr>
-    <tr>
-      <td class="label-col">VLAN ID / SNMP:</td>
-      <td><span style="font-family: monospace;">${(s.vlanId || '---') + ' / ' + (s.snmpCommunity || '---')}</span></td>
-      <td class="label-col">Phiên bản Firmware:</td>
-      <td><b>${s.firmware || '---'}</b></td>
-    </tr>
-  </table>
-
-  ${s.text ? `<div style="font-size: 10pt; margin-top: 4px; margin-bottom: 8px;"><b>Mô tả đặc tính bổ sung:</b> <i>${s.text}</i></div>` : ''}
-
-  <div class="sub-heading">3.3. Tài liệu kỹ thuật kèm theo thiết bị</div>
-  <table class="doc-table">
-    <thead>
-      <tr>
-        <th style="width: 8%;">STT</th>
-        <th style="width: 42%;">Tên tài liệu / Manual</th>
-        <th style="width: 25%;">Ký hiệu / Mã hiệu</th>
-        <th style="width: 12%;">Ngôn ngữ</th>
-        <th style="width: 13%;">Nơi lưu trữ</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${docs.length > 0 ? docs.map((d: any, idx: number) => `
+    <table class="doc-table" border="1" cellpadding="6" cellspacing="0">
+      <thead>
         <tr>
-          <td class="text-center">${d.no || idx + 1}</td>
-          <td><b>${d.name}</b></td>
-          <td>${d.code || d.format || '---'}</td>
-          <td class="text-center">${d.lang || d.language || 'Tiếng Anh/Việt'}</td>
-          <td>${d.location || d.storageLocation || 'Phòng KT'}</td>
+          <th style="width: 22%;">THỜI GIAN</th>
+          <th style="width: 53%;">NỘI DUNG THỰC HIỆN</th>
+          <th style="width: 25%;">NGƯỜI THỰC HIỆN</th>
         </tr>
-      `).join('') : `
-        <tr>
-          <td class="text-center">1</td>
-          <td>Tài liệu Hướng dẫn Vận hành & Bảo dưỡng (User & Maintenance Manual)</td>
-          <td>OM-${g.model || 'CNS'}</td>
-          <td class="text-center">Tiếng Anh</td>
-          <td>Phòng Kỹ Thuật</td>
-        </tr>
-      `}
-    </tbody>
-  </table>
-
-  <!-- NGẮT TRANG -->
-  <div class="page-break"></div>
-
-  <!-- ========================================================================= -->
-  <!-- 4. THÀNH PHẦN LINH KIỆN -->
-  <!-- ========================================================================= -->
-  <div class="section-heading">4. THÀNH PHẦN LINH KIỆN, KHỐI MÁY & BO MẠCH</div>
-  <table class="doc-table">
-    <thead>
-      <tr>
-        <th style="width: 6%;">STT</th>
-        <th style="width: 32%;">Tên linh kiện / Khối máy / Module</th>
-        <th style="width: 18%;">Mã Part No.</th>
-        <th style="width: 18%;">Số Serial</th>
-        <th style="width: 8%;">ĐVT</th>
-        <th style="width: 6%;">SL</th>
-        <th style="width: 12%;">Tình trạng</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${components.length > 0 ? components.map((c, idx) => `
-        <tr>
-          <td class="text-center">${c.no || idx + 1}</td>
-          <td><b>${c.name}</b>${c.note ? `<br><small style="color: #444;">(${c.note})</small>` : ''}</td>
-          <td style="font-family: monospace;">${c.partNo || '---'}</td>
-          <td style="font-family: monospace;">${c.serial || '---'}</td>
-          <td class="text-center">${c.unit || 'Bộ'}</td>
-          <td class="text-center"><b>${c.qty || 1}</b></td>
-          <td class="text-center">${c.healthStatus || 'Tốt'}</td>
-        </tr>
-      `).join('') : `
-        <tr>
-          <td class="text-center">1</td>
-          <td>Khối máy chính đồng bộ theo thiết bị</td>
-          <td>---</td>
-          <td style="font-family: monospace;">${g.serial || '---'}</td>
-          <td class="text-center">Bộ</td>
-          <td class="text-center">1</td>
-          <td class="text-center">Tốt</td>
-        </tr>
-      `}
-    </tbody>
-  </table>
-
-  <!-- NGẮT TRANG -->
-  <div class="page-break"></div>
-
-  <!-- ========================================================================= -->
-  <!-- 5. LỊCH SỬ BẢO DƯỠNG KỸ THUẬT -->
-  <!-- ========================================================================= -->
-  <div class="section-heading">5. LỊCH SỬ BẢO DƯỠNG KỸ THUẬT ĐỊNH KỲ</div>
-  <table class="doc-table">
-    <thead>
-      <tr>
-        <th style="width: 5%;">STT</th>
-        <th style="width: 11%;">Ngày TH</th>
-        <th style="width: 10%;">Chu kỳ</th>
-        <th style="width: 36%;">Nội dung công việc & Thông số đo đạc</th>
-        <th style="width: 14%;">Kết quả đánh giá</th>
-        <th style="width: 12%;">Người TH</th>
-        <th style="width: 12%;">Người kiểm tra</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${maintenance.length > 0 ? maintenance.map((m, idx) => `
-        <tr>
-          <td class="text-center">${idx + 1}</td>
-          <td class="text-center">${m.date}</td>
-          <td class="text-center"><b>${m.cycle || '---'}</b></td>
-          <td>
-            ${m.content || '---'}
-            ${m.measuredParams ? `<br><small style="color: #0369a1;"><b>Thông số đo:</b> ${m.measuredParams}</small>` : ''}
-          </td>
-          <td class="text-center"><b>${m.result || 'Đạt'}</b></td>
-          <td class="text-center">${m.person || '---'}</td>
-          <td class="text-center">${m.supervisor || '---'}</td>
-        </tr>
-      `).join('') : `
-        <tr>
-          <td class="text-center" colspan="7" style="padding: 12px; font-style: italic; color: #666;">
-            Chưa có ghi nhận nhật ký bảo dưỡng định kỳ
-          </td>
-        </tr>
-      `}
-    </tbody>
-  </table>
-
-  <!-- NGẮT TRANG -->
-  <div class="page-break"></div>
-
-  <!-- ========================================================================= -->
-  <!-- 6. THEO DÕI SỬA CHỮA, BIẾN ĐỘNG & SỰ CỐ -->
-  <!-- ========================================================================= -->
-  <div class="section-heading">6. THEO DÕI SỬA CHỮA, BIẾN ĐỘNG & KHẮC PHỤC SỰ CỐ</div>
-  <table class="doc-table">
-    <thead>
-      <tr>
-        <th style="width: 5%;">STT</th>
-        <th style="width: 11%;">Ngày tháng</th>
-        <th style="width: 12%;">Phân loại</th>
-        <th style="width: 28%;">Hiện tượng hư hỏng & Nguyên nhân</th>
-        <th style="width: 26%;">Biện pháp xử lý & Vật tư thay thế</th>
-        <th style="width: 10%;">Người TH</th>
-        <th style="width: 8%;">Tình trạng</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${repairs.length > 0 ? repairs.map((r, idx) => `
-        <tr>
-          <td class="text-center">${idx + 1}</td>
-          <td class="text-center">
-            ${r.date}
-            ${r.resolvedDate ? `<br><small style="color: #059669;">Xong: ${r.resolvedDate}</small>` : ''}
-          </td>
-          <td class="text-center"><b>${r.type || 'Sự cố'}</b></td>
-          <td>
-            ${r.incidentDescription || '---'}
-            ${r.rootCause ? `<br><small style="color: #b91c1c;"><b>Nguyên nhân:</b> ${r.rootCause}</small>` : ''}
-          </td>
-          <td>
-            ${r.actionTaken || '---'}
-            ${r.replacedParts ? `<br><small style="color: #0284c7;"><b>Vật tư thay:</b> ${r.replacedParts}</small>` : ''}
-          </td>
-          <td class="text-center">${r.person || '---'}</td>
-          <td class="text-center"><b>${r.status || 'Đã xử lý'}</b></td>
-        </tr>
-      `).join('') : `
-        <tr>
-          <td class="text-center" colspan="7" style="padding: 12px; font-style: italic; color: #666;">
-            Không có ghi nhận sự cố hư hỏng hoặc biến động bất thường
-          </td>
-        </tr>
-      `}
-    </tbody>
-  </table>
-
-  <!-- ========================================================================= -->
-  <!-- KHỐI CHỮ KÝ PHÊ DUYỆT (3 CỘT CHUẨN) -->
-  <!-- ========================================================================= -->
-  <div style="margin-top: 30px; page-break-inside: avoid;">
-    <table class="no-border">
-      <tr>
-        <td style="width: 33.33%; text-align: center;">
-          <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">NGƯỜI LẬP SỔ</div>
-          <div style="font-size: 9.5pt; font-style: italic;">(Ký và ghi rõ họ tên)</div>
-          <div style="height: 65px;"></div>
-          <div style="font-weight: bold; font-size: 10.5pt;">${o.primaryEngineer || 'Kỹ sư phụ trách'}</div>
-        </td>
-        <td style="width: 33.33%; text-align: center;">
-          <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">CÁN BỘ PHỤ TRÁCH ĐÀI/TRẠM</div>
-          <div style="font-size: 9.5pt; font-style: italic;">(Ký và ghi rõ họ tên)</div>
-          <div style="height: 65px;"></div>
-          <div style="font-weight: bold; font-size: 10.5pt;">${o.supervisor || 'Trưởng đài/trạm'}</div>
-        </td>
-        <td style="width: 33.33%; text-align: center;">
-          <div style="font-weight: bold; font-size: 10.5pt; text-transform: uppercase;">LÃNH ĐẠO ĐƠN VỊ DUYỆT</div>
-          <div style="font-size: 9.5pt; font-style: italic;">(Ký tên và đóng dấu)</div>
-          <div style="height: 65px;"></div>
-          <div style="font-weight: bold; font-size: 10.5pt;">Trưởng phòng / Giám đốc</div>
-        </td>
-      </tr>
+      </thead>
+      <tbody>
+        ${paddedRepairs.map(r => `
+          <tr style="height: 34px;">
+            <td style="text-align: center; font-weight: bold;">${r ? (r.date || '') : '&nbsp;'}</td>
+            <td style="padding-left: 8px;">${r ? ([r.incidentDescription, r.actionTaken, r.replacedParts].filter(Boolean).join('; ') || '') : '&nbsp;'}</td>
+            <td style="text-align: center; font-weight: bold;">${r ? (r.person || '') : '&nbsp;'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
     </table>
   </div>
 
 </body>
 </html>`;
+  }
+
+  /**
+   * Tải file HTML định dạng chuẩn Google Docs về máy tính
+   */
+  public downloadStandardGoogleDocHtml(eq: EquipmentData): void {
+    const html = this.generateStandardPassportHtml(eq);
+    const cleanName = (eq.general?.name ? eq.general.name.replace(/[^a-zA-Z0-9_-]/g, '_') : 'ThietBi');
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `So_Ly_Lich_${cleanName}_Chuan_Form.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Sao chép nội dung chuẩn Google Docs vào clipboard (Rich Text + HTML)
+   * Người dùng chỉ cần mở Google Docs trống và ấn Ctrl+V
+   */
+  public async copyStandardHtmlForGoogleDocs(eq: EquipmentData): Promise<boolean> {
+    const html = this.generateStandardPassportHtml(eq);
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        const textBlob = new Blob([html], { type: 'text/plain' });
+        const htmlBlob = new Blob([html], { type: 'text/html' });
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': htmlBlob,
+            'text/plain': textBlob
+          })
+        ]);
+        return true;
+      } else {
+        await navigator.clipboard.writeText(html);
+        return true;
+      }
+    } catch (err) {
+      console.error('Clipboard copy failed:', err);
+      return false;
+    }
   }
 
   /**

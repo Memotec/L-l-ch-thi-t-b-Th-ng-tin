@@ -5,11 +5,11 @@
     --primary: #2563EB;
     --primary-hover: #1D4ED8;
     --secondary: #0F172A;
-    --bg-main: #F5F7FA;
-    --surface: #FFFFFF;
+    --bg-main: #cacccf;
+    --surface: #989292;
     --border: #E5E7EB;
     --text-primary: #111827;
-    --text-secondary: #6B7280;
+    --text-secondary: #ced0d6;
     --success: #16A34A;
     --warning: #D97706;
     --danger: #DC2626;
@@ -44,7 +44,7 @@
 
 /* Enterprise Card utilities */
 .enterprise-card {
-  background: #FFFFFF;
+  background: #b7b2b2;
   border: 1px solid #E5E7EB;
   border-radius: 0.75rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -58,7 +58,7 @@
 /* Standard Input Styling */
 .form-input-standard {
   width: 100%;
-  background-color: #FFFFFF;
+  background-color: #b0a6a6;
   border: 1px solid #E5E7EB;
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
@@ -75,7 +75,7 @@
 
 @media print {
   body {
-    background-color: #ffffff !important;
+    background-color: #e7dede !important;
     color: #111827 !important;
   }
 
