@@ -23,7 +23,8 @@ import {
   Lock,
   Search,
   Trash2,
-  Copy
+  Copy,
+  MessageSquare
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 
@@ -140,6 +141,13 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           sub: 'Sự cố, hỏng hóc & thay thế',
           icon: AlertTriangle, 
           badge: currentEquipment?.repair?.length || 0 
+        },
+        { 
+          id: 'notes', 
+          label: 'Mục VII: Ghi Chú & Lưu Ý', 
+          sub: 'Theo dõi nhắc nhở kỹ thuật',
+          icon: MessageSquare, 
+          badge: currentEquipment?.notesList?.length || 0 
         }
       ]
     },

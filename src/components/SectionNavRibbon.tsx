@@ -7,6 +7,7 @@ import {
   BookOpen, 
   Wrench, 
   AlertTriangle, 
+  MessageSquare,
   Printer, 
   QrCode, 
   Settings
@@ -29,6 +30,7 @@ export const SectionNavRibbon: React.FC<SectionNavRibbonProps> = ({
     { id: 'docs', label: '4. Tài liệu', icon: BookOpen },
     { id: 'maintenance', label: '5. Bảo dưỡng', icon: Wrench },
     { id: 'repair', label: '6. Sửa chữa', icon: AlertTriangle },
+    { id: 'notes', label: '7. Ghi chú', icon: MessageSquare },
     { id: 'qrCode', label: 'Mã QR & Tem nhãn', icon: QrCode, isSpecial: true },
     { id: 'printPreview', label: 'In Sổ A4', icon: Printer, isSpecial: true },
     { id: 'settings', label: 'Cài đặt', icon: Settings, isSpecial: true }

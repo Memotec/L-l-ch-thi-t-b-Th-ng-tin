@@ -15,11 +15,16 @@ import { ComponentsTab } from './components/ComponentsTab';
 import { DocsTab } from './components/DocsTab';
 import { MaintenanceTab } from './components/MaintenanceTab';
 import { RepairTab } from './components/RepairTab';
+import { NotesTab } from './components/NotesTab';
 import { SectionNavRibbon } from './components/SectionNavRibbon';
 import { QuickLookupBar } from './components/QuickLookupBar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
 import { ConfirmModal } from './components/ConfirmModal';
+import { ViewerDashboard } from './components/ViewerDashboard';
+import { ViewerBottomNav, ViewerNavTab } from './components/ViewerBottomNav';
+import { QrScannerModal } from './components/QrScannerModal';
+import { ViewerQrModal } from './components/ViewerQrModal';
 
 // Lazy load heavy components and modals on demand
 const PrintPreviewTab = lazy(() => import('./components/PrintPreviewTab').then(m => ({ default: m.PrintPreviewTab })));
@@ -64,6 +69,11 @@ export default function App() {
   const [isPdfFullscreen, setIsPdfFullscreen] = useState<boolean>(false);
   const [pdfFullscreenEquipment, setPdfFullscreenEquipment] = useState<EquipmentData | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Viewer Role Specific States
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState<boolean>(false);
+  const [viewerQrEquipment, setViewerQrEquipment] = useState<EquipmentData | null>(null);
+  const [viewerMobileTab, setViewerMobileTab] = useState<ViewerNavTab>('home');
 
   // Cross-Device Cloud Sync State
   const [cloudSyncState, setCloudSyncState] = useState<CloudSyncState>(() => cloudSyncService.getState());
@@ -752,6 +762,121 @@ export default function App() {
     );
   }
 
+  if (currentUser.role === 'viewer') {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans select-none overflow-x-hidden pb-16 md:pb-0">
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-55 bg-[#5F6471] text-white px-4 py-3 rounded-xl shadow-2xl border border-sky-400/40 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-200">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Viewer Dashboard Area */}
+        <ViewerDashboard
+          equipments={equipments}
+          currentUser={currentUser}
+          onOpenLoginModal={() => setIsLoginModalOpen(true)}
+          onOpenSearchModal={() => setIsSearchModalOpen(true)}
+          onOpenQrScanner={() => setIsQrScannerOpen(true)}
+          onOpenPdfModal={(eq) => setPdfModalEquipment(eq)}
+          onOpenQrModal={(eq) => setViewerQrEquipment(eq)}
+          selectedEquipmentId={currentId !== equipments[0]?.id ? currentId : undefined}
+          onSelectEquipmentId={(id) => setCurrentId(id)}
+          activeTab={viewerMobileTab}
+          onSelectTab={(tab) => setViewerMobileTab(tab)}
+          onCloseDetail={() => {
+            // Reset hash if closing detail
+            window.location.hash = '';
+          }}
+        />
+
+        {/* Mobile Bottom Navigation (only rendered on mobile, responsive hidden inside) */}
+        <ViewerBottomNav
+          activeTab={viewerMobileTab}
+          onSelectTab={(tab) => {
+            if (tab === 'qr') {
+              setIsQrScannerOpen(true);
+            } else {
+              setViewerMobileTab(tab);
+            }
+          }}
+          currentUser={currentUser}
+        />
+
+        {/* Suspense Modals */}
+        <Suspense fallback={null}>
+          {/* Authentication Modal */}
+          {isLoginModalOpen && (
+            <LoginModal
+              isOpen={isLoginModalOpen}
+              onClose={() => setIsLoginModalOpen(false)}
+              currentUser={currentUser}
+              onLoginSuccess={(user, msg) => {
+                setCurrentUser(user);
+                showToast(msg);
+                // Switch mobile tab back to home upon login/logout
+                setViewerMobileTab('home');
+              }}
+            />
+          )}
+
+          {/* Deep search and advanced lookup modal */}
+          {isSearchModalOpen && (
+            <SearchModal
+              isOpen={isSearchModalOpen}
+              onClose={() => setIsSearchModalOpen(false)}
+              equipments={equipments}
+              initialQuery={searchTerm}
+              onSelectResult={(equipmentId) => {
+                setCurrentId(equipmentId);
+                // Open detail inside ViewerDashboard by synchronising selectedEquipmentId
+                showToast(`✓ Đã hiển thị hồ sơ: ${equipments.find(e => e.id === equipmentId)?.general.name || equipmentId}`);
+              }}
+              onOpenPdfModal={(eq) => setPdfModalEquipment(eq)}
+            />
+          )}
+
+          {/* QR Scan & manual code search modal */}
+          {isQrScannerOpen && (
+            <QrScannerModal
+              isOpen={isQrScannerOpen}
+              onClose={() => setIsQrScannerOpen(false)}
+              equipments={equipments}
+              onSelectEquipment={(equipmentId) => {
+                setCurrentId(equipmentId);
+                setIsQrScannerOpen(false);
+                setViewerMobileTab('home');
+                showToast(`✓ Quét mã thành công! Đang hiển thị hồ sơ thiết bị.`);
+              }}
+            />
+          )}
+
+          {/* Read-only single QR display card and labels download modal */}
+          {viewerQrEquipment && (
+            <ViewerQrModal
+              isOpen={!!viewerQrEquipment}
+              onClose={() => setViewerQrEquipment(null)}
+              equipment={viewerQrEquipment}
+              onOpenPdf={(eq) => setPdfModalEquipment(eq)}
+            />
+          )}
+
+          {/* PDF Viewer full-screen modal */}
+          {pdfModalEquipment && (
+            <PdfViewerModal
+              isOpen={!!pdfModalEquipment}
+              onClose={() => setPdfModalEquipment(null)}
+              equipment={pdfModalEquipment}
+              onShowToast={showToast}
+            />
+          )}
+        </Suspense>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-[#7A75FA] text-slate-100 antialiased overflow-hidden font-sans">
       {/* Toast Notification */}
@@ -895,6 +1020,15 @@ export default function App() {
 
             {activeTab === 'repair' && (
               <RepairTab
+                data={currentEquipment}
+                onChange={handleUpdateCurrent}
+                isReadOnly={isReadOnly}
+                onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              />
+            )}
+
+            {activeTab === 'notes' && (
+              <NotesTab
                 data={currentEquipment}
                 onChange={handleUpdateCurrent}
                 isReadOnly={isReadOnly}

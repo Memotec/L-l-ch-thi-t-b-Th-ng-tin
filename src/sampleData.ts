@@ -54,7 +54,8 @@ export function createEmptyEquipment(category = 'VHF/UHF', name = 'Thiết bị 
     components: [],
     docs: [],
     maintenance: [],
-    repair: []
+    repair: [],
+    notesList: []
   };
 }
 
@@ -164,6 +165,24 @@ export const vccsMainSample: EquipmentData = {
       replacedParts: 'Không',
       person: 'Kíp Đặng Chí Thanh',
       status: 'Đã xử lý dứt điểm'
+    }
+  ],
+  notesList: [
+    {
+      id: 'note-vccs-1',
+      date: '2025-06-15',
+      content: 'Lưu ý cấu hình IP Gateway đồng bộ giữa 2 tủ máy chuyển mạch trung tâm.',
+      author: 'Kíp Đặng Chí Thanh',
+      priority: 'Cao',
+      status: 'Đang theo dõi'
+    },
+    {
+      id: 'note-vccs-2',
+      date: '2026-01-20',
+      content: 'Cần kiểm tra nhiệt độ điều hòa phòng máy VCCS định kỳ mỗi ca trực, không để vượt quá 22 độ C.',
+      author: 'Kíp Nguyễn Tá Đại Phước',
+      priority: 'Trung bình',
+      status: 'Hoàn thành'
     }
   ]
 };

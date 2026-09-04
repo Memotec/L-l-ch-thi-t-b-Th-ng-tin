@@ -172,6 +172,15 @@ export interface RepairRow {
   status?: RepairStatus;
 }
 
+export interface NoteRow {
+  id: string;
+  date: string;
+  content: string;
+  author: string;
+  priority?: 'Thấp' | 'Trung bình' | 'Cao' | string;
+  status?: 'Đang theo dõi' | 'Hoàn thành' | 'Khẩn cấp' | string;
+}
+
 export interface EquipmentData {
   id: string;
   createdAt: string;
@@ -189,6 +198,7 @@ export interface EquipmentData {
   docs: DocRow[];
   maintenance: MaintenanceRow[];
   repair: RepairRow[];
+  notesList?: NoteRow[];
 }
 
 export type UserRole = 'admin' | 'viewer' | 'default';
