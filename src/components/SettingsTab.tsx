@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLogo } from './AppLogo';
 import {
   Settings,
@@ -19,10 +19,20 @@ import {
   FolderDown,
   Building2,
   User,
-  KeyRound
+  KeyRound,
+  Bell,
+  Volume2,
+  Smartphone,
+  Sparkles,
+  Calendar,
+  Wrench,
+  ExternalLink,
+  RefreshCw,
+  Radio
 } from 'lucide-react';
 import { EquipmentData, AppUser } from '../types';
 import { GoogleWorkspaceTab } from './GoogleWorkspaceTab';
+import { browserNotificationService, BrowserNotifConfig } from '../utils/browserNotificationService';
 
 interface SettingsTabProps {
   currentEquipment: EquipmentData;
@@ -65,8 +75,51 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   onOpenTrash,
   trashCount = 0
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'database' | 'security' | 'google' | 'organization' | 'qr'>('database');
+  const [activeSubTab, setActiveSubTab] = useState<'database' | 'security' | 'google' | 'organization' | 'qr' | 'notifications'>('database');
   const isAdmin = currentUser.role === 'admin';
+
+  // State for Browser Push Notification preferences
+  const [browserPerm, setBrowserPerm] = useState<NotificationPermission | 'unsupported'>('default');
+  const [notifConfig, setNotifConfig] = useState<BrowserNotifConfig>({
+    enabled: false,
+    maintAlerts: true,
+    syncAlerts: true,
+    soundEnabled: true
+  });
+
+  useEffect(() => {
+    setBrowserPerm(browserNotificationService.getPermission());
+    setNotifConfig(browserNotificationService.getConfig());
+  }, [activeSubTab]);
+
+  const handleRequestBrowserPerm = async () => {
+    const perm = await browserNotificationService.requestPermission();
+    setBrowserPerm(perm);
+    const updated = browserNotificationService.getConfig();
+    setNotifConfig(updated);
+    if (perm === 'granted') {
+      onShowToast('✓ Đã cấp quyền và kích hoạt Thông báo trình duyệt thành công!');
+    } else if (perm === 'denied') {
+      onShowToast('⚠️ Quyền thông báo bị từ chối trong trình duyệt. Vui lòng cho phép trong Cài đặt trang web.');
+    }
+  };
+
+  const handleUpdateNotifConfig = (partial: Partial<BrowserNotifConfig>) => {
+    browserNotificationService.setConfig(partial);
+    const updated = browserNotificationService.getConfig();
+    setNotifConfig(updated);
+    onShowToast('✓ Đã lưu cài đặt thông báo trình duyệt!');
+  };
+
+  const handleTestPushNotification = () => {
+    browserNotificationService.sendTestNotification();
+    onShowToast('🔔 Đã gửi 1 thông báo đẩy thử nghiệm lên màn hình máy!');
+  };
+
+  const handleScanAllMaintenanceNow = () => {
+    browserNotificationService.checkEquipmentMaintenanceDues(allEquipments, true);
+    onShowToast(`✓ Đã quét ${allEquipments.length} thiết bị và kiểm tra hạn bảo trì!`);
+  };
 
   // State for Organization defaults
   const [orgCompanyName, setOrgCompanyName] = useState<string>(
@@ -222,6 +275,21 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           >
             <QrCode className="w-4 h-4" />
             <span>Cấu hình QR & Tra cứu</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('notifications')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+              activeSubTab === 'notifications'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            <span>Thông Báo Trình Duyệt (Push)</span>
+            {browserPerm === 'granted' && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            )}
           </button>
         </div>
       </div>
@@ -776,6 +844,329 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               <p className="text-[11px] text-slate-500 leading-relaxed">
                 Chuyển thẳng đến tài liệu Google Docs trực tuyến được lưu trữ tập trung trên Google Drive của đài trạm.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUB-TAB 6: BROWSER PUSH NOTIFICATIONS */}
+      {activeSubTab === 'notifications' && (
+        <div className="space-y-6">
+          {/* Status & Permissions Banner */}
+          <div className="enterprise-card p-6 bg-gradient-to-br from-slate-900 to-indigo-950 text-white border-indigo-900/50">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-indigo-600/30 border border-indigo-500/40 rounded-xl text-indigo-300 shrink-0 mt-0.5">
+                  <Bell className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-base font-bold text-white tracking-tight">
+                      Thông Báo Trình Duyệt (Browser Push Notification)
+                    </h2>
+                    {browserPerm === 'granted' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Đã Cấp Quyền & Sẵn Sàng
+                      </span>
+                    ) : browserPerm === 'denied' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                        Trình Duyệt Đang Chặn Thông Báo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                        Chưa Cấp Quyền Đẩy
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-indigo-200/80 mt-1.5 max-w-3xl leading-relaxed">
+                    Hệ thống tự động hiển thị thông báo đẩy (Pop-up Banner) trên màn hình máy tính hoặc điện thoại ngay cả khi bạn đang mở tab khác, giúp kịp thời nắm bắt khi có thiết bị đến hạn bảo trì định kỳ, kiểm chuẩn, hoặc khi kíp trực khác đồng bộ thay đổi dữ liệu từ Cloud.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                {browserPerm !== 'granted' ? (
+                  <button
+                    onClick={handleRequestBrowserPerm}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Cấp Quyền Thông Báo Ngay</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleTestPushNotification}
+                      className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg font-semibold text-xs border border-slate-700 transition-all cursor-pointer"
+                      title="Gửi 1 thông báo thử nghiệm"
+                    >
+                      <Volume2 className="w-4 h-4 text-cyan-400" />
+                      <span>Test Push</span>
+                    </button>
+                    <button
+                      onClick={handleScanAllMaintenanceNow}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs shadow-md transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Quét Hạn Bảo Trì All Thiết Bị</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Trigger Preferences & Options */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Options Card */}
+            <div className="enterprise-card p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <Smartphone className="w-4 h-4 text-blue-600" />
+                  <span>Tùy Chọn Kích Hoạt Cảnh Báo</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold">
+                  Tùy chỉnh
+                </span>
+              </div>
+
+              <div className="space-y-3.5">
+                {/* 1. Master Toggle */}
+                <label className="flex items-start gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-200 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={notifConfig.enabled}
+                    onChange={(e) => handleUpdateNotifConfig({ enabled: e.target.checked })}
+                    disabled={browserPerm !== 'granted'}
+                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">
+                      Bật Thông Báo Trình Duyệt (Master Switch)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Cho phép ứng dụng gửi thông báo đẩy trực tiếp lên hệ điều hành / trình duyệt.
+                    </span>
+                  </div>
+                </label>
+
+                {/* 2. Maintenance & Calibration Alerts */}
+                <label className="flex items-start gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-200 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={notifConfig.maintAlerts}
+                    onChange={(e) => handleUpdateNotifConfig({ maintAlerts: e.target.checked })}
+                    disabled={!notifConfig.enabled}
+                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block flex items-center gap-1.5">
+                      <Wrench className="w-3.5 h-3.5 text-amber-600" />
+                      Cảnh báo đến hạn bảo trì định kỳ & kiểm định kỹ thuật
+                    </span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Tự động thông báo khi thiết bị còn ≤ 7 ngày đến hạn bảo dưỡng định kỳ, ≤ 30 ngày đến hạn kiểm chuẩn hoặc đã quá hạn.
+                    </span>
+                  </div>
+                </label>
+
+                {/* 3. Cross-Device Cloud Sync Alerts */}
+                <label className="flex items-start gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-200 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={notifConfig.syncAlerts}
+                    onChange={(e) => handleUpdateNotifConfig({ syncAlerts: e.target.checked })}
+                    disabled={!notifConfig.enabled}
+                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block flex items-center gap-1.5">
+                      <Cloud className="w-3.5 h-3.5 text-indigo-600" />
+                      Thông báo khi có dữ liệu đồng bộ từ thiết bị / kíp trực khác
+                    </span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Phát hiện và báo ngay khi có kỹ thuật viên khác thêm mới sổ, cập nhật hồ sơ máy hoặc nhật ký bảo dưỡng từ xa.
+                    </span>
+                  </div>
+                </label>
+
+                {/* 4. Audio Chime */}
+                <label className="flex items-start gap-3 p-3 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-200 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={notifConfig.soundEnabled}
+                    onChange={(e) => handleUpdateNotifConfig({ soundEnabled: e.target.checked })}
+                    disabled={!notifConfig.enabled}
+                    className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block flex items-center gap-1.5">
+                      <Volume2 className="w-3.5 h-3.5 text-cyan-600" />
+                      Phát âm thanh báo hiệu nhẹ (Audio Chime)
+                    </span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Tự động phát chuông 2 âm sắc nhẹ nhàng khi nhận được thông báo mới giúp cán bộ trực ca dễ nhận biết.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Guide & Help Card */}
+            <div className="enterprise-card p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Cơ Chế Hoạt Động & Bảo Mật</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold">
+                  Chuẩn W3C
+                </span>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
+                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 space-y-1">
+                  <h4 className="font-bold text-blue-900 flex items-center gap-1.5 text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                    Không bỏ lỡ kỳ kiểm định & bảo dưỡng
+                  </h4>
+                  <p className="text-[11px] text-blue-800/80">
+                    Thuật toán tự động đối chiếu ngày bảo dưỡng gần nhất với chu kỳ quy định (Tuần, Tháng, Quý, Năm) và ngày hiệu chuẩn để nhắc nhở trước hạn.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 space-y-1">
+                  <h4 className="font-bold text-indigo-900 flex items-center gap-1.5 text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                    Điều hướng 1 chạm trực tiếp
+                  </h4>
+                  <p className="text-[11px] text-indigo-800/80">
+                    Khi click vào thông báo đẩy trên góc màn hình máy tính, trình duyệt sẽ tự động kích hoạt cửa sổ ứng dụng và mở thẳng đến hồ sơ thiết bị tương ứng.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-100/70 rounded-lg border border-slate-200 space-y-1">
+                  <h4 className="font-bold text-slate-800 text-xs">
+                    Cách mở lại nếu lỡ bấm "Chặn" (Denied):
+                  </h4>
+                  <p className="text-[11px] text-slate-600">
+                    Nhấp vào biểu tượng ổ khóa hoặc cài đặt trang trên thanh địa chỉ trình duyệt (URL bar) → Chọn <strong>Thông báo (Notifications)</strong> → Chuyển sang <strong>Cho phép (Allow)</strong> và tải lại trang.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Maintenance & Calibration Due Health List Card */}
+          <div className="enterprise-card p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+              <div>
+                <h3 className="text-slate-900 font-bold text-sm flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <span>Danh Sách Thiết Bị Cần Lưu Ý Hạn Bảo Trì & Kiểm Chuẩn</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tổng hợp các thiết bị sắp đến hạn hoặc đã quá hạn bảo dưỡng / kiểm định định kỳ trong toàn đội
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-500">
+                  Tổng số: {allEquipments.length} thiết bị
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-100 text-slate-800 uppercase text-[10px] font-bold">
+                  <tr>
+                    <th className="py-2.5 px-3 rounded-l-lg">Thiết bị</th>
+                    <th className="py-2.5 px-3">Phân loại</th>
+                    <th className="py-2.5 px-3">Vị trí lắp đặt</th>
+                    <th className="py-2.5 px-3">Hạn kiểm chuẩn</th>
+                    <th className="py-2.5 px-3">Bảo dưỡng gần nhất</th>
+                    <th className="py-2.5 px-3">Trạng thái hạn</th>
+                    <th className="py-2.5 px-3 text-right rounded-r-lg">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {allEquipments.slice(0, 10).map((eq) => {
+                    const now = new Date();
+                    const calDate = eq.general?.nextCalDate ? new Date(eq.general.nextCalDate) : null;
+                    const diffCalDays = calDate && !isNaN(calDate.getTime()) 
+                      ? Math.ceil((calDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                      : null;
+
+                    const maintLogs = eq.maintenance || [];
+                    const lastMaint = maintLogs[0];
+
+                    return (
+                      <tr key={eq.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-slate-900">
+                          <div>{eq.general?.name || 'Chưa đặt tên'}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{eq.general?.code || eq.id}</div>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-medium text-[10px] border border-blue-200">
+                            {eq.general?.category || 'CNS'}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600">
+                          {eq.org?.location || 'N/A'}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono">
+                          {eq.general?.nextCalDate || 'Chưa thiết lập'}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {lastMaint ? (
+                            <div>
+                              <span className="font-mono text-slate-800">{lastMaint.date}</span>
+                              <span className="text-[10px] text-slate-500 block">({lastMaint.cycle})</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic">Chưa có nhật ký</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {diffCalDays !== null ? (
+                            diffCalDays < 0 ? (
+                              <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px] border border-rose-200">
+                                Quá hạn {Math.abs(diffCalDays)} ngày
+                              </span>
+                            ) : diffCalDays <= 30 ? (
+                              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] border border-amber-200">
+                                Còn {diffCalDays} ngày
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium text-[10px] border border-emerald-200">
+                                Đảm bảo ({diffCalDays} ngày)
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-slate-400 text-[10px]">Chưa kiểm định</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <button
+                            onClick={() => {
+                              onUpdateEquipment(eq);
+                              onNavigateTab('maintenance');
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] font-semibold transition-colors cursor-pointer border border-slate-200"
+                          >
+                            <span>Xem Sổ</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

@@ -19,7 +19,8 @@ import {
   Lock, 
   Settings, 
   Trash2,
-  RefreshCw
+  RefreshCw,
+  MessageSquare
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 import { CloudSyncState } from '../utils/cloudSyncService';

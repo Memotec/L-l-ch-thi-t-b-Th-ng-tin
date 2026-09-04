@@ -37,7 +37,8 @@ import {
   Sparkles,
   X,
   Send,
-  History
+  History,
+  MessageSquare
 } from 'lucide-react';
 import { EquipmentData, OrgTransferRow, EquipmentCategory, EquipmentStatus, EquipmentPriority, AppUser, MaintenanceRow } from '../types';
 import { PerformerSelect } from './PerformerSelect';
@@ -497,11 +498,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Quick Log Action Button */}
+            {/* Quick Log Action Buttons */}
             <button
               onClick={() => handleOpenQuickLog()}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
-              title="Ghi chú nhanh tình trạng vận hành thiết bị"
+              title="Mở cửa sổ ghi nhận nhanh tình trạng vận hành thiết bị"
             >
               <ClipboardList className="w-4 h-4" />
               <span>Ghi Nhật Ký Nhanh</span>

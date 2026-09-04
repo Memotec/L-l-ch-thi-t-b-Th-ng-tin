@@ -13,10 +13,15 @@ import {
   Info, 
   ExternalLink,
   X,
-  Filter
+  Filter,
+  Volume2,
+  Sparkles,
+  ShieldCheck,
+  Smartphone
 } from 'lucide-react';
 import { AppNotification, NotificationType, NotificationCategory } from '../types';
 import { notificationService } from '../utils/notificationService';
+import { browserNotificationService } from '../utils/browserNotificationService';
 
 interface NotificationBellProps {
   onNavigateToEquipment?: (equipmentId: string, tabName?: string) => void;
@@ -28,12 +33,14 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
+  const [browserPerm, setBrowserPerm] = useState<NotificationPermission | 'unsupported'>('default');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsubscribe = notificationService.subscribe((updated) => {
       setNotifications(updated);
     });
+    setBrowserPerm(browserNotificationService.getPermission());
     return () => unsubscribe();
   }, []);
 
@@ -46,6 +53,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     };
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      setBrowserPerm(browserNotificationService.getPermission());
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
@@ -54,6 +62,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
   const handleOpenToggle = () => {
     setIsOpen(prev => !prev);
+    setBrowserPerm(browserNotificationService.getPermission());
   };
 
   const handleMarkAllRead = () => {
@@ -77,6 +86,15 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const handleDeleteItem = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     notificationService.deleteNotification(id);
+  };
+
+  const handleRequestBrowserPermission = async () => {
+    const perm = await browserNotificationService.requestPermission();
+    setBrowserPerm(perm);
+  };
+
+  const handleTestBrowserPush = () => {
+    browserNotificationService.sendTestNotification();
   };
 
   const filteredNotifications = notifications.filter(n => {
@@ -148,51 +166,40 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
   const formatTimeAgo = (isoString: string) => {
     try {
-      const date = new Date(isoString);
-      const diffMs = Date.now() - date.getTime();
-      const diffSec = Math.floor(diffMs / 1000);
-      const diffMin = Math.floor(diffSec / 60);
-      const diffHour = Math.floor(diffMin / 60);
-      const diffDay = Math.floor(diffHour / 24);
+      const now = Date.now();
+      const time = new Date(isoString).getTime();
+      const diffSec = Math.floor((now - time) / 1000);
 
-      if (diffSec < 45) return 'Vừa xong';
-      if (diffMin < 60) return `${diffMin} phút trước`;
-      if (diffHour < 24) return `${diffHour} giờ trước`;
-      if (diffDay === 1) return 'Hôm qua';
-      if (diffDay < 7) return `${diffDay} ngày trước`;
-      return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      if (diffSec < 60) return 'Vừa xong';
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
+      return `${Math.floor(diffSec / 86400)} ngày trước`;
     } catch {
-      return 'Gần đây';
+      return '';
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Button */}
+      {/* Bell Trigger Button */}
       <button
         onClick={handleOpenToggle}
-        className={`relative flex items-center justify-center p-2 rounded-lg text-xs font-medium border transition-all cursor-pointer shadow-xs ${
-          isOpen
-            ? 'bg-blue-600 text-white border-blue-500 ring-2 ring-blue-400/30'
-            : unreadCount > 0
-            ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/40 hover:border-amber-400'
-            : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-        }`}
-        title={
+        className={`relative p-2 rounded-lg transition-all cursor-pointer border ${
           unreadCount > 0
-            ? `Có ${unreadCount} cảnh báo & thông báo sự kiện mới! (Nhấn để xem)`
-            : 'Trung tâm Cảnh báo & Thông báo Sự kiện'
-        }
+            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 shadow-xs shadow-amber-500/20 animate-pulse'
+            : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
+        }`}
+        title={`Thông báo & Cảnh báo (${unreadCount} chưa đọc)`}
+        aria-label="Cảnh báo & Sự kiện"
       >
         {unreadCount > 0 ? (
           <BellRing className="w-4 h-4 text-amber-400 animate-bounce" />
         ) : (
-          <Bell className="w-4 h-4 text-slate-300" />
+          <Bell className="w-4 h-4" />
         )}
 
-        {/* Badge counter */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center px-1.5 py-0.5 min-w-[18px] h-[18px] bg-rose-600 text-white font-extrabold text-[10px] rounded-full border-2 border-[#0F172A] shadow-md animate-pulse">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -200,7 +207,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
       {/* Notification Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 md:w-[420px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 md:w-[440px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-150">
           {/* Header */}
           <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/70 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -216,7 +223,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                     </span>
                   )}
                 </h3>
-                <p className="text-[11px] text-slate-400">Theo dõi thêm, xóa sổ & cập nhật thiết bị</p>
+                <p className="text-[11px] text-slate-400">Theo dõi bảo trì, kiểm định & đồng bộ đám mây</p>
               </div>
             </div>
 
@@ -251,6 +258,50 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             </div>
           </div>
 
+          {/* Browser Push Notification Permission Quick Bar */}
+          <div className="px-3 py-2 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Smartphone className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span className="text-[11px] text-slate-300 truncate">
+                Thông báo trình duyệt:
+              </span>
+              {browserPerm === 'granted' ? (
+                <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                  Đang BẬT
+                </span>
+              ) : browserPerm === 'denied' ? (
+                <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">
+                  Bị chặn
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+                  Chưa bật
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              {browserPerm === 'granted' ? (
+                <button
+                  onClick={handleTestBrowserPush}
+                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[10px] font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                  title="Thử gửi 1 thông báo đẩy trình duyệt kiểm tra"
+                >
+                  <Volume2 className="w-2.5 h-2.5 text-blue-400" />
+                  <span>Test Push</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleRequestBrowserPermission}
+                  className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                >
+                  <Sparkles className="w-2.5 h-2.5" />
+                  <span>Cấp quyền Push</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Filter Tabs */}
           <div className="px-3 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center gap-1 overflow-x-auto text-[11px] scrollbar-none">
             <button
@@ -274,16 +325,6 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
               Chưa đọc ({unreadCount})
             </button>
             <button
-              onClick={() => setActiveCategory('ledger')}
-              className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                activeCategory === 'ledger'
-                  ? 'bg-slate-700 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
-              Thêm / Xóa sổ
-            </button>
-            <button
               onClick={() => setActiveCategory('maintenance_repair')}
               className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer ${
                 activeCategory === 'maintenance_repair'
@@ -291,7 +332,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
-              Bảo dưỡng / Sự cố
+              Bảo dưỡng / Kiểm định
             </button>
             <button
               onClick={() => setActiveCategory('sync')}
@@ -302,6 +343,16 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
               }`}
             >
               Đồng bộ Cloud
+            </button>
+            <button
+              onClick={() => setActiveCategory('ledger')}
+              className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                activeCategory === 'ledger'
+                  ? 'bg-slate-700 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              Thêm / Xóa sổ
             </button>
           </div>
 
@@ -316,7 +367,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                 <p className="text-[11px] text-slate-500 mt-0.5">
                   {activeCategory === 'unread' 
                     ? 'Bạn đã đọc toàn bộ các cảnh báo sự kiện!' 
-                    : 'Các sự kiện thêm, xóa sổ hoặc bảo dưỡng mới sẽ hiển thị tại đây.'}
+                    : 'Các cảnh báo đến hạn bảo dưỡng, kiểm định hoặc đồng bộ mới sẽ hiển thị tại đây.'}
                 </p>
               </div>
             ) : (
@@ -388,7 +439,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
           {/* Footer status */}
           <div className="px-4 py-2 bg-slate-950 border-t border-slate-800 text-center text-[10px] text-slate-500 flex items-center justify-between">
             <span>Tự động phát hiện & cảnh báo mọi thay đổi dữ liệu</span>
-            <span className="text-emerald-400 font-mono">Real-time Alert v1.0</span>
+            <span className="text-emerald-400 font-mono">Push Notification v2.0</span>
           </div>
         </div>
       )}
