@@ -15,11 +15,12 @@ import {
   SlidersHorizontal,
   Table
 } from 'lucide-react';
-import { EquipmentData } from '../types';
+import { EquipmentData, EquipmentCategory } from '../types';
 import { generateEquipmentQrDataUrl } from '../utils/qrCodeService';
 import { googleDriveDocsService } from '../utils/googleDriveDocsService';
 import { TeamInventoryPrintView } from './TeamInventoryPrintView';
 import { EquipmentLogbookPrintPages } from './EquipmentLogbookPrintPages';
+import { StatsReportPrintView } from './StatsReportPrintView';
 
 interface PrintPreviewTabProps {
   data: EquipmentData;
@@ -38,7 +39,8 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
   // 'single_logbook': Sổ lý lịch 8 trang của thiết bị đang chọn
   // 'team_inventory': Bảng tổng hợp kiểm kê toàn bộ thiết bị hiện có (PDF khổ ngang/dọc)
   // 'all_logbooks': In gộp toàn bộ 8 trang sổ lý lịch của tất cả thiết bị
-  const [viewMode, setViewMode] = useState<'single_logbook' | 'team_inventory' | 'all_logbooks'>('single_logbook');
+  // 'logbook_stats': Báo cáo thống kê tổng hợp sổ lý lịch và trang thiết bị CNS
+  const [viewMode, setViewMode] = useState<'single_logbook' | 'team_inventory' | 'all_logbooks' | 'logbook_stats'>('single_logbook');
 
   // Single logbook settings
   const [itemsPerPageMaint, setItemsPerPageMaint] = useState<number>(7);
@@ -53,6 +55,7 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
   const [inventorySearch, setInventorySearch] = useState<string>('');
   const [showQrInInventory, setShowQrInInventory] = useState<boolean>(true);
   const [copiedInventoryTsv, setCopiedInventoryTsv] = useState<boolean>(false);
+  const [copiedStatsTsv, setCopiedStatsTsv] = useState<boolean>(false);
 
   // QR Code lookup map for all equipments
   const [qrCodeMap, setQrCodeMap] = useState<Record<string, string>>({});
@@ -189,6 +192,71 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
     }
   };
 
+  const handleCopyStatsTsv = async () => {
+    const lines: string[] = [];
+    lines.push('THỐNG KÊ SỔ LÝ LỊCH THIẾT BỊ CNS');
+    lines.push(`Thời gian xuất:\t${new Date().toLocaleString('vi-VN')}`);
+    lines.push('');
+    
+    lines.push('I. TRẠNG THÁI HOẠT ĐỘNG CHUNG');
+    lines.push('Trạng thái kỹ thuật\tSố lượng\tTỷ lệ');
+    const total = effectiveEquipments.length;
+    let active = 0, standby = 0, maint = 0, tempOff = 0;
+    effectiveEquipments.forEach(eq => {
+      const s = eq.general?.status;
+      if (s === 'Đang khai thác') active++;
+      else if (s === 'Dự phòng sẵn sàng') standby++;
+      else if (s === 'Đang bảo dưỡng/sửa chữa') maint++;
+      else if (s === 'Tạm ngừng khai thác') tempOff++;
+    });
+    lines.push(`Đang khai thác trực tuyến\t${active}\t${total > 0 ? Math.round((active/total)*100) : 0}%`);
+    lines.push(`Dự phòng sẵn sàng (Standby)\t${standby}\t${total > 0 ? Math.round((standby/total)*100) : 0}%`);
+    lines.push(`Đang sửa chữa / Tạm ngưng\t${maint + tempOff}\t${total > 0 ? Math.round(((maint + tempOff)/total)*100) : 0}%`);
+    lines.push(`TỔNG CỘNG HỒ SƠ\t${total}\t100%`);
+    lines.push('');
+    
+    lines.push('II. CƠ CẤU THIẾT BỊ THEO CHUYÊN NGÀNH KỸ THUẬT');
+    lines.push('Chủng loại thiết bị\tTổng số\tĐang khai thác\tDự phòng\tĐang bảo dưỡng/SC\tTỷ lệ');
+    const categories: EquipmentCategory[] = ['VHF/UHF', 'VCCS', 'VIBA', 'POWER', 'IT', 'RADAR_ADS', 'NAV'];
+    categories.forEach(cat => {
+      let t = 0, a = 0, s = 0, m = 0;
+      effectiveEquipments.forEach(eq => {
+        if (eq.general?.category === cat) {
+          t++;
+          const st = eq.general?.status;
+          if (st === 'Đang khai thác') a++;
+          else if (st === 'Dự phòng sẵn sàng') s++;
+          else m++;
+        }
+      });
+      lines.push(`${cat}\t${t}\t${a}\t${s}\t${m}\t${total > 0 ? Math.round((t/total)*100) : 0}%`);
+    });
+    lines.push('');
+    
+    lines.push('III. CƠ CẤU THEO MỨC ĐỘ QUAN TRỌNG');
+    lines.push('Mức độ ưu tiên\tSố lượng\tTỷ lệ');
+    let l1 = 0, l2 = 0, l3 = 0;
+    effectiveEquipments.forEach(eq => {
+      const p = eq.general?.priority;
+      if (p === 'Hệ thống chính (Level 1)') l1++;
+      else if (p === 'Hệ thống dự phòng nóng (Level 2)') l2++;
+      else if (p === 'Hệ thống phụ trợ (Level 3)') l3++;
+    });
+    const sumP = l1 + l2 + l3;
+    lines.push(`Hệ thống chính (Level 1)\t${l1}\t${sumP > 0 ? Math.round((l1/sumP)*100) : 0}%`);
+    lines.push(`Hệ thống dự phòng nóng (Level 2)\t${l2}\t${sumP > 0 ? Math.round((l2/sumP)*100) : 0}%`);
+    lines.push(`Hệ thống phụ trợ (Level 3)\t${l3}\t${sumP > 0 ? Math.round((l3/sumP)*100) : 0}%`);
+    
+    const tsv = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(tsv);
+      setCopiedStatsTsv(true);
+      setTimeout(() => setCopiedStatsTsv(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy statistics TSV', err);
+    }
+  };
+
   const handleDownloadHtml = () => {
     if (!printRef.current) return;
     const content = printRef.current.innerHTML;
@@ -197,6 +265,8 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
     const todayStr = new Date().toISOString().slice(0, 10);
     const title = isInventory 
       ? `Bao_Cao_Kiem_Ke_Thiet_Bi_CNS_${todayStr}`
+      : viewMode === 'logbook_stats'
+      ? `Bao_Cao_Thong_Ke_So_Ly_Lich_CNS_${todayStr}`
       : viewMode === 'all_logbooks'
       ? `Toan_Bo_So_Ly_Lich_CNS_${todayStr}`
       : `Ly_Lich_Thiet_Bi_${(data.general?.model || data.general?.serial || 'CNS').replace(/\W/g, '_')}`;
@@ -330,6 +400,18 @@ ${content}
               <Layers className="w-3.5 h-3.5" />
               <span>In Gộp Toàn Bộ Sổ ({effectiveEquipments.length} Thiết bị)</span>
             </button>
+
+            <button
+              onClick={() => setViewMode('logbook_stats')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'logbook_stats'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Table className="w-3.5 h-3.5" />
+              <span>Báo Cáo Thống Kê Sổ ({effectiveEquipments.length} Thiết bị)</span>
+            </button>
           </div>
 
           {/* Quick Info Tag */}
@@ -337,6 +419,10 @@ ${content}
             {viewMode === 'team_inventory' ? (
               <span className="text-indigo-300 font-medium">
                 Khổ in {inventoryOrientation === 'landscape' ? 'A4 Ngang (297×210mm)' : 'A4 Dọc (210×297mm)'} • {filteredInventoryEquipments.length} thiết bị hiển thị
+              </span>
+            ) : viewMode === 'logbook_stats' ? (
+              <span className="text-amber-300 font-medium">
+                Báo cáo tổng hợp số liệu kỹ thuật, chủng loại, vòng đời & nhật ký vận hành CNS
               </span>
             ) : viewMode === 'all_logbooks' ? (
               <span className="text-emerald-300 font-medium">
@@ -481,6 +567,54 @@ ${content}
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>In / Xuất PDF Toàn Đội</span>
+              </button>
+            </div>
+          </div>
+        ) : viewMode === 'logbook_stats' ? (
+          /* ========================================================================= */
+          /* CONTROLS CHO BÁO CÁO THỐNG KÊ SỔ LÝ LỊCH */
+          /* ========================================================================= */
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs text-slate-300">
+              <span className="font-semibold text-amber-400">Thống kê sổ lý lịch:</span>
+              <span>Xuất dữ liệu tổng hợp CNS, phân loại chuyên ngành & chất lượng vận hành toàn đội.</span>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleCopyStatsTsv}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                title="Sao chép bảng thống kê tổng hợp để dán nhanh vào Microsoft Excel hoặc Google Sheets"
+              >
+                {copiedStatsTsv ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-300">Đã chép TSV!</span>
+                  </>
+                ) : (
+                  <>
+                    <Table className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Sao chép Excel (TSV)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleDownloadHtml}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                title="Tải tệp HTML báo cáo thống kê độc lập"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-400" />
+                <span>Tải HTML Báo Cáo</span>
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+                title="In báo cáo trực tiếp hoặc lưu dưới dạng PDF khổ đứng A4"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>In / Xuất PDF Thống Kê</span>
               </button>
             </div>
           </div>
@@ -674,6 +808,11 @@ ${content}
                 setViewMode('single_logbook');
               }
             }}
+          />
+        ) : viewMode === 'logbook_stats' ? (
+          <StatsReportPrintView
+            equipments={effectiveEquipments}
+            companyName={data.org?.companyName}
           />
         ) : viewMode === 'all_logbooks' ? (
           effectiveEquipments.map((eq, i) => (
