@@ -38,10 +38,12 @@ import {
   X,
   Send,
   History,
-  MessageSquare
+  MessageSquare,
+  FileSpreadsheet
 } from 'lucide-react';
 import { EquipmentData, OrgTransferRow, EquipmentCategory, EquipmentStatus, EquipmentPriority, AppUser, MaintenanceRow } from '../types';
 import { PerformerSelect } from './PerformerSelect';
+import { statisticsExportService } from '../utils/statisticsExportService';
 
 interface DashboardTabProps {
   data: EquipmentData;
@@ -55,6 +57,7 @@ interface DashboardTabProps {
   currentUser?: AppUser;
   isReadOnly?: boolean;
   onOpenLoginModal?: () => void;
+  onShowToast?: (msg: string) => void;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({ 
@@ -68,7 +71,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onDeleteEquipment,
   currentUser,
   isReadOnly = false,
-  onOpenLoginModal
+  onOpenLoginModal,
+  onShowToast
 }) => {
   // Search & Filter state for the equipment list
   const [filterText, setFilterText] = useState('');
@@ -536,6 +540,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </button>
             </div>
 
+            {/* Export Statistics for Admin */}
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => {
+                  statisticsExportService.exportToExcel(allEquipments, currentUser);
+                  onShowToast?.(`✓ Đã xuất file thống kê ${allEquipments.length} sổ lý lịch (Excel .xlsx) thành công!`);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs border border-emerald-600 transition-all cursor-pointer shrink-0"
+                title="Xuất file báo cáo thống kê chuyên sâu toàn bộ sổ lý lịch đang có ra Excel (.xlsx)"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Xuất Thống Kê (Excel)</span>
+                <span className="sm:hidden">Excel</span>
+              </button>
+            )}
+
             {/* Add New Equipment Button */}
             {onNewEquipment && (
               <button
@@ -909,6 +929,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                             >
                               <QrCode className="w-3.5 h-3.5" />
                             </button>
+                            {onOpenPdfModal && (
+                              <button
+                                onClick={() => onOpenPdfModal(eq)}
+                                className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded border border-blue-200 cursor-pointer"
+                                title="Xem & Tải Sổ PDF"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             {onDeleteEquipment && (
                               <button
                                 onClick={() => onDeleteEquipment(eq.id)}

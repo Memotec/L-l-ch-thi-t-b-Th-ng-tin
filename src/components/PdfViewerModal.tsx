@@ -8,7 +8,8 @@ import {
   ZoomIn, 
   ZoomOut, 
   Check, 
-  Copy
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -20,6 +21,7 @@ import {
   SimpleLicenseRow 
 } from '../types';
 import { generateEquipmentQrDataUrl, buildEquipmentQrData } from '../utils/qrCodeService';
+import { pdfExportService } from '../utils/pdfExportService';
 
 interface PdfViewerModalProps {
   isOpen: boolean;
@@ -39,6 +41,8 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   const [zoom, setZoom] = useState<number>(85);
   const [qrUrl, setQrUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+  const [pdfExportProgress, setPdfExportProgress] = useState<string>('');
   const docPrintRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,6 +66,34 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!docPrintRef.current || isExportingPdf) return;
+    setIsExportingPdf(true);
+    setPdfExportProgress('Đang chuẩn bị các trang...');
+    try {
+      const rawName = equipment.general?.name || equipment.id;
+      const safeName = rawName.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_').substring(0, 40);
+      const filename = `So_Ly_Lich_${safeName}.pdf`;
+
+      await pdfExportService.exportElementToPdf(docPrintRef.current, {
+        filename,
+        orientation: 'portrait',
+        marginMm: 0,
+        onProgress: (current, total) => {
+          setPdfExportProgress(`Đang tạo trang ${current}/${total}...`);
+        }
+      });
+      onShowToast('✓ Đã tải file PDF Sổ lý lịch thành công!');
+    } catch (err: any) {
+      console.error('Lỗi xuất PDF:', err);
+      onShowToast('⚠️ Đang mở hộp thoại in trình duyệt để lưu file PDF...');
+      window.print();
+    } finally {
+      setIsExportingPdf(false);
+      setPdfExportProgress('');
+    }
   };
 
   const handleCopyPdfLink = () => {
@@ -226,20 +258,40 @@ body {
           </button>
 
           <button
+            onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
+            title="Tải sổ lý lịch dưới dạng tệp tin PDF (.pdf) chuẩn A4"
+          >
+            {isExportingPdf ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                <span>{pdfExportProgress || 'Đang tạo PDF...'}</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-white" />
+                <span>Tải Sổ PDF (.pdf)</span>
+              </>
+            )}
+          </button>
+
+          <button
             onClick={handleDownloadPdfHtml}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
             title="Tải về file HTML Sổ chuẩn A4"
           >
             <Download className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden sm:inline">Tải File</span>
+            <span>Tải HTML</span>
           </button>
 
           <button
             onClick={handlePrint}
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+            title="Mở hộp thoại in hoặc lưu PDF trình duyệt"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>In A4 (Ctrl+P)</span>
+            <span>In A4</span>
           </button>
 
           <button

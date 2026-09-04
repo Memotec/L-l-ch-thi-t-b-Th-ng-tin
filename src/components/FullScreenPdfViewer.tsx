@@ -14,7 +14,8 @@ import {
   Sparkles,
   QrCode,
   ShieldCheck,
-  Share2
+  Share2,
+  Loader2
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -26,6 +27,7 @@ import {
   SimpleLicenseRow 
 } from '../types';
 import { generateEquipmentQrDataUrl, buildEquipmentQrData } from '../utils/qrCodeService';
+import { pdfExportService } from '../utils/pdfExportService';
 
 interface FullScreenPdfViewerProps {
   equipment: EquipmentData;
@@ -62,6 +64,8 @@ export const FullScreenPdfViewer: React.FC<FullScreenPdfViewerProps> = ({
   const [zoom, setZoom] = useState<number>(getOptimalZoom);
   const [qrUrl, setQrUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+  const [pdfExportProgress, setPdfExportProgress] = useState<string>('');
   const docPrintRef = useRef<HTMLDivElement>(null);
 
   // Auto-adjust zoom on window resize
@@ -96,6 +100,34 @@ export const FullScreenPdfViewer: React.FC<FullScreenPdfViewerProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!docPrintRef.current || isExportingPdf) return;
+    setIsExportingPdf(true);
+    setPdfExportProgress('Đang chuẩn bị trang...');
+    try {
+      const rawName = equipment.general?.name || equipment.id;
+      const safeName = rawName.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_').substring(0, 40);
+      const filename = `So_Ly_Lich_${safeName}.pdf`;
+
+      await pdfExportService.exportElementToPdf(docPrintRef.current, {
+        filename,
+        orientation: 'portrait',
+        marginMm: 0,
+        onProgress: (current, total) => {
+          setPdfExportProgress(`Đang tạo trang ${current}/${total}...`);
+        }
+      });
+      onShowToast('✓ Đã tải file PDF Sổ lý lịch thành công!');
+    } catch (err: any) {
+      console.error('Lỗi xuất PDF:', err);
+      onShowToast('⚠️ Đang mở hộp thoại in trình duyệt để lưu PDF...');
+      window.print();
+    } finally {
+      setIsExportingPdf(false);
+      setPdfExportProgress('');
+    }
   };
 
   const handleCopyPdfLink = () => {
@@ -274,14 +306,34 @@ body {
             <span className="hidden xl:inline">{copiedLink ? 'Đã sao chép!' : 'Copy Link PDF'}</span>
           </button>
 
-          {/* Download HTML/PDF */}
+          {/* Direct PDF Download Button */}
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md border border-emerald-400/40 transition-all cursor-pointer"
+            title="Tải sổ lý lịch trực tiếp dưới dạng tệp tin PDF (.pdf) về máy tính"
+          >
+            {isExportingPdf ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                <span>{pdfExportProgress || 'Đang tạo PDF...'}</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-white" />
+                <span>Tải Sổ PDF (.pdf)</span>
+              </>
+            )}
+          </button>
+
+          {/* Download HTML */}
           <button
             onClick={handleDownloadPdfHtml}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
+            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#0e1d44] hover:bg-[#162d66] text-sky-200 rounded-lg text-xs font-semibold border border-[#1e3c7a] transition-all cursor-pointer"
             title="Tải về file HTML Sổ chuẩn A4"
           >
             <Download className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden lg:inline">Tải File</span>
+            <span>Tải HTML</span>
           </button>
 
           {/* Primary Print / Save as PDF Button */}
@@ -291,7 +343,7 @@ body {
             title="In ấn hoặc Lưu thành PDF chuẩn A4"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>In PDF</span>
+            <span>In A4</span>
           </button>
 
           {/* Switch to Full Management Dashboard */}

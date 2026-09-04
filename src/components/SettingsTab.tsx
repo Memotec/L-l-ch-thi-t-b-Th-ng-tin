@@ -28,11 +28,13 @@ import {
   Wrench,
   ExternalLink,
   RefreshCw,
-  Radio
+  Radio,
+  FileSpreadsheet
 } from 'lucide-react';
 import { EquipmentData, AppUser } from '../types';
 import { GoogleWorkspaceTab } from './GoogleWorkspaceTab';
 import { browserNotificationService, BrowserNotifConfig } from '../utils/browserNotificationService';
+import { statisticsExportService } from '../utils/statisticsExportService';
 
 interface SettingsTabProps {
   currentEquipment: EquipmentData;
@@ -446,6 +448,65 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 >
                   <Lock className="w-4 h-4 text-amber-600" />
                   <span>Đăng nhập Admin để mở khóa tính năng Nhập JSON</span>
+                </button>
+              )}
+            </div>
+
+            {/* Admin Statistics Export Section */}
+            <div className="p-4 bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-950">
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span>Xuất File Thống Kê Sổ Lý Lịch Đang Có (Admin)</span>
+                </div>
+                {isAdmin ? (
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                    Admin Đã Xác Thực
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-amber-800 flex items-center gap-1 font-semibold bg-amber-100/70 px-2.5 py-0.5 rounded-full border border-amber-300">
+                    <Lock className="w-3 h-3 text-amber-700" /> Cần quyền Admin
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-emerald-900/80 leading-relaxed">
+                Xuất file báo cáo thống kê chuyên sâu toàn diện của <b>{allEquipments.length} sổ lý lịch</b> hiện có trên hệ thống, bao gồm 4 bảng tính chi tiết: <b>Tổng quan điều hành</b>, <b>Danh mục tổng thể 28 thuộc tính kỹ thuật</b>, <b>Cảnh báo hạn kiểm định/bảo hành</b>, và <b>Chi tiết danh mục phụ tùng linh kiện</b>.
+              </p>
+
+              {isAdmin ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <button
+                    onClick={() => {
+                      statisticsExportService.exportToExcel(allEquipments, currentUser);
+                      onShowToast?.(`✓ Đã xuất file thống kê ${allEquipments.length} sổ lý lịch (Excel .xlsx) thành công!`);
+                    }}
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    title="Xuất file Excel (.xlsx) gồm 4 Sheet nghiệp vụ hoàn chỉnh"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Xuất Thống Kê Excel (.xlsx)</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      statisticsExportService.exportToCsv(allEquipments);
+                      onShowToast?.(`✓ Đã xuất file thống kê ${allEquipments.length} sổ lý lịch (CSV) thành công!`);
+                    }}
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                    title="Xuất file CSV mã hóa UTF-8 BOM chuẩn tiếng Việt"
+                  >
+                    <Download className="w-4 h-4 text-emerald-600" />
+                    <span>Xuất File CSV Nhanh (.csv)</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={onOpenLoginModal}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-white hover:bg-emerald-50/50 text-slate-700 hover:text-emerald-800 rounded-lg text-xs font-semibold border border-emerald-200 cursor-pointer transition-all shadow-2xs"
+                >
+                  <Lock className="w-4 h-4 text-amber-600" />
+                  <span>Đăng nhập quyền Admin để tải file thống kê</span>
                 </button>
               )}
             </div>
@@ -1108,7 +1169,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                       <tr key={eq.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-2.5 px-3 font-semibold text-slate-900">
                           <div>{eq.general?.name || 'Chưa đặt tên'}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{eq.general?.code || eq.id}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{eq.general?.assetCode || eq.general?.assetNo || eq.id}</div>
                         </td>
                         <td className="py-2.5 px-3">
                           <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-medium text-[10px] border border-blue-200">

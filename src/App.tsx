@@ -980,6 +980,7 @@ export default function App() {
                 onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
                 onDeleteEquipment={handleDeleteCurrent}
                 currentUser={currentUser}
+                onShowToast={showToast}
               />
             )}
 
@@ -1105,6 +1106,8 @@ export default function App() {
                   data={currentEquipment}
                   allEquipments={equipments}
                   onSelectEquipment={(id) => setCurrentId(id)}
+                  currentUser={currentUser}
+                  onShowToast={showToast}
                 />
               )}
             </Suspense>

@@ -13,11 +13,16 @@ import {
   Layers,
   QrCode,
   SlidersHorizontal,
-  Table
+  Table,
+  FileSpreadsheet,
+  Loader2,
+  ShieldCheck
 } from 'lucide-react';
-import { EquipmentData } from '../types';
+import { EquipmentData, AppUser } from '../types';
 import { generateEquipmentQrDataUrl } from '../utils/qrCodeService';
 import { googleDriveDocsService } from '../utils/googleDriveDocsService';
+import { pdfExportService } from '../utils/pdfExportService';
+import { statisticsExportService } from '../utils/statisticsExportService';
 import { TeamInventoryPrintView } from './TeamInventoryPrintView';
 import { EquipmentLogbookPrintPages } from './EquipmentLogbookPrintPages';
 
@@ -25,12 +30,16 @@ interface PrintPreviewTabProps {
   data: EquipmentData;
   allEquipments?: EquipmentData[];
   onSelectEquipment?: (id: string) => void;
+  currentUser?: AppUser;
+  onShowToast?: (msg: string) => void;
 }
 
 export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({ 
   data, 
   allEquipments, 
-  onSelectEquipment 
+  onSelectEquipment,
+  currentUser,
+  onShowToast
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +62,8 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
   const [inventorySearch, setInventorySearch] = useState<string>('');
   const [showQrInInventory, setShowQrInInventory] = useState<boolean>(true);
   const [copiedInventoryTsv, setCopiedInventoryTsv] = useState<boolean>(false);
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+  const [exportProgress, setExportProgress] = useState<string>('');
 
   // QR Code lookup map for all equipments
   const [qrCodeMap, setQrCodeMap] = useState<Record<string, string>>({});
@@ -288,6 +299,81 @@ ${content}
     URL.revokeObjectURL(a.href);
   };
 
+  const isAdmin = currentUser?.role === 'admin';
+
+  const notify = (msg: string) => {
+    if (onShowToast) onShowToast(msg);
+    else alert(msg);
+  };
+
+  const handleDownloadDirectPdf = async () => {
+    if (!printRef.current || isExportingPdf) return;
+    setIsExportingPdf(true);
+    setExportProgress('Đang chuẩn bị trang...');
+    try {
+      let filename = 'So_Ly_Lich.pdf';
+      let orientation: 'portrait' | 'landscape' = 'portrait';
+
+      if (viewMode === 'team_inventory') {
+        orientation = inventoryOrientation;
+        filename = `Bang_Kiem_Ke_Thiet_Bi_CNS_${new Date().toISOString().split('T')[0]}.pdf`;
+      } else if (viewMode === 'all_logbooks') {
+        orientation = 'portrait';
+        filename = `Gop_Toan_Bo_${effectiveEquipments.length}_So_Ly_Lich.pdf`;
+      } else {
+        orientation = 'portrait';
+        const rawName = data.general?.name || data.id;
+        const safeName = rawName.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_').substring(0, 40);
+        filename = `So_Ly_Lich_${safeName}.pdf`;
+      }
+
+      await pdfExportService.exportElementToPdf(printRef.current, {
+        filename,
+        orientation,
+        marginMm: 0,
+        onProgress: (current, total) => {
+          setExportProgress(`Đang tạo trang ${current}/${total}...`);
+        }
+      });
+      notify('✓ Đã tải file PDF thành công!');
+    } catch (err: any) {
+      console.error('Lỗi xuất PDF:', err);
+      notify('⚠️ Đang mở hộp thoại in trình duyệt để lưu PDF...');
+      window.print();
+    } finally {
+      setIsExportingPdf(false);
+      setExportProgress('');
+    }
+  };
+
+  const handleExportStatisticsExcel = () => {
+    if (!isAdmin) {
+      notify('⚠️ Chức năng xuất file thống kê chỉ dành riêng cho Quản trị viên (Admin)!');
+      return;
+    }
+    try {
+      statisticsExportService.exportToExcel(effectiveEquipments, currentUser);
+      notify(`✓ Đã xuất file thống kê ${effectiveEquipments.length} sổ lý lịch dạng Excel (.xlsx)!`);
+    } catch (err: any) {
+      console.error('Lỗi xuất Excel thống kê:', err);
+      notify('❌ Có lỗi xảy ra khi tạo file Excel thống kê.');
+    }
+  };
+
+  const handleExportStatisticsCsv = () => {
+    if (!isAdmin) {
+      notify('⚠️ Chức năng xuất file thống kê chỉ dành riêng cho Quản trị viên (Admin)!');
+      return;
+    }
+    try {
+      statisticsExportService.exportToCsv(effectiveEquipments);
+      notify(`✓ Đã xuất file thống kê CSV (UTF-8) thành công!`);
+    } catch (err: any) {
+      console.error('Lỗi xuất CSV thống kê:', err);
+      notify('❌ Có lỗi xảy ra khi tạo file CSV.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Toolbar / Action Controls (Hidden on Print) */}
@@ -447,6 +533,27 @@ ${content}
 
             {/* Export Actions */}
             <div className="flex items-center gap-2 flex-wrap">
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={handleExportStatisticsExcel}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold border border-emerald-500/50 shadow-xs transition-colors cursor-pointer"
+                    title="Xuất file báo cáo thống kê chuyên sâu toàn bộ sổ lý lịch ra tệp Microsoft Excel đa trang (.xlsx)"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    <span>Xuất Thống Kê Excel</span>
+                  </button>
+                  <button
+                    onClick={handleExportStatisticsCsv}
+                    className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                    title="Xuất dữ liệu thống kê ra file CSV (UTF-8 BOM)"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Xuất CSV</span>
+                  </button>
+                </>
+              )}
+
               <button
                 onClick={handleCopyInventoryTsv}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
@@ -466,12 +573,31 @@ ${content}
               </button>
 
               <button
+                onClick={handleDownloadDirectPdf}
+                disabled={isExportingPdf}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
+                title="Tải bảng kiểm kê thiết bị trực tiếp dưới dạng tệp tin PDF (.pdf) về máy tính"
+              >
+                {isExportingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>{exportProgress || 'Đang tạo PDF...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-white" />
+                    <span>Tải Bảng PDF (.pdf)</span>
+                  </>
+                )}
+              </button>
+
+              <button
                 onClick={handleDownloadHtml}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
                 title="Tải file HTML bảng kiểm kê hoàn chỉnh để lưu trữ độc lập hoặc mở trên trình duyệt"
               >
                 <Download className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Tải HTML Báo Cáo</span>
+                <span>Tải HTML</span>
               </button>
 
               <button
@@ -480,7 +606,7 @@ ${content}
                 title="Mở hộp thoại in trình duyệt để in trực tiếp hoặc Lưu dưới dạng PDF (Ctrl+P)"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In / Xuất PDF Toàn Đội</span>
+                <span>In A4</span>
               </button>
             </div>
           </div>
@@ -494,10 +620,40 @@ ${content}
               <span>In nối tiếp toàn bộ {effectiveEquipments.length} sổ lý lịch theo chuẩn Form scan 8 trang/sổ.</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {isAdmin && (
+                <button
+                  onClick={handleExportStatisticsExcel}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold border border-emerald-500/50 shadow-xs transition-colors cursor-pointer"
+                  title="Xuất file báo cáo thống kê toàn bộ sổ lý lịch ra Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Xuất Thống Kê Excel</span>
+                </button>
+              )}
+
+              <button
+                onClick={handleDownloadDirectPdf}
+                disabled={isExportingPdf}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
+                title="Tải toàn bộ sổ lý lịch gộp thành một file PDF duy nhất (.pdf)"
+              >
+                {isExportingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>{exportProgress || 'Đang tạo PDF...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-white" />
+                    <span>Tải PDF Gộp (.pdf)</span>
+                  </>
+                )}
+              </button>
+
               <button
                 onClick={handleDownloadHtml}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Tải HTML Toàn Bộ Sổ</span>
@@ -508,7 +664,7 @@ ${content}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In / Xuất PDF Gộp ({effectiveEquipments.length} Sổ)</span>
+                <span>In A4</span>
               </button>
             </div>
           </div>
@@ -574,16 +730,36 @@ ${content}
                 href={data.googleDocUrl || `https://docs.google.com/document/create?title=${encodeURIComponent('Sổ_Lý_Lịch_' + (data.general?.name || data.id))}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 title="Mở tài liệu Google Docs trực tuyến"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Mở Google Docs</span>
+                <span>Google Docs</span>
               </a>
+
+              {/* Direct PDF Download Button */}
+              <button
+                onClick={handleDownloadDirectPdf}
+                disabled={isExportingPdf}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
+                title="Tải sổ lý lịch thiết bị dưới dạng tệp tin PDF (.pdf) chuẩn A4"
+              >
+                {isExportingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>{exportProgress || 'Đang tạo PDF...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-white" />
+                    <span>Tải Sổ PDF (.pdf)</span>
+                  </>
+                )}
+              </button>
 
               <button
                 onClick={handleDownloadHtml}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
+                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
                 title="Tải file HTML nguyên bản để lưu trữ hoặc in độc lập"
               >
                 <Download className="w-3.5 h-3.5 text-blue-400" />
@@ -593,9 +769,10 @@ ${content}
               <button
                 onClick={handlePrint}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+                title="Mở hộp thoại in trình duyệt để in ấn trực tiếp hoặc Lưu thành file PDF (Ctrl+P)"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In / Xuất PDF (Ctrl+P)</span>
+                <span>In A4</span>
               </button>
             </div>
           </div>
