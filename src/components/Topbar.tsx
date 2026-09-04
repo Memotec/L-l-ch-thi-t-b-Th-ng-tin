@@ -281,20 +281,20 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
             <span>Lưu hồ sơ</span>
           </button>
 
-          {/* Delete Equipment Button (Admin Only or Login Trigger) */}
-          {onDeleteEquipment && (
+          {/* Delete Equipment Button (Admin Only) */}
+          {isAdmin && onDeleteEquipment && (
             <button
               onClick={onDeleteEquipment}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold border border-rose-800/50 transition-all cursor-pointer"
-              title="Chuyển sổ lý lịch thiết bị này vào Thùng rác"
+              title="Chuyển sổ lý lịch thiết bị này vào Thùng rác (Chỉ Admin)"
             >
               <Trash2 className="w-3.5 h-3.5 text-rose-400" />
               <span className="hidden sm:inline">Xóa sổ</span>
             </button>
           )}
 
-          {/* Recycle Bin / Trash Button */}
-          {onOpenTrash && (
+          {/* Recycle Bin / Trash Button (Admin Only) */}
+          {isAdmin && onOpenTrash && (
             <button
               onClick={onOpenTrash}
               className="relative flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition-all cursor-pointer"

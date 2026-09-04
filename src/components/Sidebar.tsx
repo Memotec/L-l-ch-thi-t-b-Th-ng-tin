@@ -260,7 +260,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             </div>
 
             {/* Admin Quick Equipment Actions */}
-            <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-800 text-[10px]">
+            <div className={`flex items-center ${isAdmin ? 'justify-between' : 'justify-end'} gap-1 pt-1 border-t border-slate-800 text-[10px]`}>
               <button
                 onClick={onCloneEquipment}
                 className="flex items-center gap-1 px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors cursor-pointer"
@@ -270,14 +270,16 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 <span>Nhân bản</span>
               </button>
 
-              <button
-                onClick={() => onDeleteEquipment && onDeleteEquipment()}
-                className="flex items-center gap-1 px-1.5 py-0.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded border border-rose-800/40 transition-colors cursor-pointer font-medium"
-                title="Xóa vĩnh viễn sổ lý lịch thiết bị này (Chỉ Admin)"
-              >
-                <Trash2 className="w-2.5 h-2.5 text-rose-400" />
-                <span>Xóa sổ</span>
-              </button>
+              {isAdmin && onDeleteEquipment && (
+                <button
+                  onClick={() => onDeleteEquipment()}
+                  className="flex items-center gap-1 px-1.5 py-0.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded border border-rose-800/40 transition-colors cursor-pointer font-medium"
+                  title="Chuyển sổ lý lịch thiết bị này vào Thùng rác (Chỉ Admin)"
+                >
+                  <Trash2 className="w-2.5 h-2.5 text-rose-400" />
+                  <span>Xóa sổ</span>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -299,8 +301,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           </button>
         )}
 
-        {/* Quick Trash / Recycle Bin Trigger */}
-        {onOpenTrash && (
+        {/* Quick Trash / Recycle Bin Trigger (Admin Only) */}
+        {isAdmin && onOpenTrash && (
           <button
             onClick={onOpenTrash}
             className="w-full flex items-center justify-between px-2.5 py-1.5 bg-[#0F172A] hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-700 text-xs font-medium transition-all cursor-pointer group"

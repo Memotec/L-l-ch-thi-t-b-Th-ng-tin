@@ -594,6 +594,18 @@ export default function App() {
     });
   }, [trashList, equipments, currentUser, showToast]);
 
+  const isAdmin = useMemo(() => currentUser.role === 'admin', [currentUser.role]);
+
+  // Handler to open Trash / Recycle Bin with strict Admin validation
+  const handleOpenTrash = useCallback(() => {
+    if (currentUser.role !== 'admin') {
+      showToast('⚠️ Quyền truy cập bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền truy cập Thùng Rác!');
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setIsTrashModalOpen(true);
+  }, [currentUser.role, showToast]);
+
   // Export current equipment JSON
   const handleExportCurrent = useCallback(() => {
     const jsonStr = JSON.stringify(currentEquipment, null, 2);
@@ -898,15 +910,15 @@ export default function App() {
         onSelectTab={(tab) => setActiveTab(tab)}
         onNewEquipment={() => setIsNewModalOpen(true)}
         onCloneEquipment={handleCloneCurrent}
-        onDeleteEquipment={handleDeleteCurrent}
+        onDeleteEquipment={isAdmin ? handleDeleteCurrent : undefined}
         onExportCurrent={handleExportCurrent}
         onExportAll={handleExportAll}
         onImportFile={handleImportFile}
         onSaveData={handleManualSave}
         onResetDefaults={handleResetDefaults}
         onOpenSearchModal={() => setIsSearchModalOpen(true)}
-        onOpenTrash={() => setIsTrashModalOpen(true)}
-        trashCount={trashList.length}
+        onOpenTrash={isAdmin ? handleOpenTrash : undefined}
+        trashCount={isAdmin ? trashList.length : 0}
         lastSaved={lastSaved}
       />
 
@@ -925,9 +937,9 @@ export default function App() {
           onOpenGas={() => setActiveTab('settings')}
           onOpenSettings={() => setActiveTab('settings')}
           onOpenPdfModal={() => handleOpenPdfFullScreen(currentEquipment)}
-          onDeleteEquipment={handleDeleteCurrent}
-          onOpenTrash={() => setIsTrashModalOpen(true)}
-          trashCount={trashList.length}
+          onDeleteEquipment={isAdmin ? handleDeleteCurrent : undefined}
+          onOpenTrash={isAdmin ? handleOpenTrash : undefined}
+          trashCount={isAdmin ? trashList.length : 0}
           onResetDefaults={handleResetDefaults}
           searchTerm={searchTerm}
           onSearchChange={(term) => setSearchTerm(term)}
@@ -1074,7 +1086,7 @@ export default function App() {
                   onOpenLoginModal={() => setIsLoginModalOpen(true)}
                   onSaveData={handleManualSave}
                   onCloneEquipment={handleCloneCurrent}
-                  onDeleteEquipment={handleDeleteCurrent}
+                  onDeleteEquipment={isAdmin ? handleDeleteCurrent : undefined}
                   onExportCurrent={handleExportCurrent}
                   onExportAll={handleExportAll}
                   onImportFile={handleImportFile}
@@ -1083,8 +1095,8 @@ export default function App() {
                   onSyncFromGas={handleSyncFromGas}
                   onShowToast={showToast}
                   onNavigateTab={(tab) => setActiveTab(tab)}
-                  onOpenTrash={() => setIsTrashModalOpen(true)}
-                  trashCount={trashList.length}
+                  onOpenTrash={isAdmin ? handleOpenTrash : undefined}
+                  trashCount={isAdmin ? trashList.length : 0}
                 />
               )}
 
@@ -1148,7 +1160,7 @@ export default function App() {
           />
         )}
 
-        {/* Recycle Bin & Restore Modal */}
+        {/* Recycle Bin & Restore Modal (Protected by Admin check) */}
         {isTrashModalOpen && (
           <RecycleBinModal
             isOpen={isTrashModalOpen}
@@ -1158,6 +1170,7 @@ export default function App() {
             onPermanentDeleteItem={handlePermanentDeleteFromTrash}
             onEmptyTrash={handleEmptyTrash}
             currentUser={currentUser}
+            onOpenLoginModal={() => setIsLoginModalOpen(true)}
           />
         )}
 
