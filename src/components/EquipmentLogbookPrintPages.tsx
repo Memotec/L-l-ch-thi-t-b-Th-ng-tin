@@ -73,6 +73,78 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
 
   return (
     <div className="equipment-logbook-container space-y-8 print:space-y-0" key={keyPrefix}>
+      <style>{`
+        .page-sheet {
+          width: 210mm;
+          min-height: 297mm;
+          height: 297mm;
+          margin: 0 auto;
+          background: #ffffff;
+          box-sizing: border-box;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          font-family: "Times New Roman", Times, "Liberation Serif", serif;
+          color: #000000;
+          page-break-after: always;
+          page-break-inside: avoid;
+        }
+        .pdf-table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 1.5px solid #000000;
+          font-size: 11pt;
+          background: #ffffff;
+        }
+        .pdf-table th, .pdf-table td {
+          border: 1px solid #000000;
+          padding: 6px 8px;
+          vertical-align: middle;
+          color: #000000;
+        }
+        .pdf-table th {
+          background-color: #f8fafc;
+          font-weight: bold;
+          text-align: center;
+          text-transform: uppercase;
+        }
+        .page-num {
+          text-align: center;
+          font-size: 12pt;
+          margin-top: auto;
+          padding-top: 6mm;
+          font-weight: normal;
+          color: #000000;
+        }
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .page-sheet {
+            width: 210mm !important;
+            height: 297mm !important;
+            min-height: 297mm !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            page-break-after: always !important;
+            page-break-inside: avoid !important;
+          }
+          .page-sheet:last-child {
+            page-break-after: auto !important;
+          }
+        }
+      `}</style>
+
       {/* ========================================================================= */}
       {/* TRANG 1: BÌA SỔ LÝ LỊCH (EXACT SCAN PAGE 1) */}
       {/* ========================================================================= */}

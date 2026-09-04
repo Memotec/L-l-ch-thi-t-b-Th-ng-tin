@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import { EquipmentData } from '../types';
 
 export interface PdfExportProgress {
@@ -51,19 +51,21 @@ class PdfExportService {
 
     notifyProgress(0, totalPages, `Bắt đầu khởi tạo bản in PDF (${totalPages} trang)...`);
 
+    const firstIsLandscape = pageElements[0]?.classList.contains('page-sheet-landscape') || isLandscape;
     const pdf = new jsPDF({
-      orientation: isLandscape ? 'landscape' : 'portrait',
+      orientation: firstIsLandscape ? 'landscape' : 'portrait',
       unit: 'mm',
       format: 'a4',
       compress: true
     });
 
-    const pageWidthMm = isLandscape ? 297 : 210;
-    const pageHeightMm = isLandscape ? 210 : 297;
-
     for (let i = 0; i < totalPages; i++) {
       const pageEl = pageElements[i];
       const pageNum = i + 1;
+      const isLandscapePage = pageEl.classList.contains('page-sheet-landscape') || 
+        (!pageEl.classList.contains('page-sheet') && isLandscape);
+      const pageWidthMm = isLandscapePage ? 297 : 210;
+      const pageHeightMm = isLandscapePage ? 210 : 297;
 
       notifyProgress(pageNum, totalPages, `Đang kết xuất trang ${pageNum}/${totalPages}...`);
 
@@ -74,14 +76,36 @@ class PdfExportService {
         allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: pageEl.scrollWidth,
-        windowHeight: pageEl.scrollHeight
+        onclone: (_clonedDoc, clonedElement) => {
+          // Reset transform/zoom on clonedElement and all parents up to document body
+          let cur: HTMLElement | null = clonedElement;
+          while (cur && cur !== _clonedDoc.body) {
+            cur.style.transform = 'none';
+            cur.style.transformOrigin = 'top left';
+            cur = cur.parentElement;
+          }
+          // Remove preview-only shadow, border, and margin
+          clonedElement.style.margin = '0 auto';
+          clonedElement.style.boxShadow = 'none';
+          clonedElement.style.border = 'none';
+          clonedElement.style.borderRadius = '0';
+          clonedElement.style.backgroundColor = '#ffffff';
+
+          // Lock to exact standard A4 size
+          if (isLandscapePage) {
+            clonedElement.style.width = '297mm';
+            clonedElement.style.minHeight = '210mm';
+          } else {
+            clonedElement.style.width = '210mm';
+            clonedElement.style.minHeight = '297mm';
+          }
+        }
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 0.96);
 
       if (i > 0) {
-        pdf.addPage('a4', isLandscape ? 'landscape' : 'portrait');
+        pdf.addPage('a4', isLandscapePage ? 'landscape' : 'portrait');
       }
 
       pdf.addImage(
