@@ -987,11 +987,15 @@ export default function App() {
             {activeTab === 'general' && (
               <GeneralTab
                 data={currentEquipment}
+                allEquipments={equipments}
+                onSelectEquipment={(id) => setCurrentId(id)}
                 onChange={handleUpdateCurrent}
                 isReadOnly={isReadOnly}
                 onOpenLoginModal={() => setIsLoginModalOpen(true)}
                 onDeleteEquipment={handleDeleteCurrent}
                 currentUser={currentUser}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
               />
             )}
 

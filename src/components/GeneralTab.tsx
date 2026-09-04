@@ -7,34 +7,64 @@ import {
   Trash2, 
   Globe2, 
   AlertTriangle,
-  Building,
-  User,
-  ShieldCheck,
-  Copy,
-  Check
+  Building, 
+  User, 
+  ShieldCheck, 
+  Copy, 
+  Check, 
+  Radio, 
+  Activity, 
+  Zap, 
+  Server, 
+  PhoneCall, 
+  Layers, 
+  HardDrive, 
+  FileCheck, 
+  Clock, 
+  CheckCircle2,
+  Lock,
+  ChevronDown,
+  ArrowRight,
+  Printer
 } from 'lucide-react';
-import { EquipmentData, LicenseRow, AppUser } from '../types';
+import { 
+  EquipmentData, 
+  EquipmentCategory, 
+  EquipmentStatus, 
+  EquipmentPriority, 
+  LicenseRow, 
+  OrganizationTransferRow, 
+  AppUser 
+} from '../types';
 
 interface GeneralTabProps {
   data: EquipmentData;
+  allEquipments?: EquipmentData[];
+  onSelectEquipment?: (id: string) => void;
   onChange: (updated: EquipmentData) => void;
   isReadOnly?: boolean;
   currentUser?: AppUser;
   onOpenLoginModal?: () => void;
   onDeleteEquipment?: () => void;
+  onNavigateTab?: (tab: string) => void;
+  onOpenPdfModal?: (eq: EquipmentData) => void;
 }
 
 export const GeneralTab: React.FC<GeneralTabProps> = ({ 
   data, 
+  allEquipments,
+  onSelectEquipment,
   onChange,
   isReadOnly = false,
   currentUser,
   onOpenLoginModal,
-  onDeleteEquipment
+  onDeleteEquipment,
+  onNavigateTab,
+  onOpenPdfModal
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const updateGeneral = (field: string, value: string) => {
+  const updateGeneral = (field: string, value: any) => {
     if (isReadOnly) return;
     onChange({
       ...data,
@@ -45,7 +75,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     });
   };
 
-  const updateOrg = (field: string, value: string) => {
+  const updateOrg = (field: string, value: any) => {
     if (isReadOnly) return;
     onChange({
       ...data,
@@ -56,6 +86,36 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     });
   };
 
+  // Trang 2: Quá trình luân chuyển & bàn giao đơn vị quản lý qua các thời kỳ (orgRows)
+  const addOrgRow = () => {
+    if (isReadOnly) return;
+    const newRow: OrganizationTransferRow = {
+      id: `org-row-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      unit: '',
+      handoverDocNo: '',
+      status: 'Tốt, đủ điều kiện khai thác'
+    };
+    onChange({
+      ...data,
+      orgRows: [...(data.orgRows || []), newRow]
+    });
+  };
+
+  const updateOrgRow = (index: number, field: keyof OrganizationTransferRow, value: string) => {
+    if (isReadOnly) return;
+    const updatedRows = [...(data.orgRows || [])];
+    updatedRows[index] = { ...updatedRows[index], [field]: value };
+    onChange({ ...data, orgRows: updatedRows });
+  };
+
+  const removeOrgRow = (index: number) => {
+    if (isReadOnly) return;
+    const updatedRows = (data.orgRows || []).filter((_, i) => i !== index);
+    onChange({ ...data, orgRows: updatedRows });
+  };
+
+  // Trang 3: Giấy phép / chứng nhận chuyên ngành (licenses)
   const addLicense = () => {
     if (isReadOnly) return;
     const newLic: LicenseRow = {
@@ -68,20 +128,20 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     };
     onChange({
       ...data,
-      licenses: [...data.licenses, newLic]
+      licenses: [...(data.licenses || []), newLic]
     });
   };
 
   const updateLicense = (index: number, field: keyof LicenseRow, value: any) => {
     if (isReadOnly) return;
-    const newLicenses = [...data.licenses];
+    const newLicenses = [...(data.licenses || [])];
     newLicenses[index] = { ...newLicenses[index], [field]: value };
     onChange({ ...data, licenses: newLicenses });
   };
 
   const removeLicense = (index: number) => {
     if (isReadOnly) return;
-    const newLicenses = data.licenses.filter((_, i) => i !== index);
+    const newLicenses = (data.licenses || []).filter((_, i) => i !== index);
     onChange({ ...data, licenses: newLicenses });
   };
 
@@ -92,7 +152,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  // Check calibration countdown
+  // Calibration alert computation
   const getCalibrationCountdown = () => {
     if (!data.general.nextCalDate) return null;
     const target = new Date(data.general.nextCalDate).getTime();
@@ -103,27 +163,139 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
 
   const daysUntilCal = getCalibrationCountdown();
 
+  const getCategoryIcon = (category: EquipmentCategory) => {
+    switch (category) {
+      case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-500" />;
+      case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-500" />;
+      case 'VIBA': return <Activity className="w-4 h-4 text-emerald-500" />;
+      case 'VSAT': return <Radio className="w-4 h-4 text-sky-500" />;
+      case 'VCCS':
+      case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-500" />;
+      case 'POWER': return <Zap className="w-4 h-4 text-yellow-500" />;
+      case 'IT': return <Server className="w-4 h-4 text-purple-500" />;
+      default: return <HardDrive className="w-4 h-4 text-slate-500" />;
+    }
+  };
+
+  const getStatusBadgeColor = (status?: EquipmentStatus) => {
+    switch (status) {
+      case 'Đang khai thác': return 'bg-emerald-50 text-emerald-700 border-emerald-300';
+      case 'Dự phòng sẵn sàng': return 'bg-blue-50 text-blue-700 border-blue-300';
+      case 'Đang bảo dưỡng/sửa chữa': return 'bg-amber-50 text-amber-700 border-amber-300';
+      case 'Tạm ngừng khai thác': return 'bg-rose-50 text-rose-700 border-rose-300';
+      case 'Đã thanh lý': return 'bg-slate-100 text-slate-700 border-slate-300';
+      default: return 'bg-slate-50 text-slate-700 border-slate-300';
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Read-Only Notice for Viewer */}
-      {isReadOnly && (
-        <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 text-xs text-blue-900">
-            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">
-              CHỈ XEM (VIEWER)
-            </span>
-            <span>Bạn đang ở chế độ xem thông tin chung. Để sửa các trường dữ liệu pháp lý & tổ chức, vui lòng đăng nhập Quản trị viên.</span>
+      {/* Top Equipment Banner & Admin Status */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl shrink-0 mt-0.5 shadow-2xs">
+              {getCategoryIcon(data.general.category)}
+            </div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">
+                  {data.general.category}
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadgeColor(data.general.status)}`}>
+                  {data.general.status || 'Đang khai thác'}
+                </span>
+                {data.general.priority && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    {data.general.priority}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-lg font-bold text-slate-900 leading-tight">
+                {data.general.name}
+              </h1>
+              <p className="text-xs text-slate-500 font-mono flex flex-wrap items-center gap-2">
+                <span>Model: <b className="text-slate-700">{data.general.model || '---'}</b></span>
+                <span>•</span>
+                <span>Serial: <b className="text-blue-700">{data.general.serial || '---'}</b></span>
+                <span>•</span>
+                <span>Vị trí: <b className="text-slate-700">{data.org.location || data.org.unit || '---'}</b></span>
+              </p>
+            </div>
           </div>
-          {onOpenLoginModal && (
-            <button
-              onClick={onOpenLoginModal}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-all shrink-0 cursor-pointer shadow-xs"
-            >
-              Đăng nhập Admin
-            </button>
+
+          {/* Controls & Equipment Switcher */}
+          <div className="flex flex-wrap items-center gap-2 self-end lg:self-center">
+            {allEquipments && allEquipments.length > 1 && onSelectEquipment && (
+              <div className="relative">
+                <select
+                  value={data.id}
+                  onChange={(e) => onSelectEquipment(e.target.value)}
+                  className="pl-3 pr-8 py-1.5 text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl cursor-pointer transition-all"
+                  title="Chuyển sang sổ lý lịch thiết bị khác"
+                >
+                  {allEquipments.map(eq => (
+                    <option key={eq.id} value={eq.id}>
+                      {eq.general.name} ({eq.general.serial || eq.general.model || eq.general.category})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {onOpenPdfModal && (
+              <button
+                type="button"
+                onClick={() => onOpenPdfModal(data)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                title="Xem & Tải tệp PDF Sổ Lý Lịch tiêu chuẩn A4"
+              >
+                <Printer className="w-3.5 h-3.5 text-blue-600" />
+                <span>Xem & Tải Sổ PDF</span>
+              </button>
+            )}
+
+            {onDeleteEquipment && !isReadOnly && (
+              <button
+                type="button"
+                onClick={onDeleteEquipment}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200 transition-all cursor-pointer shadow-xs"
+                title="Chuyển sổ lý lịch này vào thùng rác"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Xóa Sổ</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Editing Permission Banner */}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          {!isReadOnly ? (
+            <div className="flex items-center gap-2 text-emerald-700 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="font-bold">Quyền Quản Trị Viên (Admin):</span>
+              <span>Đang mở Sổ lý lịch chi tiết. Bạn có thể sửa trực tiếp tất cả các trường thông tin bên dưới (hệ thống tự động lưu).</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between w-full gap-2">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Lock className="w-3.5 h-3.5 text-slate-400" />
+                <span>Chế độ Người Xem (Viewer) - Các trường đang ở trạng thái chỉ đọc. Đăng nhập Admin để sửa.</span>
+              </div>
+              {onOpenLoginModal && (
+                <button
+                  type="button"
+                  onClick={onOpenLoginModal}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs shrink-0"
+                >
+                  Đăng nhập Admin để sửa
+                </button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Calibration Alert Ribbon if within 30 days or overdue */}
       {daysUntilCal !== null && daysUntilCal <= 30 && (
@@ -139,39 +311,42 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
         </div>
       )}
 
-      {/* 1. Technical Origin & Timelines */}
+      {/* SECTION 1: TRANG BÌA & ĐỊNH DANH THIẾT BỊ CNS */}
       <div className="enterprise-card p-6">
         <div className="border-b border-slate-200 pb-3 mb-5 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-600" />
-              1. Chi tiết Sơ lược Thiết bị & Các mốc thời gian pháp lý
+              1. Thông Tin Định Danh & Phân Loại Chủng Loại Thiết Bị (Trang Bìa)
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Thông tin xuất xứ, năm sản xuất và các mốc thời gian nghiệm thu đưa vào khai thác</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {onDeleteEquipment && (
-              <button
-                onClick={onDeleteEquipment}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 transition-all cursor-pointer shadow-xs"
-                title="Xóa sổ lý lịch thiết bị này"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                <span>Xóa Sổ Lý Lịch</span>
-              </button>
-            )}
-            {isReadOnly && (
-              <span className="text-xs font-medium text-slate-500 px-2.5 py-1 bg-slate-100 rounded-md border border-slate-200">
-                Khóa chỉnh sửa
-              </span>
-            )}
+            <p className="text-xs text-slate-500 mt-0.5">Xác lập chủng loại CNS, mã tài sản quản lý, model, số serial và mức độ ưu tiên vận hành</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800">Chủng loại thiết bị CNS *</label>
+            <select
+              disabled={isReadOnly}
+              value={data.general.category}
+              onChange={(e) => updateGeneral('category', e.target.value as EquipmentCategory)}
+              className="form-input-standard font-semibold text-blue-900"
+            >
+              <option value="VHF/UHF">VHF/UHF Air-Ground Radio</option>
+              <option value="Ghép Kênh">Ghép Kênh / Multiplexer</option>
+              <option value="VIBA">Viba / Microwave Viễn thông</option>
+              <option value="VSAT">VSAT Vệ tinh Hàng không</option>
+              <option value="VCCS">VCCS / Chuyển mạch thoại</option>
+              <option value="VOICE">VOICE / Ghi âm không lưu</option>
+              <option value="POWER">Hệ thống Nguồn điện / UPS</option>
+              <option value="IT">Mạng IT / Máy chủ CNS</option>
+              <option value="Thiết Bị Khác">Thiết Bị Khác / Máy đo</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5 md:col-span-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-slate-700">Tên thiết bị</label>
+              <label className="text-xs font-bold text-slate-800">Tên thiết bị đầy đủ *</label>
               {data.general.name && (
                 <button
                   type="button"
@@ -188,24 +363,42 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               disabled={isReadOnly}
               value={data.general.name}
               onChange={(e) => updateGeneral('name', e.target.value)}
-              className="form-input-standard font-semibold"
+              className="form-input-standard font-semibold text-slate-900"
+              placeholder="VD: Máy thu phát VHF Air-Ground Park Air T6T Kênh Chính"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Hãng sản xuất</label>
+            <label className="text-xs font-bold text-slate-800">Trạng thái khai thác</label>
+            <select
+              disabled={isReadOnly}
+              value={data.general.status || 'Đang khai thác'}
+              onChange={(e) => updateGeneral('status', e.target.value as EquipmentStatus)}
+              className="form-input-standard font-medium"
+            >
+              <option value="Đang khai thác">Đang khai thác</option>
+              <option value="Dự phòng sẵn sàng">Dự phòng sẵn sàng</option>
+              <option value="Đang bảo dưỡng/sửa chữa">Đang bảo dưỡng/sửa chữa</option>
+              <option value="Tạm ngừng khai thác">Tạm ngừng khai thác</option>
+              <option value="Đã thanh lý">Đã thanh lý</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800">Hãng sản xuất</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.general.manufacturer}
               onChange={(e) => updateGeneral('manufacturer', e.target.value)}
               className="form-input-standard"
+              placeholder="VD: Park Air Systems / Jotron"
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-slate-700">Kiểu loại (Model)</label>
+              <label className="text-xs font-bold text-slate-800">Kiểu loại (Model)</label>
               {data.general.model && (
                 <button
                   type="button"
@@ -223,24 +416,13 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               value={data.general.model}
               onChange={(e) => updateGeneral('model', e.target.value)}
               className="form-input-standard font-mono"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Năm sản xuất</label>
-            <input
-              type="text"
-              disabled={isReadOnly}
-              placeholder="VD: 2020"
-              value={data.general.yearMade || ''}
-              onChange={(e) => updateGeneral('yearMade', e.target.value)}
-              className="form-input-standard"
+              placeholder="VD: T6T"
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-slate-700">Số Serial / Part No</label>
+              <label className="text-xs font-bold text-slate-800">Số Serial / Part No</label>
               {data.general.serial && (
                 <button
                   type="button"
@@ -258,18 +440,19 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               value={data.general.serial}
               onChange={(e) => updateGeneral('serial', e.target.value)}
               className="form-input-standard font-mono font-semibold text-blue-600"
+              placeholder="VD: PA-SN-998822"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <Globe2 className="w-3.5 h-3.5 text-blue-600" />
-              Xuất xứ (Country of Origin)
+              Xuất xứ (Nước SX)
             </label>
             <input
               type="text"
               disabled={isReadOnly}
-              placeholder="UK / France / USA / Japan / Italy / Israel..."
+              placeholder="Vương Quốc Anh / Pháp / Mỹ..."
               value={data.general.origin || ''}
               onChange={(e) => updateGeneral('origin', e.target.value)}
               className="form-input-standard"
@@ -277,99 +460,132 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
-              Ngày đưa vào khai thác chính thức
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-800">Mã tài sản quản lý (Asset No)</label>
+              {data.general.assetNo && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(data.general.assetNo || '', 'assetNo')}
+                  className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedKey === 'assetNo' ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
+                  <span>{copiedKey === 'assetNo' ? 'Đã sao chép' : 'Sao chép'}</span>
+                </button>
+              )}
+            </div>
             <input
-              type="date"
+              type="text"
               disabled={isReadOnly}
-              value={data.general.commissioned || ''}
-              onChange={(e) => updateGeneral('commissioned', e.target.value)}
+              value={data.general.assetNo || ''}
+              onChange={(e) => updateGeneral('assetNo', e.target.value)}
+              className="form-input-standard font-mono"
+              placeholder="VD: TS-VHF-2023-01"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800">Mã nội bộ trạm / Đài (Asset Code)</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              value={data.general.assetCode || ''}
+              onChange={(e) => updateGeneral('assetCode', e.target.value)}
+              className="form-input-standard font-mono"
+              placeholder="VD: VHF-NB-01"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800">Phân nhóm thiết bị (Mức ưu tiên)</label>
+            <select
+              disabled={isReadOnly}
+              value={data.general.priority || 'Hệ thống chính (Level 1)'}
+              onChange={(e) => updateGeneral('priority', e.target.value as EquipmentPriority)}
+              className="form-input-standard font-medium"
+            >
+              <option value="Hệ thống chính (Level 1)">Hệ thống chính (Level 1)</option>
+              <option value="Hệ thống dự phòng nóng (Level 2)">Hệ thống dự phòng nóng (Level 2)</option>
+              <option value="Hệ thống phụ trợ (Level 3)">Hệ thống phụ trợ (Level 3)</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800">Năm sản xuất</label>
+            <input
+              type="text"
+              disabled={isReadOnly}
+              placeholder="VD: 2021"
+              value={data.general.yearMade || ''}
+              onChange={(e) => updateGeneral('yearMade', e.target.value)}
               className="form-input-standard"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
-              Ngày nghiệm thu bàn giao
-            </label>
+            <label className="text-xs font-bold text-slate-800">Tuổi thọ thiết kế ước tính (Năm)</label>
             <input
-              type="date"
+              type="number"
+              min="1"
+              max="50"
               disabled={isReadOnly}
-              value={data.general.acceptanceDate || ''}
-              onChange={(e) => updateGeneral('acceptanceDate', e.target.value)}
+              value={data.general.estimatedLifespanYears || 10}
+              onChange={(e) => updateGeneral('estimatedLifespanYears', parseInt(e.target.value) || 10)}
               className="form-input-standard"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-blue-600" />
-              Thời hạn bảo hành của hãng đến
-            </label>
+          <div className="space-y-1.5 md:col-span-3">
+            <label className="text-xs font-bold text-slate-800">Ghi chú mục đích sử dụng / Đặc thù vận hành</label>
             <input
-              type="date"
+              type="text"
               disabled={isReadOnly}
-              value={data.general.warrantyDate || ''}
-              onChange={(e) => updateGeneral('warrantyDate', e.target.value)}
+              value={data.general.notes || ''}
+              onChange={(e) => updateGeneral('notes', e.target.value)}
               className="form-input-standard"
-            />
-          </div>
-
-          <div className="space-y-1.5 md:col-span-2">
-            <label className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-amber-600" />
-              Kỳ hạn kiểm định / Hiệu chuẩn tiếp theo
-            </label>
-            <input
-              type="date"
-              disabled={isReadOnly}
-              value={data.general.nextCalDate || ''}
-              onChange={(e) => updateGeneral('nextCalDate', e.target.value)}
-              className="form-input-standard font-semibold text-amber-700 md:w-1/3"
+              placeholder="VD: Phục vụ điều hành bay tiếp cận ACC / Đài Kiểm soát không lưu"
             />
           </div>
         </div>
       </div>
 
-      {/* Organizational Ownership & Management Units */}
+      {/* SECTION 2: CƠ QUAN QUẢN LÝ, VỊ TRÍ & NHÂN SỰ */}
       <div className="enterprise-card p-6">
         <div className="border-b border-slate-200 pb-3 mb-5">
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Building className="w-5 h-5 text-blue-600" />
-            Cơ quan Quản lý, Vị trí lắp đặt & Nhân sự chịu trách nhiệm
+            2. Cơ Quan Quản Lý, Vị Trí Lắp Đặt & Nhân Sự Chịu Trách Nhiệm
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">Phân cấp quản lý tài sản theo hệ thống Tổng công ty Quản lý bay Việt Nam</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Đơn vị quản lý cấp trên (Công ty / Trung tâm)</label>
+            <label className="text-xs font-bold text-slate-800">Đơn vị quản lý cấp trên (Công ty / Trung tâm)</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.org.companyName || ''}
               onChange={(e) => updateOrg('companyName', e.target.value)}
               className="form-input-standard font-semibold"
+              placeholder="VD: Tổng công ty Quản lý bay Việt Nam / Công ty QLB Miền Bắc"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Bộ phận / Đội / Đài kỹ thuật trực tiếp</label>
+            <label className="text-xs font-bold text-slate-800">Bộ phận / Đội / Đài kỹ thuật trực tiếp *</label>
             <input
               type="text"
               disabled={isReadOnly}
               value={data.org.unit || ''}
               onChange={(e) => updateOrg('unit', e.target.value)}
               className="form-input-standard"
+              placeholder="VD: Đài KSKL Nội Bài / Đội Kỹ thuật CNS"
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-slate-700">Vị trí lắp đặt / Trạm / Phòng máy</label>
+              <label className="text-xs font-bold text-slate-800">Vị trí lắp đặt / Trạm / Phòng máy / Rack U *</label>
               {data.org.location && (
                 <button
                   type="button"
@@ -387,15 +603,16 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               value={data.org.location || ''}
               onChange={(e) => updateOrg('location', e.target.value)}
               className="form-input-standard font-semibold text-slate-900"
+              placeholder="VD: Phòng thiết bị Tầng 3 - Đài KSKL Nội Bài, Rack CNS-02, U12-U14"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Số điện thoại liên hệ / Trực ban kỹ thuật</label>
+            <label className="text-xs font-bold text-slate-800">Số điện thoại liên hệ / Trực ban kỹ thuật</label>
             <input
               type="text"
               disabled={isReadOnly}
-              placeholder="VD: 028.38485383 - Ext 123"
+              placeholder="VD: 024.38865xxx - Ext 123"
               value={data.org.phoneContact || ''}
               onChange={(e) => updateOrg('phoneContact', e.target.value)}
               className="form-input-standard font-mono"
@@ -403,23 +620,23 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Kỹ sư chính phụ trách trang thiết bị</label>
+            <label className="text-xs font-bold text-slate-800">Kỹ sư chính phụ trách trang thiết bị</label>
             <input
               type="text"
               disabled={isReadOnly}
-              placeholder="VD: Kỹ sư Nguyễn Văn A"
+              placeholder="VD: KS. Nguyễn Văn A (Chứng chỉ CNS-VHF)"
               value={data.org.primaryEngineer || ''}
               onChange={(e) => updateOrg('primaryEngineer', e.target.value)}
               className="form-input-standard"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700">Cán bộ phụ trách / Đội trưởng</label>
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-xs font-bold text-slate-800">Cán bộ phụ trách / Đội trưởng</label>
             <input
               type="text"
               disabled={isReadOnly}
-              placeholder="VD: Trưởng đài / Đội trưởng"
+              placeholder="VD: Trưởng đài KSKL / Đội trưởng Đội Thiết bị CNS"
               value={data.org.supervisor || ''}
               onChange={(e) => updateOrg('supervisor', e.target.value)}
               className="form-input-standard"
@@ -428,20 +645,192 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
         </div>
       </div>
 
-      {/* 2. Specialized Licenses and Certificates */}
+      {/* SECTION 3: TRANG 2 SỔ LÝ LỊCH - QUÁ TRÌNH LUÂN CHUYỂN & BÀN GIAO */}
+      <div className="enterprise-card p-6">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-5">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-blue-600" />
+              3. Quá Trình Luân Chuyển & Bàn Giao Đơn Vị Quản Lý (Trang 2 Sổ Lý Lịch)
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">Ghi nhận lịch sử điều chuyển, bàn giao giữa các đơn vị, trạm đài qua các thời kỳ</p>
+          </div>
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={addOrgRow}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-blue-600" />
+              <span>Thêm dòng bàn giao</span>
+            </button>
+          )}
+        </div>
+
+        <div className="border border-slate-200 rounded-xl overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse min-w-[750px]">
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
+              <tr>
+                <th className="p-2.5 w-36">Ngày tháng</th>
+                <th className="p-2.5 w-56">Đơn vị bàn giao / Tiếp nhận</th>
+                <th className="p-2.5 w-52">Số biên bản / Quyết định</th>
+                <th className="p-2.5">Tình trạng thiết bị khi bàn giao</th>
+                {!isReadOnly && <th className="p-2.5 w-12 text-center">Xóa</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {(!data.orgRows || data.orgRows.length === 0) ? (
+                <tr>
+                  <td colSpan={!isReadOnly ? 5 : 4} className="p-5 text-center text-slate-500 italic bg-white">
+                    Chưa có ghi nhận luân chuyển bàn giao nào. Bấm "Thêm dòng bàn giao" để bổ sung lịch sử Trang 2 của Sổ.
+                  </td>
+                </tr>
+              ) : (
+                data.orgRows.map((row, idx) => (
+                  <tr key={row.id || idx} className="hover:bg-slate-50 bg-white">
+                    <td className="p-2">
+                      <input
+                        type="date"
+                        disabled={isReadOnly}
+                        value={row.date}
+                        onChange={(e) => updateOrgRow(idx, 'date', e.target.value)}
+                        className="form-input-standard font-mono"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="VD: Đội CNS bàn giao sang Đài KSKL..."
+                        value={row.unit}
+                        onChange={(e) => updateOrgRow(idx, 'unit', e.target.value)}
+                        className="form-input-standard"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="VD: BB-BG/2023/CNS-01"
+                        value={row.handoverDocNo}
+                        onChange={(e) => updateOrgRow(idx, 'handoverDocNo', e.target.value)}
+                        className="form-input-standard font-mono text-blue-600"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        disabled={isReadOnly}
+                        placeholder="VD: Tốt, hoạt động bình thường, kèm 02 khối nguồn"
+                        value={row.status}
+                        onChange={(e) => updateOrgRow(idx, 'status', e.target.value)}
+                        className="form-input-standard"
+                      />
+                    </td>
+                    {!isReadOnly && (
+                      <td className="p-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeOrgRow(idx)}
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                          title="Xóa dòng này"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* SECTION 4: MỐC THỜI GIAN PHÁP LÝ & KIỂM ĐỊNH */}
+      <div className="enterprise-card p-6">
+        <div className="border-b border-slate-200 pb-3 mb-5">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            4. Các Mốc Thời Gian Pháp Lý, Bảo Hành & Kiểm Định Kỹ Thuật
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">Thời hạn vận hành, ngày nghiệm thu bàn giao và chu kỳ kiểm định / hiệu chuẩn</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              Ngày đưa vào khai thác chính thức
+            </label>
+            <input
+              type="date"
+              disabled={isReadOnly}
+              value={data.general.commissioned || ''}
+              onChange={(e) => updateGeneral('commissioned', e.target.value)}
+              className="form-input-standard"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              Ngày nghiệm thu bàn giao
+            </label>
+            <input
+              type="date"
+              disabled={isReadOnly}
+              value={data.general.acceptanceDate || ''}
+              onChange={(e) => updateGeneral('acceptanceDate', e.target.value)}
+              className="form-input-standard"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              Thời hạn bảo hành của hãng đến
+            </label>
+            <input
+              type="date"
+              disabled={isReadOnly}
+              value={data.general.warrantyDate || ''}
+              onChange={(e) => updateGeneral('warrantyDate', e.target.value)}
+              className="form-input-standard"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 text-amber-800">
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+              Kỳ hạn kiểm định / Hiệu chuẩn tiếp theo
+            </label>
+            <input
+              type="date"
+              disabled={isReadOnly}
+              value={data.general.nextCalDate || ''}
+              onChange={(e) => updateGeneral('nextCalDate', e.target.value)}
+              className="form-input-standard font-semibold text-amber-700 border-amber-300 focus:border-amber-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 5: GIẤY PHÉP / CHỨNG NHẬN CHUYÊN NGÀNH (TRANG 3 SỔ LÝ LỊCH) */}
       <div className="enterprise-card p-6">
         <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-5">
           <div>
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Award className="w-5 h-5 text-blue-600" />
-              Giấy phép / Chứng nhận chuyên ngành liên quan
+              5. Giấy Phép & Chứng Nhận Chuyên Ngành Hàng Không (Trang 3 Sổ Lý Lịch)
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">Giấy phép sử dụng tần số vô tuyến điện, Giấy chứng nhận đủ điều kiện bảo đảm hoạt động bay</p>
           </div>
           {!isReadOnly && (
             <button
+              type="button"
               onClick={addLicense}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-blue-600" />
               <span>Thêm giấy phép</span>
@@ -449,7 +838,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           )}
         </div>
 
-        <div className="border border-slate-200 rounded-lg overflow-x-auto">
+        <div className="border border-slate-200 rounded-xl overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse min-w-[700px]">
             <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
               <tr>
@@ -462,10 +851,10 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {data.licenses.length === 0 ? (
+              {(!data.licenses || data.licenses.length === 0) ? (
                 <tr>
                   <td colSpan={isReadOnly ? 5 : 6} className="p-4 text-center text-slate-500 italic bg-white">
-                    Chưa có dữ liệu giấy phép chuyên ngành.
+                    Chưa có dữ liệu giấy phép chuyên ngành. Bấm "Thêm giấy phép" để bổ sung.
                   </td>
                 </tr>
               ) : (
@@ -523,8 +912,9 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                     {!isReadOnly && (
                       <td className="p-2 text-center">
                         <button
+                          type="button"
                           onClick={() => removeLicense(idx)}
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
                           title="Xóa giấy phép này"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -538,6 +928,37 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           </table>
         </div>
       </div>
+
+      {/* QUICK JUMP TO OTHER LOGBOOK SECTIONS */}
+      {onNavigateTab && (
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Các phần nội dung khác của Sổ Lý Lịch ({data.general.name})
+            </h3>
+            <span className="text-xs text-slate-500">Chuyển trang nhanh</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {[
+              { id: 'spec', label: '2. Đặc Tính Kỹ Thuật' },
+              { id: 'components', label: '3. Khối & Linh Kiện' },
+              { id: 'docs', label: '4. Tài Liệu Kỹ Thuật' },
+              { id: 'maintenance', label: '5. Lịch Sử Bảo Dưỡng' },
+              { id: 'repair', label: '6. Sửa Chữa & Sự Cố' },
+              { id: 'notes', label: '7. Ghi Chú & Lưu Ý' }
+            ].map(sec => (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => onNavigateTab(sec.id)}
+                className="px-3 py-2 bg-white hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 transition-all cursor-pointer text-center shadow-2xs"
+              >
+                {sec.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

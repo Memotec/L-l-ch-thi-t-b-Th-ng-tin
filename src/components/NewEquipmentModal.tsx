@@ -127,7 +127,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {/* Category Select */}
           <div className="space-y-1.5">
-            <label className="font-bold text-slate-900 block">Chủng loại thiết bị CNS *</label>
+            <label className="font-bold text-slate-900 block">Chủng loại thiết bị*</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'VHF/UHF', label: 'VHF / UHF Radio', icon: Radio },
@@ -135,7 +135,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
                 { id: 'VOICE', label: 'VCS / Thoại', icon: PhoneCall },
                 { id: 'POWER', label: 'UPS / Nguồn Điện', icon: Zap },
                 { id: 'IT', label: 'NMS / Mạng IT', icon: Server },
-                { id: 'OTHER', label: 'Khác (Radar/DVOR)', icon: HardDrive }
+                { id: 'OTHER', label: 'Khác (Thiết bị đo...)', icon: HardDrive }
               ].map((item) => {
                 const Icon = item.icon;
                 return (

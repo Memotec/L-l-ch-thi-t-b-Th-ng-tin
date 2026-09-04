@@ -13,9 +13,10 @@ export type EquipmentCategory =
   | 'VOICE' 
   | 'POWER' 
   | 'IT'  
-  | 'RADAR_ADS' 
-  | 'NAV' 
-  | 'Thiết Bị Khác';
+  | 'OTHER'
+  | 'Thiết Bị Khác'
+  | 'RADAR_ADS'
+  | 'NAV';
 
 export type EquipmentStatus = 
   | 'Đang khai thác' 
