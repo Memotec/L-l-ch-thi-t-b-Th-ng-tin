@@ -2,7 +2,7 @@
   "entities": {
     "Equipment": {
       "title": "Equipment",
-      "description": "Thực thể hồ sơ Sổ Lý Lịch Thiết Bị Kỹ Thuật (CNS/ATM)",
+      "description": "hồ sơ Sổ Lý Lịch Thiết Bị Kỹ Thuật (CNS/ATM)",
       "type": "object",
       "properties": {
         "id": {
