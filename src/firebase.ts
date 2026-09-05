@@ -75,7 +75,9 @@ export async function testFirestoreConnection(): Promise<boolean> {
     console.log('Firebase Firestore connection verified successfully.');
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
+    if (error instanceof Error && error.message.includes('Quota exceeded')) {
+      console.warn('Firebase Firestore daily quota exceeded. App seamlessly operating in offline local mode.');
+    } else if (error instanceof Error && error.message.includes('the client is offline')) {
       console.warn('Firebase client is offline. Verify configuration or network connectivity.');
     } else {
       console.log('Firestore initialized with project:', firebaseConfig.projectId);
@@ -190,8 +192,24 @@ export const firestoreService = {
         onUpdate(items);
       },
       (error) => {
+        const errInfo: FirestoreErrorInfo = {
+          error: error instanceof Error ? error.message : String(error),
+          authInfo: {
+            userId: auth.currentUser?.uid,
+            email: auth.currentUser?.email,
+            emailVerified: auth.currentUser?.emailVerified,
+            isAnonymous: auth.currentUser?.isAnonymous,
+            tenantId: auth.currentUser?.tenantId,
+            providerInfo: auth.currentUser?.providerData?.map(provider => ({
+              providerId: provider.providerId,
+              email: provider.email,
+            })) || []
+          },
+          operationType: OperationType.GET,
+          path: pathStr
+        };
+        console.error('Firestore Error:', JSON.stringify(errInfo));
         if (onError) onError(error);
-        handleFirestoreError(error, OperationType.GET, pathStr);
       }
     );
   },
