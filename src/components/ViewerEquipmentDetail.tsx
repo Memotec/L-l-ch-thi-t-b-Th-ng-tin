@@ -58,6 +58,7 @@ export const ViewerEquipmentDetail: React.FC<ViewerEquipmentDetailProps> = ({
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
       case 'VHF/UHF': return <Radio className="w-5 h-5 text-blue-500" />;
+      case 'Ghép Kênh': return <Layers className="w-5 h-5 text-indigo-500" />;
       case 'VIBA': return <Activity className="w-5 h-5 text-emerald-500" />;
       case 'VOICE': return <PhoneCall className="w-5 h-5 text-amber-500" />;
       case 'POWER': return <Zap className="w-5 h-5 text-yellow-500" />;

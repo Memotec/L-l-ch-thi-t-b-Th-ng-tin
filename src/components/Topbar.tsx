@@ -20,7 +20,8 @@ import {
   Settings, 
   Trash2,
   RefreshCw,
-  MessageSquare
+  MessageSquare,
+  Layers
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 import { CloudSyncState } from '../utils/cloudSyncService';
@@ -77,6 +78,7 @@ export const Topbar: React.FC<TopbarProps> = React.memo(({
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
       case 'VHF/UHF': return <Radio className="w-5 h-5 text-blue-400" />;
+      case 'Ghép Kênh': return <Layers className="w-5 h-5 text-indigo-400" />;
       case 'VIBA': return <Activity className="w-5 h-5 text-emerald-400" />;
       case 'VOICE': return <PhoneCall className="w-5 h-5 text-amber-400" />;
       case 'POWER': return <Zap className="w-5 h-5 text-yellow-400" />;

@@ -99,7 +99,7 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
 
   const categories: { id: EquipmentCategory; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'VHF/UHF', label: 'VHF/UHF Radio', icon: Radio },
-    { id: 'Ghép Kênh', label: 'Ghép Kênh / Mux', icon: Layers },
+    { id: 'Ghép Kênh', label: 'Ghép kênh / Router', icon: Layers },
     { id: 'VIBA', label: 'Viba / Microwave', icon: Activity },
     { id: 'VSAT', label: 'VSAT Vệ Tinh', icon: Radio },
     { id: 'VCCS', label: 'VCCS / Thoại Không Lưu', icon: PhoneCall },

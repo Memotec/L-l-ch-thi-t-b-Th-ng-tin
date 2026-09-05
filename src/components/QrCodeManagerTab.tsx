@@ -914,6 +914,7 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                 >
                   <option value="all">Tất cả chủng loại ({allEquipments.length})</option>
                   <option value="VHF/UHF">VHF/UHF</option>
+                  <option value="Ghép Kênh">Ghép kênh / Router</option>
                   <option value="VIBA">VIBA & Truyền dẫn</option>
                   <option value="VOICE">VOICE (Tổng đài/Ghi âm)</option>
                   <option value="POWER">Nguồn & Phụ Trợ (POWER)</option>

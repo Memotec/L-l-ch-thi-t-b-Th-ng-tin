@@ -173,6 +173,7 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
       case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-500" />;
+      case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-500" />;
       case 'VIBA': return <Activity className="w-4 h-4 text-emerald-500" />;
       case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-500" />;
       case 'POWER': return <Zap className="w-4 h-4 text-yellow-500" />;

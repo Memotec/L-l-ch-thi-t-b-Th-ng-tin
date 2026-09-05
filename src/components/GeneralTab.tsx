@@ -360,7 +360,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               className="form-input-standard font-semibold text-blue-900"
             >
               <option value="VHF/UHF">VHF/UHF Air-Ground Radio</option>
-              <option value="Ghép Kênh">Ghép Kênh / Multiplexer</option>
+              <option value="Ghép Kênh">Ghép kênh / Router (Mux/Router)</option>
               <option value="VIBA">Viba / Microwave Viễn thông</option>
               <option value="VSAT">VSAT Vệ tinh Hàng không</option>
               <option value="VCCS">VCCS / Chuyển mạch thoại</option>

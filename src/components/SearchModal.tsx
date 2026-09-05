@@ -120,6 +120,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
       case 'VHF/UHF': return <Radio className="w-3.5 h-3.5 text-blue-600" />;
+      case 'Ghép Kênh': return <Layers className="w-3.5 h-3.5 text-indigo-600" />;
       case 'VIBA': return <HardDrive className="w-3.5 h-3.5 text-emerald-600" />;
       case 'VOICE': return <PhoneCall className="w-3.5 h-3.5 text-amber-600" />;
       case 'POWER': return <Zap className="w-3.5 h-3.5 text-yellow-600" />;
@@ -654,7 +655,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-slate-800 text-xs">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Chủng loại:</span>
-              {(['ALL', 'VHF/UHF', 'VIBA', 'VOICE', 'POWER', 'IT', 'RADAR_ADS', 'NAV'] as EquipmentCategoryFilter[]).map(cat => (
+              {(['ALL', 'VHF/UHF', 'Ghép Kênh', 'VIBA', 'VOICE', 'POWER', 'IT', 'RADAR_ADS', 'NAV'] as EquipmentCategoryFilter[]).map(cat => (
                 <button
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}

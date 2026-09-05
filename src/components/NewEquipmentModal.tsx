@@ -7,7 +7,8 @@ import {
   PhoneCall, 
   Zap, 
   Server, 
-  HardDrive
+  HardDrive,
+  Layers
 } from 'lucide-react';
 import { EquipmentCategory, EquipmentData } from '../types';
 
@@ -131,6 +132,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'VHF/UHF', label: 'VHF / UHF Radio', icon: Radio },
+                { id: 'Ghép Kênh', label: 'Ghép kênh / Router', icon: Layers },
                 { id: 'VIBA', label: 'Viba / Microwave', icon: Activity },
                 { id: 'VOICE', label: 'VCS / Thoại', icon: PhoneCall },
                 { id: 'POWER', label: 'UPS / Nguồn Điện', icon: Zap },

@@ -611,6 +611,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             >
               <option value="ALL">-- Tất cả chủng loại --</option>
               <option value="VHF/UHF">VHF/UHF Air-Ground</option>
+              <option value="Ghép Kênh">Ghép kênh / Router</option>
               <option value="VIBA">Viba / Truyền dẫn số</option>
               <option value="VOICE">Chuyển mạch thoại / Ghi âm</option>
               <option value="POWER">Nguồn điện / UPS / Máy nổ</option>
@@ -1035,6 +1036,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 className="form-input-standard"
               >
                 <option value="VHF/UHF">VHF/UHF Air-Ground Radio (T6T, Jotron, Rohde&Schwarz)</option>
+                <option value="Ghép Kênh">Ghép kênh / Router (Mux, Switch/Router chuyên dụng)</option>
                 <option value="VIBA">Viba / Truyền dẫn số (Ceragon, Nokia, SIAE)</option>
                 <option value="VOICE">Hệ thống chuyển mạch thoại / Ghi âm (SITTI, Frequentis, Rohill)</option>
                 <option value="POWER">Hệ thống Nguồn điện (UPS, DC Rectifier, Máy nổ phát điện)</option>
