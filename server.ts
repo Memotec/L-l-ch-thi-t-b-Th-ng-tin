@@ -72,6 +72,7 @@ async function startServer() {
 
   // Cross-Device Cloud Sync Endpoints
   app.get('/api/cloud-sync/status', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const db = getCloudDb();
     res.json({
       success: true,
@@ -85,6 +86,7 @@ async function startServer() {
   });
 
   app.get('/api/cloud-sync/data', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const db = getCloudDb();
     if (db) {
       res.json({
@@ -212,6 +214,15 @@ async function startServer() {
         existingDb.gasUrl = finalUrl;
         existingDb.lastModified = new Date().toISOString();
         saveCloudDb(existingDb);
+      } else {
+        saveCloudDb({
+          version: 1,
+          lastModified: new Date().toISOString(),
+          updatedBy: 'System Config',
+          gasUrl: finalUrl,
+          equipments: [],
+          trash: []
+        });
       }
       res.json({
         success: true,
@@ -234,11 +245,17 @@ async function startServer() {
       const fetchRes = await fetch(url, {
         method: payload ? 'POST' : 'GET',
         headers: { 'Content-Type': 'application/json' },
-        body: payload ? JSON.stringify(payload) : undefined
+        body: payload ? JSON.stringify(payload) : undefined,
+        redirect: 'follow'
       });
 
-      const responseData = await fetchRes.json();
-      res.json(responseData);
+      const text = await fetchRes.text();
+      try {
+        const json = JSON.parse(text);
+        res.json(json);
+      } catch {
+        res.json({ success: fetchRes.ok, raw: text });
+      }
     } catch (err: any) {
       res.status(500).json({ success: false, message: `Lỗi kết nối Google Apps Script: ${err.message}` });
     }

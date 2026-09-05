@@ -40,12 +40,12 @@ export function buildEquipmentQrData(
   const g = equipment.general || ({} as any);
   const o = equipment.org || ({} as any);
   const currentOrigin = typeof window !== 'undefined' 
-    ? window.location.origin + window.location.pathname 
+    ? (window.location.origin + window.location.pathname).replace(/\/+$/, '') 
     : 'https://cns-passport.vn';
-  const appBase = baseUrl || currentOrigin;
+  const cleanBase = (baseUrl ? baseUrl : currentOrigin).replace(/\/+$/, '');
   
-  const lookupUrl = `${appBase}#eq=${encodeURIComponent(equipment.id)}`;
-  const pdfViewerUrl = `${appBase}#eq=${encodeURIComponent(equipment.id)}&view=pdf`;
+  const lookupUrl = `${cleanBase}/?eq=${encodeURIComponent(equipment.id)}#eq=${encodeURIComponent(equipment.id)}`;
+  const pdfViewerUrl = `${cleanBase}/?eq=${encodeURIComponent(equipment.id)}&view=pdf#eq=${encodeURIComponent(equipment.id)}&view=pdf`;
   
   // Clean default Google Doc URL or user configured one
   const googleDocUrl = equipment.googleDocUrl || 

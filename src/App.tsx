@@ -77,9 +77,46 @@ export default function App() {
   const [isNewModalOpen, setIsNewModalOpen] = useState<boolean>(false);
   const [pdfModalEquipment, setPdfModalEquipment] = useState<EquipmentData | null>(null);
   
-  // Dedicated Full-Screen PDF Mode for QR Scans and Direct Inspection
-  const [isPdfFullscreen, setIsPdfFullscreen] = useState<boolean>(false);
-  const [pdfFullscreenEquipment, setPdfFullscreenEquipment] = useState<EquipmentData | null>(null);
+  // Dedicated Full-Screen PDF Mode for QR Scans and Direct Inspection (No login required)
+  const [isPdfFullscreen, setIsPdfFullscreen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    if (search.includes('eq=') || search.includes('id=') || search.includes('pdf=') || 
+        hash.includes('eq=') || hash.includes('id=') || hash.includes('pdf=') || hash.includes('view=pdf')) {
+      // Don't auto-open PDF if user explicitly requested admin view
+      if (!search.includes('view=admin') && !hash.includes('view=admin')) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  const [pdfFullscreenEquipment, setPdfFullscreenEquipment] = useState<EquipmentData | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    let targetId: string | null = null;
+    if (search) {
+      const p = new URLSearchParams(search);
+      targetId = p.get('eq') || p.get('id') || p.get('pdf');
+    }
+    if (!targetId && hash) {
+      const clean = hash.replace(/^#/, '');
+      const p = new URLSearchParams(clean.includes('=') ? clean : `eq=${clean}`);
+      targetId = p.get('eq') || p.get('id') || p.get('pdf') || (clean.startsWith('eq-') ? clean.split('&')[0] : null);
+    }
+    if (targetId) {
+      const loaded = storageService.loadEquipments();
+      const decoded = decodeURIComponent(targetId).toLowerCase();
+      return loaded.find(e => 
+        e.id.toLowerCase() === decoded || 
+        (e.general.serial && e.general.serial.toLowerCase() === decoded) ||
+        (e.general.assetNo && e.general.assetNo.toLowerCase() === decoded)
+      ) || null;
+    }
+    return null;
+  });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Viewer Role Specific States
@@ -219,8 +256,9 @@ export default function App() {
   const lastProcessedUrlRef = useRef<string>('');
 
   // Deep Link Listener for QR Codes (#eq=eq-xxx&view=pdf, ?eq=xxx&view=pdf)
+  // Automatically opens PDF Sổ Lý Lịch without requiring login
   useEffect(() => {
-    const handleUrlChange = () => {
+    const handleUrlChange = async () => {
       const hash = window.location.hash || '';
       const search = window.location.search || '';
       const currentUrlSignature = `${search}||${hash}`;
@@ -235,20 +273,24 @@ export default function App() {
       }
 
       let targetId: string | null = null;
-      let isPdfView = false;
+      let isPdfView = true; // Default to true for QR code scans
       let isDocView = false;
+      let isAdminView = false;
 
       // 1. Check Search Query params (?eq=xxx&view=pdf)
       if (search) {
         const params = new URLSearchParams(search);
-        if (params.has('eq') || params.has('id')) {
-          targetId = params.get('eq') || params.get('id');
+        if (params.has('eq') || params.has('id') || params.has('pdf')) {
+          targetId = params.get('eq') || params.get('id') || params.get('pdf');
         }
-        if (params.get('view') === 'pdf' || params.get('mode') === 'pdf') {
-          isPdfView = true;
-        }
-        if (params.get('view') === 'doc') {
+        if (params.get('view') === 'admin' || params.get('view') === 'detail' || params.get('view') === 'edit') {
+          isAdminView = true;
+          isPdfView = false;
+        } else if (params.get('view') === 'doc') {
           isDocView = true;
+          isPdfView = false;
+        } else if (params.get('view') === 'pdf' || params.get('mode') === 'pdf') {
+          isPdfView = true;
         }
       }
 
@@ -257,37 +299,60 @@ export default function App() {
         const cleanHash = hash.replace(/^#/, '');
         const hashParams = new URLSearchParams(cleanHash.includes('=') ? cleanHash : `eq=${cleanHash}`);
         
-        if (hashParams.has('eq') || hashParams.has('id')) {
-          targetId = hashParams.get('eq') || hashParams.get('id');
+        if (hashParams.has('eq') || hashParams.has('id') || hashParams.has('pdf')) {
+          targetId = targetId || hashParams.get('eq') || hashParams.get('id') || hashParams.get('pdf');
         } else if (cleanHash.startsWith('eq-') || cleanHash.startsWith('cns-')) {
-          targetId = cleanHash.split('&')[0];
+          targetId = targetId || cleanHash.split('&')[0];
         }
 
-        if (hashParams.get('view') === 'pdf' || hashParams.get('mode') === 'pdf' || cleanHash.includes('view=pdf')) {
-          isPdfView = true;
-        }
-        if (hashParams.get('view') === 'doc' || cleanHash.includes('view=doc')) {
+        if (hashParams.get('view') === 'admin' || cleanHash.includes('view=admin') || cleanHash.includes('view=detail')) {
+          isAdminView = true;
+          isPdfView = false;
+        } else if (hashParams.get('view') === 'doc' || cleanHash.includes('view=doc')) {
           isDocView = true;
+          isPdfView = false;
+        } else if (hashParams.get('view') === 'pdf' || hashParams.get('mode') === 'pdf' || cleanHash.includes('view=pdf')) {
+          isPdfView = true;
         }
       }
 
       if (targetId) {
         const decoded = decodeURIComponent(targetId).trim();
-        const found = equipments.find(e => 
+        let found = equipments.find(e => 
           e.id.toLowerCase() === decoded.toLowerCase() || 
           (e.general.serial && e.general.serial.toLowerCase() === decoded.toLowerCase()) || 
           (e.general.assetNo && e.general.assetNo.toLowerCase() === decoded.toLowerCase()) ||
           e.general.name.toLowerCase() === decoded.toLowerCase()
         );
 
+        // If not found in local memory (e.g. freshly scanned on another device/browser), pull from Cloud
+        if (!found) {
+          try {
+            const pullRes = await cloudSyncService.pullFromCloud({ reason: 'qr_lookup', force: true });
+            if (pullRes.success && pullRes.equipments && pullRes.equipments.length > 0) {
+              setEquipments(pullRes.equipments);
+              if (pullRes.trash) setTrashList(pullRes.trash);
+              storageService.saveImmediate(pullRes.equipments);
+              found = pullRes.equipments.find(e => 
+                e.id.toLowerCase() === decoded.toLowerCase() || 
+                (e.general.serial && e.general.serial.toLowerCase() === decoded.toLowerCase()) || 
+                (e.general.assetNo && e.general.assetNo.toLowerCase() === decoded.toLowerCase()) ||
+                e.general.name.toLowerCase() === decoded.toLowerCase()
+              );
+            }
+          } catch (e) {
+            console.warn('Auto cloud pull on QR scan error:', e);
+          }
+        }
+
         if (found) {
           lastProcessedUrlRef.current = currentUrlSignature;
           setCurrentId(found.id);
           setViewerViewingId(found.id);
-          if (isPdfView) {
+          if (isPdfView && !isAdminView) {
             setPdfFullscreenEquipment(found);
             setIsPdfFullscreen(true);
-            showToast(`✓ Quét mã QR thành công: Đang hiển thị toàn màn hình PDF Sổ lý lịch ${found.general.name}`);
+            showToast(`✓ Quét mã QR thành công: Đang tự động mở file PDF Sổ lý lịch "${found.general.name}"`);
           } else if (isDocView) {
             setActiveTab('printPreview');
             setIsPdfFullscreen(false);
@@ -298,7 +363,7 @@ export default function App() {
             showToast(`✓ Đã quét mã QR: Mở hồ sơ ${found.general.name}`);
           }
         }
-      } else if (isPdfView) {
+      } else if (isPdfView && !isAdminView) {
         lastProcessedUrlRef.current = currentUrlSignature;
         const target = equipments.find(e => e.id === currentId) || equipments[0];
         if (target) {
@@ -315,7 +380,7 @@ export default function App() {
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, [equipments, showToast]);
+  }, [equipments, currentId, showToast]);
 
   // Global Keyboard Shortcut Listener (Ctrl+K or Cmd+K)
   useEffect(() => {
@@ -749,11 +814,11 @@ export default function App() {
             actor: currentUser.displayName || 'Quản trị viên'
           });
         } else {
-          alert('Định dạng file JSON không hợp lệ với cấu trúc Sổ Lý Lịch CNS.');
+          showToast('⚠️ Định dạng file JSON không hợp lệ với cấu trúc Sổ Lý Lịch CNS.');
         }
       } catch (err) {
         console.error('Import parse error:', err);
-        alert('Lỗi đọc file JSON. Vui lòng kiểm tra lại định dạng file.');
+        showToast('⚠️ Lỗi đọc file JSON. Vui lòng kiểm tra lại định dạng file.');
       }
     };
     reader.readAsText(file);
@@ -842,8 +907,11 @@ export default function App() {
   }, [equipments, handleSelectEquipment, showToast]);
 
   // If Full-Screen PDF Mode is active (e.g. from scanning QR Code or direct link)
-  if (isPdfFullscreen && (pdfFullscreenEquipment || currentEquipment)) {
+  if (isPdfFullscreen) {
     const targetEquipment = pdfFullscreenEquipment || currentEquipment;
+    if (!targetEquipment) {
+      return <LoadingFallback message="Đang tải tệp PDF Sổ lý lịch thiết bị..." />;
+    }
     return (
       <Suspense fallback={<LoadingFallback message="Đang tải tệp PDF Sổ lý lịch toàn màn hình..." />}>
         <FullScreenPdfViewer
@@ -857,9 +925,13 @@ export default function App() {
               window.location.hash = `#eq=${encodeURIComponent(id)}&view=pdf`;
             }
           }}
+          onScanAnotherQr={() => {
+            setIsPdfFullscreen(false);
+            setIsQrScannerOpen(true);
+          }}
           onExitToAdmin={() => {
             setIsPdfFullscreen(false);
-            window.location.hash = `#eq=${encodeURIComponent(targetEquipment.id)}`;
+            window.location.hash = `#eq=${encodeURIComponent(targetEquipment.id)}&view=admin`;
             showToast(`✓ Đã vào Hệ thống Quản trị: ${targetEquipment.general.name}`);
           }}
           onShowToast={showToast}
@@ -949,17 +1021,29 @@ export default function App() {
             />
           )}
 
-          {/* QR Scan & manual code search modal */}
+          {/* QR Scan & manual code search modal - automatically opens PDF */}
           {isQrScannerOpen && (
             <QrScannerModal
               isOpen={isQrScannerOpen}
               onClose={() => setIsQrScannerOpen(false)}
               equipments={equipments}
-              onSelectEquipment={(equipmentId) => {
-                handleSelectEquipment(equipmentId);
-                setIsQrScannerOpen(false);
-                setViewerMobileTab('home');
-                showToast(`✓ Quét mã thành công! Đang hiển thị hồ sơ thiết bị.`);
+              onSelectEquipment={(equipmentId, viewMode = 'pdf') => {
+                const found = equipments.find(e => e.id === equipmentId);
+                if (found) {
+                  setCurrentId(found.id);
+                  setViewerViewingId(found.id);
+                  setIsQrScannerOpen(false);
+                  if (viewMode === 'pdf') {
+                    setPdfFullscreenEquipment(found);
+                    setIsPdfFullscreen(true);
+                    window.location.hash = `#eq=${encodeURIComponent(found.id)}&view=pdf`;
+                    showToast(`✓ Quét mã QR thành công: Tự động mở file PDF Sổ lý lịch "${found.general.name}"`);
+                  } else {
+                    handleSelectEquipment(equipmentId);
+                    setViewerMobileTab('home');
+                    showToast(`✓ Đã hiển thị hồ sơ: ${found.general.name}`);
+                  }
+                }
               }}
             />
           )}

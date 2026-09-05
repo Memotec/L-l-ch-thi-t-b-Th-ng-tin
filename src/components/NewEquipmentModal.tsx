@@ -9,7 +9,8 @@ import {
   Server, 
   HardDrive,
   Layers,
-  Gauge
+  Gauge,
+  AlertCircle
 } from 'lucide-react';
 import { EquipmentCategory, EquipmentData } from '../types';
 
@@ -32,15 +33,17 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
   const [assetNo, setAssetNo] = useState('');
   const [unit, setUnit] = useState('');
   const [location, setLocation] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('Vui lòng nhập tên thiết bị.');
+      setFormError('Vui lòng nhập tên thiết bị.');
       return;
     }
+    setFormError(null);
 
     const id = `eq-${Date.now()}`;
     const nowIso = new Date().toISOString();
@@ -127,6 +130,12 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+          {formError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{formError}</span>
+            </div>
+          )}
           {/* Category Select */}
           <div className="space-y-1.5">
             <label className="font-bold text-slate-900 block">Chủng loại thiết bị*</label>

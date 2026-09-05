@@ -35,6 +35,7 @@ interface FullScreenPdfViewerProps {
   allEquipments?: EquipmentData[];
   onSelectEquipment?: (id: string) => void;
   onExitToAdmin?: () => void;
+  onScanAnotherQr?: () => void;
   onShowToast: (msg: string) => void;
 }
 
@@ -43,6 +44,7 @@ export const FullScreenPdfViewer: React.FC<FullScreenPdfViewerProps> = ({
   allEquipments,
   onSelectEquipment,
   onExitToAdmin,
+  onScanAnotherQr,
   onShowToast
 }) => {
   // Compute initial zoom based on screen width for mobile auto-fit
@@ -249,7 +251,11 @@ body {
                 {g.name || 'Sổ Lý Lịch Thiết Bị CNS'}
               </h1>
               <span className="hidden sm:inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-[10px] font-bold border border-emerald-400/40 uppercase shrink-0">
-                Chuẩn A4 Toàn Màn Hình
+                Chuẩn {paperSize} Toàn Màn Hình
+              </span>
+              <span className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 bg-sky-500/15 text-sky-300 rounded text-[10px] font-medium border border-sky-400/30 shrink-0">
+                <QrCode className="w-2.5 h-2.5 text-sky-400" />
+                <span>Không cần đăng nhập</span>
               </span>
             </div>
             <p className="text-[11px] text-sky-200/70 truncate">
@@ -371,6 +377,18 @@ body {
             <Printer className="w-3.5 h-3.5" />
             <span>In ({paperSize})</span>
           </button>
+
+          {/* Quick Scan Another QR Code Button */}
+          {onScanAnotherQr && (
+            <button
+              onClick={onScanAnotherQr}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-indigo-950/80 hover:bg-indigo-900 text-indigo-200 hover:text-white rounded-lg text-xs font-semibold border border-indigo-700/50 transition-all cursor-pointer"
+              title="Mở camera quét mã QR thiết bị khác"
+            >
+              <QrCode className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">Quét QR khác</span>
+            </button>
+          )}
 
           {/* Switch to Full Management Dashboard */}
           {onExitToAdmin && (

@@ -307,7 +307,7 @@ ${content}
 
   const notify = (msg: string) => {
     if (onShowToast) onShowToast(msg);
-    else alert(msg);
+    else console.info('[CNS Logbook]', msg);
   };
 
   const handleDownloadDirectPdf = async () => {

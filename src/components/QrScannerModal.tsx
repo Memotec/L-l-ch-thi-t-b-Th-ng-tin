@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import jsQR from 'jsqr';
 import { 
   X, 
   Camera, 
@@ -12,7 +13,8 @@ import {
   ArrowRight,
   RefreshCw,
   Zap,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 import { EquipmentData } from '../types';
 
@@ -33,14 +35,23 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
   const [manualCode, setManualCode] = useState('');
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [matchedEquipment, setMatchedEquipment] = useState<EquipmentData | null>(null);
+  const [scanFeedbackError, setScanFeedbackError] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const hasDetectedRef = useRef<boolean>(false);
 
-  // Stop camera helper
+  // Stop camera and scanning loop
   const stopCamera = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -48,56 +59,35 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
     setIsScanning(false);
   }, []);
 
-  // Start camera helper
-  const startCamera = useCallback(async () => {
-    setCameraError(null);
-    setMatchedEquipment(null);
-    setIsScanning(true);
-
+  // Quick sound effect & vibration on QR capture
+  const triggerSuccessFeedback = useCallback(() => {
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError('Trình duyệt hoặc thiết bị không hỗ trợ truy cập Camera trực tiếp.');
-        setIsScanning(false);
-        return;
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([60, 40, 60]);
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(e => {
-          console.warn('Video play error:', e);
-        });
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12); // E6
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
       }
-    } catch (err: any) {
-      console.warn('Camera access denied/error:', err);
-      setCameraError('Không thể mở Camera. Vui lòng cấp quyền truy cập máy ảnh trên trình duyệt hoặc sử dụng tính năng "Nhập mã / Tra cứu nhanh".');
-      setIsScanning(false);
+    } catch (e) {
+      // Audio or vibration not permitted or supported, benign
     }
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      if (activeMode === 'camera') {
-        startCamera();
-      }
-    } else {
-      stopCamera();
-      setManualCode('');
-      setMatchedEquipment(null);
-    }
-
-    return () => {
-      stopCamera();
-    };
-  }, [isOpen, activeMode, startCamera, stopCamera]);
-
   // Decode code string and find matching equipment
   const processScannedCode = useCallback((rawCode: string) => {
-    if (!rawCode || !rawCode.trim()) return;
+    if (!rawCode || !rawCode.trim() || hasDetectedRef.current) return;
     const clean = rawCode.trim();
 
     // 1. Try match by direct ID
@@ -113,13 +103,40 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
       found = equipments.find(e => e.general.assetNo && e.general.assetNo.toLowerCase() === clean.toLowerCase());
     }
 
-    // 4. Try parse URL / Hash: #eq=eq-xxx or ?eq=eq-xxx
+    // 4. Try parse URL / Hash: #eq=eq-xxx or ?eq=eq-xxx or ?id=xxx or ?pdf=xxx
     if (!found) {
-      if (clean.includes('eq=')) {
+      try {
+        let queryVal: string | null = null;
+        if (clean.includes('?')) {
+          const qs = clean.split('?')[1]?.split('#')[0];
+          if (qs) {
+            const sp = new URLSearchParams(qs);
+            queryVal = sp.get('eq') || sp.get('id') || sp.get('pdf');
+          }
+        }
+        if (!queryVal && clean.includes('#')) {
+          const hs = clean.split('#')[1];
+          if (hs) {
+            const hp = new URLSearchParams(hs.includes('=') ? hs : `eq=${hs}`);
+            queryVal = hp.get('eq') || hp.get('id') || hp.get('pdf') || (hs.startsWith('eq-') ? hs.split('&')[0] : null);
+          }
+        }
+        if (queryVal) {
+          const targetId = decodeURIComponent(queryVal).toLowerCase();
+          found = equipments.find(e => 
+            e.id.toLowerCase() === targetId || 
+            (e.general.serial && e.general.serial.toLowerCase() === targetId) ||
+            (e.general.assetNo && e.general.assetNo.toLowerCase() === targetId)
+          );
+        }
+      } catch (e) {
+        // Not a URL
+      }
+      if (!found && clean.includes('eq=')) {
         const match = clean.match(/[?#&]eq=([^&]+)/);
         if (match && match[1]) {
-          const targetId = decodeURIComponent(match[1]);
-          found = equipments.find(e => e.id.toLowerCase() === targetId.toLowerCase());
+          const targetId = decodeURIComponent(match[1]).toLowerCase();
+          found = equipments.find(e => e.id.toLowerCase() === targetId);
         }
       }
     }
@@ -145,32 +162,153 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
     }
 
     if (found) {
-      setMatchedEquipment(found);
+      hasDetectedRef.current = true;
+      triggerSuccessFeedback();
       stopCamera();
+      
+      // AUTO-OPEN PDF DIRECTLY WITHOUT EXTRA STEPS (User requirement: Quét sẽ tự động mở file PDF "Sổ Lý lịch" Tương ứng)
+      onSelectEquipment(found.id, 'pdf');
+      onClose();
     } else {
-      setMatchedEquipment(null);
-      alert(`Không tìm thấy thiết bị nào khớp với mã: "${clean}". Vui lòng thử lại!`);
+      setScanFeedbackError(`Không tìm thấy thiết bị nào khớp với mã: "${clean}". Vui lòng kiểm tra lại!`);
     }
-  }, [equipments, stopCamera]);
+  }, [equipments, stopCamera, triggerSuccessFeedback, onSelectEquipment, onClose]);
+
+  // Frame-by-frame scanner loop
+  const tickScanner = useCallback(() => {
+    if (!isScanning || hasDetectedRef.current) return;
+
+    const video = videoRef.current;
+    if (video && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      if (!scanCanvasRef.current) {
+        scanCanvasRef.current = document.createElement('canvas');
+      }
+      const canvas = scanCanvasRef.current;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      if (ctx) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'dontInvert'
+        });
+
+        if (code && code.data && code.data.trim()) {
+          processScannedCode(code.data);
+          return; // stop loop
+        }
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(tickScanner);
+  }, [isScanning, processScannedCode]);
+
+  // Start camera helper
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    setMatchedEquipment(null);
+    hasDetectedRef.current = false;
+    setIsScanning(true);
+
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Trình duyệt hoặc thiết bị không hỗ trợ truy cập Camera trực tiếp.');
+        setIsScanning(false);
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('playsinline', 'true');
+        await videoRef.current.play();
+        // Start scanning loop
+        animationFrameRef.current = requestAnimationFrame(tickScanner);
+      }
+    } catch (err: any) {
+      console.warn('Camera access denied/error:', err);
+      setCameraError('Không thể mở Camera. Vui lòng cấp quyền máy ảnh hoặc sử dụng tính năng "Nhập mã / Tra cứu nhanh".');
+      setIsScanning(false);
+    }
+  }, [tickScanner]);
+
+  useEffect(() => {
+    if (isOpen) {
+      hasDetectedRef.current = false;
+      if (activeMode === 'camera') {
+        startCamera();
+      }
+    } else {
+      stopCamera();
+      setManualCode('');
+      setMatchedEquipment(null);
+    }
+
+    return () => {
+      stopCamera();
+    };
+  }, [isOpen, activeMode, startCamera, stopCamera]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     processScannedCode(manualCode);
   };
 
+  // Upload image file and decode QR with jsQR
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Simulate reading image QR or text file
+    setIsProcessingImage(true);
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
-        // Try decoding filename or content
-        const fileName = file.name.replace(/\.[^/.]+$/, "");
-        processScannedCode(fileName);
+      const src = event.target?.result as string;
+      if (!src) {
+        setIsProcessingImage(false);
+        return;
       }
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'attemptBoth'
+          });
+
+          setIsProcessingImage(false);
+          if (code && code.data) {
+            processScannedCode(code.data);
+          } else {
+            // Fallback: search by filename without extension
+            const fileName = file.name.replace(/\.[^/.]+$/, '');
+            processScannedCode(fileName);
+          }
+        } else {
+          setIsProcessingImage(false);
+        }
+      };
+      img.onerror = () => {
+        setIsProcessingImage(false);
+        setScanFeedbackError('Không thể đọc tệp hình ảnh. Vui lòng thử lại với ảnh khác.');
+      };
+      img.src = src;
     };
     reader.readAsDataURL(file);
   };
@@ -203,7 +341,10 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
         <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold">
           <button
             type="button"
-            onClick={() => setActiveMode('camera')}
+            onClick={() => {
+              setScanFeedbackError(null);
+              setActiveMode('camera');
+            }}
             className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
               activeMode === 'camera'
                 ? 'border-blue-600 text-blue-600 bg-white'
@@ -217,6 +358,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
             type="button"
             onClick={() => {
               stopCamera();
+              setScanFeedbackError(null);
               setActiveMode('manual');
             }}
             className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
@@ -232,6 +374,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
             type="button"
             onClick={() => {
               stopCamera();
+              setScanFeedbackError(null);
               setActiveMode('upload');
             }}
             className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
@@ -247,6 +390,21 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
 
         {/* Body Content */}
         <div className="p-5 flex-1 overflow-y-auto space-y-4">
+          {scanFeedbackError && (
+            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                <span>{scanFeedbackError}</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setScanFeedbackError(null)}
+                className="text-amber-600 hover:text-amber-900 font-bold px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           {matchedEquipment ? (
             /* Result Found Screen */
             <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
@@ -282,25 +440,25 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    onSelectEquipment(matchedEquipment.id, 'detail');
+                    onSelectEquipment(matchedEquipment.id, 'pdf');
                     onClose();
                   }}
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
                 >
-                  <span>Xem Chi Tiết Hồ Sơ</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <FileText className="w-4 h-4 text-white" />
+                  <span>Mở File PDF Sổ Lý Lịch</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => {
-                    onSelectEquipment(matchedEquipment.id, 'pdf');
+                    onSelectEquipment(matchedEquipment.id, 'detail');
                     onClose();
                   }}
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Xem Bản PDF A4</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Xem Chi Tiết Hồ Sơ</span>
                 </button>
               </div>
 

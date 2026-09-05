@@ -42,11 +42,7 @@ export const storageService = {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.general) {
-          // If the stored data only has an untitled placeholder, augment with sampleEquipments
-          const hasRealData = parsed.some(p => p.general?.name && p.general?.name !== 'Thiết bị kỹ thuật mới');
-          if (hasRealData) {
-            return parsed;
-          }
+          return parsed;
         }
       }
     } catch (err) {

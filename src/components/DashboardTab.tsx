@@ -115,7 +115,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   const handleSaveQuickLog = useCallback(() => {
     if (!logContent.trim()) {
-      alert('Vui lòng nhập nội dung ghi chú nhật ký vận hành!');
+      if (onShowToast) onShowToast('⚠️ Vui lòng nhập nội dung ghi chú nhật ký vận hành!');
       return;
     }
 

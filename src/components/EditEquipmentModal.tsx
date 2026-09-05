@@ -42,12 +42,14 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<EquipmentData | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'general' | 'org' | 'legal'>('general');
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (equipment) {
       // Deep copy to prevent accidental mutation before save
       setFormData(JSON.parse(JSON.stringify(equipment)));
       setActiveSubTab('general');
+      setFormError(null);
     }
   }, [equipment, isOpen]);
 
@@ -82,9 +84,13 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.general.name.trim()) {
-      alert('Vui lòng nhập tên thiết bị.');
+      setFormError('Vui lòng nhập tên thiết bị.');
+      if (onShowToast) {
+        onShowToast('⚠️ Vui lòng nhập tên thiết bị.');
+      }
       return;
     }
+    setFormError(null);
 
     const updatedWithTimestamp: EquipmentData = {
       ...formData,
@@ -183,6 +189,12 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
 
         {/* Modal Form Body (Scrollable) */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+          {formError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{formError}</span>
+            </div>
+          )}
           {/* TAB 1: GENERAL & CATEGORY */}
           {activeSubTab === 'general' && (
             <div className="space-y-5">

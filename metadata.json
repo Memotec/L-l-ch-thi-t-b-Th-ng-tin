@@ -1,6 +1,8 @@
 {
   "name": "Sổ Lý Lịch Thiết Bị",
   "description": "Sổ Lý Lịch Thiết Bị Đội THông tin (VHF, VCCS, Thiết bị truyền dẫn, tổng đài)",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "camera"
+  ],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
