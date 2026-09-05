@@ -27,7 +27,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   canEditDetails: false,
   canDelete: false,
   canClone: false,
-  canImportData: false,
+  canImportData: true,
   canExportData: true,
   canResetDatabase: false,
   canSyncGas: true,

@@ -6,6 +6,7 @@ import { googleDriveDocsService } from './utils/googleDriveDocsService';
 import { storageService } from './utils/storageService';
 import { cloudSyncService, CloudSyncState } from './utils/cloudSyncService';
 import { notificationService } from './utils/notificationService';
+import { firestoreService } from './firebase';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardTab } from './components/DashboardTab';
@@ -508,6 +509,11 @@ export default function App() {
     
     storageService.saveImmediate(remaining);
     cloudSyncService.pushToCloud(remaining, updatedTrash, currentUser);
+    
+    // Explicitly update Firestore collections immediately for deletion
+    firestoreService.deleteEquipment(target.id).catch(err => console.warn('Firestore delete failed:', err));
+    firestoreService.saveTrashItem(trashItem).catch(err => console.warn('Firestore save trash item failed:', err));
+
     setEquipmentToDelete(null);
     showToast(`✓ Đã chuyển Sổ lý lịch "${target.general.name}" vào Thùng Rác (Lưu giữ 30 ngày).`);
 
@@ -547,6 +553,11 @@ export default function App() {
     });
 
     cloudSyncService.pushToCloud(updatedActive, updatedTrash, currentUser);
+    
+    // Explicitly update Firestore collections immediately for restore
+    firestoreService.deleteTrashItem(targetEqId).catch(err => console.warn('Firestore delete trash item failed:', err));
+    firestoreService.saveEquipment(trashItem.equipment).catch(err => console.warn('Firestore save equipment failed:', err));
+
     setCurrentId(trashItem.equipment.id);
     showToast(`✓ Đã khôi phục thành công Sổ lý lịch "${trashItem.equipment.general.name}"!`);
 
@@ -585,6 +596,10 @@ export default function App() {
     setTrashList(updatedTrash);
     storageService.saveTrash(updatedTrash);
     cloudSyncService.pushToCloud(equipments, updatedTrash, currentUser);
+    
+    // Explicitly update Firestore collections immediately for permanent delete
+    firestoreService.deleteTrashItem(targetEqId).catch(err => console.warn('Firestore permanent delete failed:', err));
+
     setPermanentDeleteTarget(null);
     showToast(`✓ Đã xóa vĩnh viễn Sổ lý lịch "${eqName}".`);
 
@@ -620,6 +635,14 @@ export default function App() {
     setTrashList([]);
     storageService.saveTrash([]);
     cloudSyncService.pushToCloud(equipments, [], currentUser);
+    
+    // Explicitly delete all trash items from Firestore
+    trashList.forEach(item => {
+      if (item.equipment && item.equipment.id) {
+        firestoreService.deleteTrashItem(item.equipment.id).catch(err => console.warn('Firestore delete trash item failed:', err));
+      }
+    });
+
     setIsConfirmEmptyTrashOpen(false);
     showToast(`✓ Đã dọn sạch toàn bộ thùng rác.`);
 
@@ -1045,7 +1068,7 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
-                {currentUser.role === 'admin' ? (
+                {currentUser.permissions.canImportData ? (
                   <button
                     onClick={async () => {
                       if (window.confirm('XÁC NHẬN: Bạn có chắc chắn muốn nạp đè dữ liệu hiện tại bằng file JSON sao lưu gốc trên Server?')) {
@@ -1061,7 +1084,7 @@ export default function App() {
                     onClick={() => setIsLoginModalOpen(true)}
                     className="w-full md:w-auto px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>Đăng Nhập Admin Để Khôi Phục</span>
+                    <span>Đăng Nhập Để Khôi Phục</span>
                   </button>
                 )}
               </div>

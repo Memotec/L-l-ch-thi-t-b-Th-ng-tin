@@ -162,6 +162,20 @@ export const firestoreService = {
       const batch = writeBatch(db);
       const nowStr = new Date().toISOString();
 
+      // Retrieve existing doc IDs from Firestore
+      const querySnapshot = await getDocs(collection(db, 'equipments'));
+      const existingIds = querySnapshot.docs.map(doc => doc.id);
+      const activeIds = new Set(equipments.map(eq => eq.id));
+
+      // Obsolete equipment documents (not in active list anymore) are deleted
+      existingIds.forEach(id => {
+        if (!activeIds.has(id)) {
+          const docRef = doc(db, 'equipments', id);
+          batch.delete(docRef);
+        }
+      });
+
+      // Save/update active equipment documents
       equipments.forEach(eq => {
         const docRef = doc(db, 'equipments', eq.id);
         batch.set(docRef, {

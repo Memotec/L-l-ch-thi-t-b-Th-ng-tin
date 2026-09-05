@@ -82,6 +82,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'database' | 'security' | 'google' | 'organization' | 'qr' | 'notifications'>('database');
   const isAdmin = currentUser.role === 'admin';
+  const canImportData = currentUser.permissions.canImportData;
 
   // State for Browser Push Notification preferences
   const [browserPerm, setBrowserPerm] = useState<NotificationPermission | 'unsupported'>('default');
@@ -428,9 +429,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   <Upload className="w-4 h-4 text-amber-600" />
                   <span>Nhập file sao lưu JSON (Khôi phục / Bổ sung)</span>
                 </div>
-                {!isAdmin && (
+                {!canImportData && (
                   <span className="text-[10px] text-amber-700 flex items-center gap-1 font-medium">
-                    <Lock className="w-3 h-3" /> Cần quyền Admin
+                    <Lock className="w-3 h-3" /> Khóa tính năng
                   </span>
                 )}
               </div>
@@ -438,7 +439,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 Hệ thống tự động phát hiện file sao lưu chứa 1 thiết bị hoặc toàn bộ danh sách để cập nhật an toàn.
               </p>
 
-              {isAdmin ? (
+              {canImportData ? (
                 <label className="flex items-center justify-center gap-2 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold border border-amber-200 cursor-pointer transition-all">
                   <Upload className="w-4 h-4" />
                   <span>Chọn File JSON từ máy tính để Nhập</span>
@@ -462,9 +463,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   <RefreshCw className="w-4 h-4 text-indigo-600 animate-pulse" />
                   <span>Dự Phòng: Khôi Phục Từ File JSON Bản Gốc Server</span>
                 </div>
-                {!isAdmin && (
+                {!canImportData && (
                   <span className="text-[10px] text-amber-700 flex items-center gap-1 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
-                    <Lock className="w-3 h-3" /> Cần Admin
+                    <Lock className="w-3 h-3" /> Khóa tính năng
                   </span>
                 )}
               </div>
@@ -473,7 +474,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {isAdmin ? (
+                {canImportData ? (
                   <button
                     onClick={async () => {
                       if (window.confirm('CẢNH BÁO: Hành động này sẽ TẢI VỀ và GHI ĐÈ toàn bộ cơ sở dữ liệu hiện tại bằng tệp lưu trữ gốc từ Server! Bạn có chắc chắn muốn khôi phục?')) {
@@ -494,7 +495,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                     className="flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium cursor-pointer border border-slate-200"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    <span>Đăng nhập Admin để khôi phục</span>
+                    <span>Đăng nhập để mở khóa tính năng</span>
                   </button>
                 )}
 
