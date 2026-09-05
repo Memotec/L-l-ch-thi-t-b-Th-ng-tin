@@ -46,36 +46,57 @@ export interface FirestoreErrorInfo {
   };
 }
 
+// Track if Firestore daily quota is exhausted to prevent console error spam
+let isFirestoreQuotaExceeded = false;
+
+export function isQuotaExceeded(): boolean {
+  return isFirestoreQuotaExceeded;
+}
+
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error:', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  const errMsg = error instanceof Error ? error.message : String(error);
+  const isQuotaError = errMsg.toLowerCase().includes('quota exceeded') || errMsg.toLowerCase().includes('resource-exhausted');
+  let errInfo: FirestoreErrorInfo | null = null;
+
+  if (isQuotaError) {
+    if (!isFirestoreQuotaExceeded) {
+      isFirestoreQuotaExceeded = true;
+      console.warn('Firestore daily Quota exceeded. Operating in offline/local storage mode.');
+    }
+  } else {
+    errInfo = {
+      error: errMsg,
+      authInfo: {
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        emailVerified: auth.currentUser?.emailVerified,
+        isAnonymous: auth.currentUser?.isAnonymous,
+        tenantId: auth.currentUser?.tenantId,
+        providerInfo: auth.currentUser?.providerData?.map(provider => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || []
+      },
+      operationType,
+      path
+    };
+    console.error('Firestore Error:', JSON.stringify(errInfo));
+  }
+
+  throw new Error(isQuotaError ? 'Quota exceeded' : JSON.stringify(errInfo || errMsg));
 }
 
 // Test connection on startup as mandated by Skill
 export async function testFirestoreConnection(): Promise<boolean> {
+  if (isFirestoreQuotaExceeded) return false;
   const testPath = 'test/connection';
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
     console.log('Firebase Firestore connection verified successfully.');
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Quota exceeded')) {
+    if (error instanceof Error && (error.message.includes('Quota exceeded') || error.message.includes('resource-exhausted'))) {
+      isFirestoreQuotaExceeded = true;
       console.warn('Firebase Firestore daily quota exceeded. App seamlessly operating in offline local mode.');
     } else if (error instanceof Error && error.message.includes('the client is offline')) {
       console.warn('Firebase client is offline. Verify configuration or network connectivity.');
@@ -88,10 +109,14 @@ export async function testFirestoreConnection(): Promise<boolean> {
 
 // Firestore Database Helpers for CNS Equipment Management
 export const firestoreService = {
+  isQuotaExceeded(): boolean {
+    return isFirestoreQuotaExceeded;
+  },
   /**
    * Fetches all equipment documents from Firestore
    */
   async getAllEquipments(): Promise<EquipmentData[]> {
+    if (isFirestoreQuotaExceeded) return [];
     const pathStr = 'equipments';
     try {
       const snap = await getDocs(collection(db, pathStr));
@@ -112,6 +137,7 @@ export const firestoreService = {
    * Saves a single equipment document to Firestore
    */
   async saveEquipment(equipment: EquipmentData, updatedBy: string = 'Quản trị viên'): Promise<void> {
+    if (isFirestoreQuotaExceeded) return;
     const pathStr = `equipments/${equipment.id}`;
     try {
       const docRef = doc(db, 'equipments', equipment.id);
@@ -130,6 +156,7 @@ export const firestoreService = {
    * Batch writes multiple equipments to Firestore
    */
   async batchSaveEquipments(equipments: EquipmentData[], updatedBy: string = 'Quản trị viên'): Promise<void> {
+    if (isFirestoreQuotaExceeded) return;
     const pathStr = 'equipments';
     try {
       const batch = writeBatch(db);
@@ -163,6 +190,7 @@ export const firestoreService = {
    * Deletes an equipment from Firestore
    */
   async deleteEquipment(equipmentId: string): Promise<void> {
+    if (isFirestoreQuotaExceeded) return;
     const pathStr = `equipments/${equipmentId}`;
     try {
       await deleteDoc(doc(db, 'equipments', equipmentId));
@@ -178,6 +206,9 @@ export const firestoreService = {
     onUpdate: (equipments: EquipmentData[]) => void, 
     onError?: (err: any) => void
   ): () => void {
+    if (isFirestoreQuotaExceeded) {
+      return () => {};
+    }
     const pathStr = 'equipments';
     return onSnapshot(
       collection(db, pathStr),
@@ -192,23 +223,31 @@ export const firestoreService = {
         onUpdate(items);
       },
       (error) => {
-        const errInfo: FirestoreErrorInfo = {
-          error: error instanceof Error ? error.message : String(error),
-          authInfo: {
-            userId: auth.currentUser?.uid,
-            email: auth.currentUser?.email,
-            emailVerified: auth.currentUser?.emailVerified,
-            isAnonymous: auth.currentUser?.isAnonymous,
-            tenantId: auth.currentUser?.tenantId,
-            providerInfo: auth.currentUser?.providerData?.map(provider => ({
-              providerId: provider.providerId,
-              email: provider.email,
-            })) || []
-          },
-          operationType: OperationType.GET,
-          path: pathStr
-        };
-        console.error('Firestore Error:', JSON.stringify(errInfo));
+        const errMsg = error instanceof Error ? error.message : String(error);
+        const isQuotaError = errMsg.toLowerCase().includes('quota exceeded') || errMsg.toLowerCase().includes('resource-exhausted');
+
+        if (isQuotaError) {
+          isFirestoreQuotaExceeded = true;
+          console.warn('Firestore Quota exceeded in real-time subscription. Operating in offline local mode.');
+        } else {
+          const errInfo: FirestoreErrorInfo = {
+            error: errMsg,
+            authInfo: {
+              userId: auth.currentUser?.uid,
+              email: auth.currentUser?.email,
+              emailVerified: auth.currentUser?.emailVerified,
+              isAnonymous: auth.currentUser?.isAnonymous,
+              tenantId: auth.currentUser?.tenantId,
+              providerInfo: auth.currentUser?.providerData?.map(provider => ({
+                providerId: provider.providerId,
+                email: provider.email,
+              })) || []
+            },
+            operationType: OperationType.GET,
+            path: pathStr
+          };
+          console.error('Firestore Error:', JSON.stringify(errInfo));
+        }
         if (onError) onError(error);
       }
     );
@@ -218,6 +257,7 @@ export const firestoreService = {
    * Fetches trash items from Firestore
    */
   async getTrashItems(): Promise<TrashEquipmentItem[]> {
+    if (isFirestoreQuotaExceeded) return [];
     const pathStr = 'trash';
     try {
       const snap = await getDocs(collection(db, pathStr));
@@ -238,6 +278,7 @@ export const firestoreService = {
    * Saves a trash item to Firestore
    */
   async saveTrashItem(item: TrashEquipmentItem): Promise<void> {
+    if (isFirestoreQuotaExceeded) return;
     const trashId = item.equipment?.id || `trash_${Date.now()}`;
     const pathStr = `trash/${trashId}`;
     try {
@@ -251,6 +292,7 @@ export const firestoreService = {
    * Permanently deletes a trash item from Firestore
    */
   async deleteTrashItem(itemId: string): Promise<void> {
+    if (isFirestoreQuotaExceeded) return;
     const pathStr = `trash/${itemId}`;
     try {
       await deleteDoc(doc(db, 'trash', itemId));

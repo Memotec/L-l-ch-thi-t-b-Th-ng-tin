@@ -145,6 +145,63 @@ async function startServer() {
     }
   });
 
+  // Endpoint to download the single unified JSON database file directly
+  app.get('/api/cloud-sync/download-json', (req, res) => {
+    try {
+      const db = getCloudDb();
+      if (!db || !db.equipments) {
+        return res.status(404).json({ success: false, message: 'Cơ sở dữ liệu JSON chưa khởi tạo' });
+      }
+      const filename = `cns_unified_equipment_database_${new Date().toISOString().slice(0, 10)}.json`;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(JSON.stringify(db, null, 2));
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Lỗi xuất file JSON' });
+    }
+  });
+
+  // Endpoint to restore database from an uploaded or provided JSON payload
+  app.post('/api/cloud-sync/restore-json', (req, res) => {
+    try {
+      const { equipments, trash, updatedBy, fullData } = req.body;
+      let targetEquipments = Array.isArray(equipments) ? equipments : [];
+      let targetTrash = Array.isArray(trash) ? trash : [];
+
+      if (fullData && typeof fullData === 'object') {
+        if (Array.isArray(fullData.equipments)) targetEquipments = fullData.equipments;
+        if (Array.isArray(fullData.trash)) targetTrash = fullData.trash;
+      }
+
+      if (!Array.isArray(targetEquipments) || targetEquipments.length === 0) {
+        return res.status(400).json({ success: false, message: 'File JSON không chứa dữ liệu thiết bị hợp lệ' });
+      }
+
+      const existingDb = getCloudDb();
+      const newDb: CloudDbSchema = {
+        version: (existingDb?.version || 0) + 1,
+        lastModified: new Date().toISOString(),
+        updatedBy: updatedBy || 'Restore System',
+        gasUrl: existingDb?.gasUrl || DEFAULT_GAS_URL,
+        equipments: targetEquipments,
+        trash: targetTrash
+      };
+
+      saveCloudDb(newDb);
+
+      res.json({
+        success: true,
+        version: newDb.version,
+        lastModified: newDb.lastModified,
+        count: targetEquipments.length,
+        trashCount: targetTrash.length,
+        message: `Đã khôi phục (Restore) thành công ${targetEquipments.length} hồ sơ thiết bị từ file JSON!`
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Lỗi khôi phục dữ liệu từ file JSON' });
+    }
+  });
+
   // Dedicated endpoint to save / update Google Apps Script Web App URL
   app.post('/api/cloud-sync/gas-url', (req, res) => {
     try {

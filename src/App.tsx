@@ -737,6 +737,42 @@ export default function App() {
     e.target.value = '';
   }, [currentUser, trashList, showToast]);
 
+  // Restore from server cloud JSON backup
+  const handleRestoreFromCloudJson = useCallback(async () => {
+    if (!currentUser.permissions.canImportData) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để khôi phục dữ liệu từ Server.');
+      return;
+    }
+    showToast('⏳ Đang tải cơ sở dữ liệu từ Server...');
+    try {
+      const res = await cloudSyncService.restoreFromCloudJson();
+      if (res.success && res.equipments) {
+        setEquipments(res.equipments);
+        if (res.equipments.length > 0) {
+          setCurrentId(res.equipments[0].id);
+        }
+        if (res.trash) {
+          setTrashList(res.trash);
+          storageService.saveTrash(res.trash);
+        }
+        storageService.saveImmediate(res.equipments);
+        showToast(res.message);
+
+        notificationService.notify({
+          title: 'Khôi phục từ Server thành công',
+          message: `Đã khôi phục thành công toàn bộ cơ sở dữ liệu (${res.equipments.length} thiết bị) từ file JSON Server gốc.`,
+          type: 'sync',
+          actor: currentUser.displayName || 'Quản trị viên'
+        });
+      } else {
+        showToast(`❌ ${res.message}`);
+      }
+    } catch (err: any) {
+      showToast(`❌ Lỗi khôi phục từ Server: ${err.message || 'Không thể đọc dữ liệu'}`);
+    }
+  }, [currentUser, trashList, showToast]);
+
   // Reset to default sample - Trigger Confirm Modal
   const handleResetDefaults = useCallback(() => {
     if (!currentUser.permissions.canResetDatabase) {
@@ -991,6 +1027,47 @@ export default function App() {
 
         {/* Tab Body Viewports with ErrorBoundary and Suspense */}
         <main className="p-6 flex-1 max-w-7xl w-full mx-auto">
+          {/* Firestore Out of Quota / Offline Warning Banner with Server JSON restore option */}
+          {(cloudSyncService.isFirestoreQuotaExceeded() || cloudSyncState.status === 'error') && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-300 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg text-amber-800 mt-0.5 md:mt-0">
+                  <svg className="w-5 h-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-amber-950">Hệ Thống Đang Chạy Chế Độ Dự Phòng Offline</h3>
+                  <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                    Hạn ngạch (Quota) Firebase Firestore hôm nay đã hết hoặc lỗi kết nối. Dữ liệu đang được lưu cục bộ an toàn. 
+                    Bạn có thể <b>nạp đè/khôi phục lại toàn bộ dữ liệu từ bản sao lưu JSON gốc trên Server</b> bất cứ lúc nào để đồng bộ các thiết bị.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                {currentUser.role === 'admin' ? (
+                  <button
+                    onClick={async () => {
+                      if (window.confirm('XÁC NHẬN: Bạn có chắc chắn muốn nạp đè dữ liệu hiện tại bằng file JSON sao lưu gốc trên Server?')) {
+                        await handleRestoreFromCloudJson();
+                      }
+                    }}
+                    className="w-full md:w-auto px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Khôi Phục Từ Server JSON</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="w-full md:w-auto px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Đăng Nhập Admin Để Khôi Phục</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Quick HUD Bar for Equipment Details and 1-Click Copy */}
           {activeTab !== 'dashboard' && activeTab !== 'printPreview' && activeTab !== 'settings' && (
             <QuickLookupBar
@@ -1142,6 +1219,7 @@ export default function App() {
                   onNavigateTab={(tab) => setActiveTab(tab)}
                   onOpenTrash={isAdmin ? handleOpenTrash : undefined}
                   trashCount={isAdmin ? trashList.length : 0}
+                  onRestoreFromCloudJson={handleRestoreFromCloudJson}
                 />
               )}
 

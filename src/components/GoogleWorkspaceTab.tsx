@@ -370,28 +370,60 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     setLastActionStatus('Đang đồng bộ cơ sở dữ liệu lên Google Sheets & Drive...');
 
     try {
-      const response = await fetch(gasUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify({
-          action: 'saveAllEquipments',
-          equipments: allEquipments
-        })
-      });
+      let result: any = null;
 
-      const result = await response.json();
-      if (result && result.success) {
+      // Try proxy first to bypass CORS/iframe restrictions
+      try {
+        const proxyRes = await fetch('/api/cloud-sync/gas-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: gasUrl,
+            payload: {
+              action: 'saveAllEquipments',
+              equipments: allEquipments
+            }
+          })
+        });
+        if (proxyRes.ok) {
+          result = await proxyRes.json();
+        }
+      } catch (pErr) {
+        console.warn('Proxy attempt skipped, falling back to direct fetch:', pErr);
+      }
+
+      // Direct fallback fetch if proxy returned null
+      if (!result) {
+        const response = await fetch(gasUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify({
+            action: 'saveAllEquipments',
+            equipments: allEquipments
+          })
+        });
+
+        const rawText = await response.text();
+        try {
+          result = JSON.parse(rawText);
+        } catch (jsonErr) {
+          throw new Error('Google Apps Script phản hồi nội dung HTML (có thể chưa triển khai với quyền "Anyone" hoặc sai URL Web App).');
+        }
+      }
+
+      if (result && (result.success || result.action === 'saveAllEquipments')) {
         setLastActionStatus(`✓ Đã lưu thành công ${allEquipments.length} hồ sơ thiết bị vào Google Sheet!`);
         onShowToast(`✓ Đã đồng bộ ${allEquipments.length} thiết bị lên Google Sheet!`);
       } else {
-        throw new Error(result.message || 'Lỗi khi lưu dữ liệu lên Google Sheet');
+        throw new Error(result?.message || result?.error || 'Lỗi khi lưu dữ liệu lên Google Sheet');
       }
     } catch (err: any) {
-      console.error('GAS push error:', err);
-      setLastActionStatus(`✗ Lỗi đồng bộ lên Sheet: ${err.message}`);
-      onShowToast('✗ Lỗi khi tải dữ liệu lên Google Sheets');
+      console.warn('GAS push warning:', err.message || err);
+      const userFriendlyMsg = err.message || 'Chưa thể kết nối Google Apps Script';
+      setLastActionStatus(`✗ Lỗi đồng bộ lên Sheet: ${userFriendlyMsg}`);
+      onShowToast(`✗ ${userFriendlyMsg}`);
     } finally {
       setIsSyncingUp(false);
     }
@@ -408,16 +440,43 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
     setLastActionStatus('Đang tải dữ liệu thiết bị từ Google Sheets (Chế độ Chỉ đọc)...');
 
     try {
-      const pullUrl = gasUrl.includes('?') 
-        ? `${gasUrl}&action=getAllEquipments` 
-        : `${gasUrl}?action=getAllEquipments`;
+      let result: any = null;
 
-      const response = await fetch(pullUrl, {
-        method: 'GET',
-        mode: 'cors'
-      });
+      // Try proxy first
+      try {
+        const proxyRes = await fetch('/api/cloud-sync/gas-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: gasUrl.includes('?') ? `${gasUrl}&action=getAllEquipments` : `${gasUrl}?action=getAllEquipments`
+          })
+        });
+        if (proxyRes.ok) {
+          result = await proxyRes.json();
+        }
+      } catch (pErr) {
+        console.warn('Proxy pull skipped, falling back to direct fetch:', pErr);
+      }
 
-      const result = await response.json();
+      // Fallback direct fetch
+      if (!result) {
+        const pullUrl = gasUrl.includes('?') 
+          ? `${gasUrl}&action=getAllEquipments` 
+          : `${gasUrl}?action=getAllEquipments`;
+
+        const response = await fetch(pullUrl, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        const rawText = await response.text();
+        try {
+          result = JSON.parse(rawText);
+        } catch (jsonErr) {
+          throw new Error('Google Apps Script phản hồi trang HTML (kiểm tra lại quyền truy cập "Anyone" của Web App).');
+        }
+      }
+
       if (result && result.success && Array.isArray(result.data)) {
         if (result.data.length === 0) {
           onShowToast('Google Sheet hiện chưa có dữ liệu nào.');
@@ -429,12 +488,13 @@ export const GoogleWorkspaceTab: React.FC<GoogleWorkspaceTabProps> = ({
         setLastActionStatus(`✓ Đã nạp thành công ${result.data.length} thiết bị từ Google Sheet!`);
         onShowToast(`✓ Đã tải về thành công ${result.data.length} thiết bị từ Google Sheet!`);
       } else {
-        throw new Error(result.message || 'Dữ liệu không hợp lệ từ Google Sheet');
+        throw new Error(result?.message || result?.error || 'Dữ liệu không hợp lệ từ Google Sheet');
       }
     } catch (err: any) {
-      console.error('GAS pull error:', err);
-      setLastActionStatus(`✗ Lỗi tải dữ liệu: ${err.message}`);
-      onShowToast('✗ Lỗi tải dữ liệu từ Google Sheets');
+      console.warn('GAS pull warning:', err.message || err);
+      const userFriendlyMsg = err.message || 'Lỗi tải dữ liệu từ Google Sheets';
+      setLastActionStatus(`✗ Lỗi tải dữ liệu: ${userFriendlyMsg}`);
+      onShowToast(`✗ ${userFriendlyMsg}`);
     } finally {
       setIsSyncingDown(false);
     }

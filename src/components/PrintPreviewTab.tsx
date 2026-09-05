@@ -55,6 +55,7 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
   const [copiedStandardDoc, setCopiedStandardDoc] = useState<boolean>(false);
 
   // Team inventory settings
+  const [paperSize, setPaperSize] = useState<'A4' | 'A5'>('A4');
   const [inventoryOrientation, setInventoryOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [inventoryRowsPerPage, setInventoryRowsPerPage] = useState<number>(7);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -479,6 +480,29 @@ ${content}
                 ))}
               </select>
 
+              {/* Paper Size Selector (A4 vs A5) */}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 p-1 rounded-lg">
+                <span className="text-[11px] text-slate-400 font-medium px-1">Khổ trang:</span>
+                <button
+                  onClick={() => setPaperSize('A4')}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                    paperSize === 'A4' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ giấy tiêu chuẩn A4 (210 × 297 mm)"
+                >
+                  A4
+                </button>
+                <button
+                  onClick={() => setPaperSize('A5')}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                    paperSize === 'A5' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ giấy A5 (148 × 210 mm) - Tối ưu cho sổ tay công tác nhỏ gọn"
+                >
+                  A5
+                </button>
+              </div>
+
               {/* Orientation Switch */}
               <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 p-1 rounded-lg">
                 <button
@@ -772,7 +796,7 @@ ${content}
                 title="Mở hộp thoại in trình duyệt để in ấn trực tiếp hoặc Lưu thành file PDF (Ctrl+P)"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In A4</span>
+                <span>In trang ({paperSize})</span>
               </button>
             </div>
           </div>
@@ -783,7 +807,10 @@ ${content}
       <style>{`
         @media print {
           @page {
-            size: ${viewMode === 'team_inventory' && inventoryOrientation === 'landscape' ? 'A4 landscape' : 'A4 portrait'};
+            size: ${paperSize === 'A5' 
+              ? (viewMode === 'team_inventory' && inventoryOrientation === 'landscape' ? 'A5 landscape' : 'A5 portrait') 
+              : (viewMode === 'team_inventory' && inventoryOrientation === 'landscape' ? 'A4 landscape' : 'A4 portrait')
+            };
             margin: 0;
           }
           body {
@@ -798,10 +825,10 @@ ${content}
             display: none !important;
           }
           .page-sheet {
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
-            padding: 12mm 15mm 10mm 18mm !important;
+            width: ${paperSize === 'A5' ? '148mm' : '210mm'} !important;
+            height: ${paperSize === 'A5' ? '210mm' : '297mm'} !important;
+            min-height: ${paperSize === 'A5' ? '210mm' : '297mm'} !important;
+            padding: ${paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '12mm 15mm 10mm 18mm'} !important;
             margin: 0 !important;
             box-shadow: none !important;
             page-break-after: always !important;
@@ -809,10 +836,10 @@ ${content}
             background: #fff !important;
           }
           .page-sheet-landscape {
-            width: 297mm !important;
-            height: 210mm !important;
-            min-height: 210mm !important;
-            padding: 8mm 12mm 8mm 12mm !important;
+            width: ${paperSize === 'A5' ? '210mm' : '297mm'} !important;
+            height: ${paperSize === 'A5' ? '148mm' : '210mm'} !important;
+            min-height: ${paperSize === 'A5' ? '148mm' : '210mm'} !important;
+            padding: ${paperSize === 'A5' ? '5mm 8mm 5mm 8mm' : '8mm 12mm 8mm 12mm'} !important;
             margin: 0 !important;
             box-shadow: none !important;
             page-break-after: always !important;
@@ -841,6 +868,7 @@ ${content}
           <TeamInventoryPrintView
             equipments={filteredInventoryEquipments}
             orientation={inventoryOrientation}
+            paperSize={paperSize}
             rowsPerPage={inventoryRowsPerPage}
             showQr={showQrInInventory}
             qrCodeMap={qrCodeMap}
@@ -860,6 +888,7 @@ ${content}
               coverQrUrl={qrCodeMap[eq.id] || coverQrUrl}
               itemsPerPageMaint={itemsPerPageMaint}
               keyPrefix={`all-${eq.id}-${i}`}
+              paperSize={paperSize}
             />
           ))
         ) : (
@@ -868,6 +897,7 @@ ${content}
             coverQrUrl={coverQrUrl}
             itemsPerPageMaint={itemsPerPageMaint}
             keyPrefix="single"
+            paperSize={paperSize}
           />
         )}
       </div>

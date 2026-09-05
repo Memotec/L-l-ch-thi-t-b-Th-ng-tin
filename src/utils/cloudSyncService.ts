@@ -57,6 +57,13 @@ export const cloudSyncService = {
   },
 
   /**
+   * Check if Firebase Firestore is offline or has exceeded its quota limit
+   */
+  isFirestoreQuotaExceeded(): boolean {
+    return firestoreService.isQuotaExceeded ? firestoreService.isQuotaExceeded() : false;
+  },
+
+  /**
    * Subscribe to sync state changes
    */
   subscribe(fn: SyncListener): () => void {
@@ -501,5 +508,130 @@ export const cloudSyncService = {
         unsubscribeFirestore();
       }
     };
+  },
+
+  /**
+   * Restores data directly from the unified JSON database file on the server
+   */
+  async restoreFromCloudJson(): Promise<{
+    success: boolean;
+    equipments?: EquipmentData[];
+    trash?: TrashEquipmentItem[];
+    message: string;
+  }> {
+    try {
+      const res = await fetch('/api/cloud-sync/data?t=' + Date.now());
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.equipments) && data.equipments.length > 0) {
+        const nowStr = new Date().toISOString();
+        localStorage.setItem(CLOUD_LAST_SYNC_KEY, nowStr);
+        updateState({
+          status: 'synced',
+          lastSyncedAt: nowStr,
+          cloudCount: data.equipments.length,
+          lastModified: data.lastModified || nowStr,
+          updatedBy: data.updatedBy || 'Restore JSON'
+        });
+        return {
+          success: true,
+          equipments: data.equipments,
+          trash: data.trash || [],
+          message: `✓ Đã khôi phục thành công ${data.equipments.length} hồ sơ thiết bị từ File JSON Server!`
+        };
+      }
+      return {
+        success: false,
+        message: 'File JSON trên Server chưa có dữ liệu thiết bị.'
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: `Lỗi khôi phục từ File JSON Server: ${err.message || 'Không thể đọc file'}`
+      };
+    }
+  },
+
+  /**
+   * Restores database from an uploaded JSON file object
+   */
+  async restoreFromUploadJson(jsonData: any, userDisplayName?: string): Promise<{
+    success: boolean;
+    equipments?: EquipmentData[];
+    trash?: TrashEquipmentItem[];
+    message: string;
+  }> {
+    try {
+      let equipmentsToRestore: EquipmentData[] = [];
+      let trashToRestore: TrashEquipmentItem[] = [];
+
+      if (Array.isArray(jsonData)) {
+        equipmentsToRestore = jsonData;
+      } else if (jsonData && typeof jsonData === 'object') {
+        if (Array.isArray(jsonData.equipments)) equipmentsToRestore = jsonData.equipments;
+        if (Array.isArray(jsonData.trash)) trashToRestore = jsonData.trash;
+      }
+
+      if (!equipmentsToRestore.length) {
+        return {
+          success: false,
+          message: 'Dữ liệu file JSON không đúng cấu trúc (không tìm thấy danh sách equipments).'
+        };
+      }
+
+      // Save to server database endpoint
+      const res = await fetch('/api/cloud-sync/restore-json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipments: equipmentsToRestore,
+          trash: trashToRestore,
+          updatedBy: userDisplayName || 'Restore Upload JSON'
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const nowStr = new Date().toISOString();
+        localStorage.setItem(CLOUD_LAST_SYNC_KEY, nowStr);
+        updateState({
+          status: 'synced',
+          lastSyncedAt: nowStr,
+          cloudCount: equipmentsToRestore.length,
+          lastModified: nowStr,
+          updatedBy: userDisplayName || 'Restore Upload JSON'
+        });
+
+        return {
+          success: true,
+          equipments: equipmentsToRestore,
+          trash: trashToRestore,
+          message: `✓ Khôi phục thành công ${equipmentsToRestore.length} thiết bị từ file JSON uploaded!`
+        };
+      } else {
+        throw new Error(data.message || 'Lỗi server khi khôi phục JSON');
+      }
+    } catch (err: any) {
+      return {
+        success: false,
+        message: `Khôi phục thất bại: ${err.message}`
+      };
+    }
+  },
+
+  /**
+   * Downloads the current unified JSON database file
+   */
+  downloadUnifiedJsonDb(): void {
+    if (typeof window !== 'undefined') {
+      const link = document.createElement('a');
+      link.href = '/api/cloud-sync/download-json';
+      link.download = `cns_unified_equipment_database_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }
 };

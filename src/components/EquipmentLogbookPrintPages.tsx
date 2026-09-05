@@ -15,13 +15,15 @@ interface EquipmentLogbookPrintPagesProps {
   coverQrUrl?: string;
   itemsPerPageMaint?: number;
   keyPrefix?: string;
+  paperSize?: 'A4' | 'A5';
 }
 
 export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProps> = ({
   equipment,
   coverQrUrl,
   itemsPerPageMaint = 7,
-  keyPrefix = 'logbook'
+  keyPrefix = 'logbook',
+  paperSize = 'A4'
 }) => {
   const g = equipment.general || ({} as any);
   const s = equipment.spec || ({} as any);
@@ -119,7 +121,7 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
         }
         @media print {
           @page {
-            size: A4 portrait;
+            size: ${paperSize === 'A5' ? 'A5 portrait' : 'A4 portrait'};
             margin: 0;
           }
           body {
@@ -130,9 +132,9 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
             print-color-adjust: exact;
           }
           .page-sheet {
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
+            width: ${paperSize === 'A5' ? '148mm' : '210mm'} !important;
+            height: ${paperSize === 'A5' ? '210mm' : '297mm'} !important;
+            min-height: ${paperSize === 'A5' ? '210mm' : '297mm'} !important;
             margin: 0 !important;
             box-shadow: none !important;
             border: none !important;
@@ -151,15 +153,19 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-page-1`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 relative flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '12mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '12mm 15mm 12mm 18mm' 
+        }}
       >
         {/* Double Frame Border */}
         <div 
           className="h-full flex flex-col justify-between"
           style={{
             border: '3px double #000',
-            padding: '14mm 12mm 12mm',
-            minHeight: '272mm'
+            padding: paperSize === 'A5' ? '10mm 8mm 8mm' : '14mm 12mm 12mm',
+            minHeight: paperSize === 'A5' ? '194mm' : '272mm'
           }}
         >
           {/* Top Unit / Company & Official Logo */}
@@ -281,7 +287,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-page-2`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+        }}
       >
         <div>
           {/* Top Table of Contents */}
@@ -379,7 +389,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-page-3`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+        }}
       >
         <div>
           <div className="text-center mb-6">
@@ -499,7 +513,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-page-4`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+        }}
       >
         <div>
           <div className="text-center mb-6">
@@ -568,7 +586,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-page-5`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+        }}
       >
         <div>
           <div className="text-center mb-6">
@@ -622,7 +644,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-page-6`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+        }}
       >
         <div>
           <div className="text-center mb-6">
@@ -677,7 +703,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
           <div 
             key={`${keyPrefix}-maint-page-${pageIdx}`}
             className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-            style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+            style={{ 
+              width: paperSize === 'A5' ? '148mm' : '210mm', 
+              minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+              padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+            }}
           >
             <div>
               <div className="text-center mb-6">
@@ -740,7 +770,11 @@ export const EquipmentLogbookPrintPages: React.FC<EquipmentLogbookPrintPagesProp
       <div 
         key={`${keyPrefix}-repair-page`}
         className="page-sheet bg-white mx-auto shadow-md border border-slate-300 flex flex-col justify-between"
-        style={{ width: '210mm', minHeight: '297mm', padding: '14mm 15mm 12mm 18mm' }}
+        style={{ 
+          width: paperSize === 'A5' ? '148mm' : '210mm', 
+          minHeight: paperSize === 'A5' ? '210mm' : '297mm', 
+          padding: paperSize === 'A5' ? '8mm 10mm 8mm 12mm' : '14mm 15mm 12mm 18mm' 
+        }}
       >
         <div>
           <div className="text-center mb-6">

@@ -5,6 +5,7 @@ import { EquipmentData } from '../types';
 interface TeamInventoryPrintViewProps {
   equipments: EquipmentData[];
   orientation?: 'landscape' | 'portrait';
+  paperSize?: 'A4' | 'A5';
   rowsPerPage?: number;
   showQr?: boolean;
   qrCodeMap?: Record<string, string>;
@@ -15,6 +16,7 @@ interface TeamInventoryPrintViewProps {
 export const TeamInventoryPrintView: React.FC<TeamInventoryPrintViewProps> = ({
   equipments,
   orientation = 'landscape',
+  paperSize = 'A4',
   rowsPerPage = 7,
   showQr = true,
   qrCodeMap = {},
@@ -65,14 +67,25 @@ export const TeamInventoryPrintView: React.FC<TeamInventoryPrintViewProps> = ({
         const pageNum = pIndex + 1;
         const totalPages = pages.length;
 
+        const isA5 = paperSize === 'A5';
+        const sheetWidth = isA5 
+          ? (isLandscape ? '210mm' : '148mm') 
+          : (isLandscape ? '297mm' : '210mm');
+        const sheetHeight = isA5 
+          ? (isLandscape ? '148mm' : '210mm') 
+          : (isLandscape ? '210mm' : '297mm');
+        const sheetPadding = isA5 
+          ? (isLandscape ? '5mm 8mm 5mm 8mm' : '6mm 8mm 6mm 10mm') 
+          : (isLandscape ? '8mm 12mm 8mm 12mm' : '12mm 14mm 10mm 16mm');
+
         return (
           <div
             key={`team-inv-page-${pIndex}`}
             className={`${sheetClass} bg-white mx-auto shadow-md border border-slate-300 relative flex flex-col justify-between`}
             style={{
-              width: isLandscape ? '297mm' : '210mm',
-              minHeight: isLandscape ? '210mm' : '297mm',
-              padding: isLandscape ? '8mm 12mm 8mm 12mm' : '12mm 14mm 10mm 16mm',
+              width: sheetWidth,
+              minHeight: sheetHeight,
+              padding: sheetPadding,
               boxSizing: 'border-box'
             }}
           >
