@@ -1,0 +1,4225 @@
+{
+  "version": 368,
+  "lastModified": "2026-09-05T04:40:43.921Z",
+  "updatedBy": "Quản Trị Viên (Admin)",
+  "gasUrl": "https://script.google.com/macros/s/AKfycbySB2N2_ekkgKoxNzZjrRmdHaysDntLGXmsS7FH2mp04_WSyCpZh7ExWAWfunwjmnS7PA/exec",
+  "equipments": [
+    {
+      "licenses": [
+        {
+          "content": "",
+          "startNo": "",
+          "active": true,
+          "id": "lic-1788448983724",
+          "startDate": "2026-09-03",
+          "endDate": ""
+        }
+      ],
+      "general": {
+        "assetNo": "A0424102002422",
+        "status": "Đang khai thác",
+        "warrantyDate": "2027-09-01",
+        "nextCalDate": "2027-02-28",
+        "manufacturer": "R&S",
+        "model": "S5200VR",
+        "notes": "Thiết bị mới đưa vào khai thác.",
+        "acceptanceDate": "",
+        "commissioned": "",
+        "category": "VHF/UHF",
+        "serial": "100868",
+        "assetCode": "EQ-8020",
+        "estimatedLifespanYears": 10,
+        "name": "Máy Thu VHF S5200",
+        "origin": "Đức",
+        "priority": "Hệ thống chính (Level 1)",
+        "yearMade": "2026"
+      },
+      "id": "eq-1788232478019",
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "createdAt": "2026-09-01T03:14:38.019Z",
+      "repair": [
+        {
+          "actionTaken": "",
+          "replacedParts": "",
+          "date": "2026-09-03 15:43",
+          "id": "rp-1788450214354",
+          "status": "Đã xử lý dứt điểm",
+          "rootCause": "",
+          "resolvedDate": "2026-09-03 15:43",
+          "type": "Sửa chữa khắc phục sự cố",
+          "incidentDescription": "",
+          "person": "Kỹ sư Trực Kỹ thuật"
+        }
+      ],
+      "docs": [
+        {
+          "note": "Kèm đĩa phần mềm",
+          "no": 1,
+          "format": "Bản in giấy",
+          "lang": "English / Tiếng Việt",
+          "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+          "location": "Tủ tài liệu trạm",
+          "qty": 1,
+          "id": "doc-1"
+        }
+      ],
+      "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+      "orgRows": [],
+      "org": {
+        "location": "Phòng TBTT-ACC HCM",
+        "unit": "Đội Thông Tin - TT BDKT",
+        "supervisor": "Đội Trưởng đội Thông tin",
+        "primaryEngineer": "Kíp trực kỹ thuật",
+        "companyName": "Công ty quản lý bay miền Nam",
+        "phoneContact": ""
+      },
+      "components": [
+        {
+          "qty": 1,
+          "partNo": "MCU-01",
+          "id": "cp-1",
+          "healthStatus": "Tốt",
+          "name": "Khối xử lý trung tâm (Main Controller)",
+          "serial": "SN-MCU-4004",
+          "note": "Slot 1",
+          "no": 1,
+          "unit": "Bo mạch"
+        },
+        {
+          "no": 2,
+          "partNo": "PSU-220/48",
+          "unit": "Bộ",
+          "serial": "SN-PSU-5932",
+          "note": "Khe cắm nguồn",
+          "id": "cp-2",
+          "name": "Khối nguồn cung cấp (PSU Module)",
+          "qty": 1,
+          "healthStatus": "Tốt"
+        },
+        {
+          "unit": "Bộ",
+          "note": "",
+          "healthStatus": "Tốt",
+          "no": 3,
+          "name": "",
+          "serial": "",
+          "id": "cp-1788482726418",
+          "partNo": "",
+          "qty": 1
+        }
+      ],
+      "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+      "maintenance": [
+        {
+          "cycle": "6 tháng",
+          "person": "Kíp Tô Minh Tâm",
+          "result": "Đạt yêu cầu kỹ thuật",
+          "date": "2026-09-04",
+          "id": "log-1788485372751",
+          "supervisor": "Đội Trưởng đội Thông tin",
+          "content": ""
+        },
+        {
+          "cycle": "Bảo dưỡng định kỳ",
+          "supervisor": "Trưởng Đài / Đội trưởng CNS",
+          "id": "log-1788450137469",
+          "person": "Kíp Tô Minh Tâm",
+          "content": "",
+          "date": "2026-09-03",
+          "result": "Đạt yêu cầu kỹ thuật"
+        },
+        {
+          "result": "Đạt yêu cầu kỹ thuật",
+          "id": "mt-1",
+          "date": "2026-09-01",
+          "person": "Kỹ sư Trực Kỹ thuật",
+          "cycle": "Hàng quý",
+          "supervisor": "Trưởng Đài CNS",
+          "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+          "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu."
+        }
+      ],
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "spec": {
+        "snmpCommunity": "public",
+        "output": "Chuẩn định mức",
+        "mgmtIp": "192.168.1.50",
+        "power": "220VAC ± 10% / -48VDC",
+        "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+        "gateway": "192.168.1.1",
+        "firmware": "v1.0.0",
+        "range": "Băng thông tiêu chuẩn",
+        "vlanId": "VLAN 100",
+        "interface": "VoIP ED-137 / IP / RS232",
+        "subnetMask": "255.255.255.0",
+        "channelFreq": "Kênh khai thác chính"
+      }
+    },
+    {
+      "repair": [],
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "spec": {
+        "output": "Chuẩn định mức",
+        "power": "220VAC ± 10% / -48VDC",
+        "gateway": "192.168.1.1",
+        "snmpCommunity": "public",
+        "firmware": "v1.0.0",
+        "interface": "VoIP ED-137 / IP / RS232",
+        "range": "Băng thông tiêu chuẩn",
+        "vlanId": "VLAN 100",
+        "channelFreq": "Kênh khai thác chính",
+        "mgmtIp": "192.168.1.50",
+        "text": "Hệ thống Router Cisco 2900 Series phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+        "subnetMask": "255.255.255.0"
+      },
+      "org": {
+        "phoneContact": "024-3872xxxx",
+        "unit": "Đội Thông Tin - TT BDKT",
+        "location": "Phòng TBTT-ACC HCM",
+        "supervisor": "Trưởng Đài / Đội trưởng CNS",
+        "primaryEngineer": "Kỹ sư Trực Kỹ thuật"
+      },
+      "maintenance": [
+        {
+          "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+          "supervisor": "Trưởng Đài CNS",
+          "date": "2026-09-01",
+          "id": "mt-1",
+          "cycle": "Hàng quý",
+          "result": "Đạt yêu cầu kỹ thuật",
+          "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+          "person": "Kỹ sư Trực Kỹ thuật"
+        }
+      ],
+      "components": [
+        {
+          "healthStatus": "Tốt",
+          "serial": "SN-MCU-9285",
+          "qty": 1,
+          "no": 1,
+          "name": "Khối xử lý trung tâm (Main Controller)",
+          "partNo": "MCU-01",
+          "id": "cp-1",
+          "unit": "Bo mạch",
+          "note": "Slot 1"
+        },
+        {
+          "id": "cp-2",
+          "partNo": "PSU-220/48",
+          "note": "Khe cắm nguồn",
+          "qty": 1,
+          "unit": "Bộ",
+          "healthStatus": "Tốt",
+          "no": 2,
+          "serial": "SN-PSU-4756",
+          "name": "Khối nguồn cung cấp (PSU Module)"
+        }
+      ],
+      "docs": [
+        {
+          "lang": "English / Tiếng Việt",
+          "id": "doc-1",
+          "note": "Kèm đĩa phần mềm",
+          "qty": 1,
+          "format": "Bản in giấy",
+          "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+          "no": 1,
+          "location": "Tủ tài liệu trạm"
+        }
+      ],
+      "general": {
+        "manufacturer": "Cisco",
+        "serial": "FGL192811GJ",
+        "warrantyDate": "2027-09-01",
+        "notes": "Thiết bị mới đưa vào khai thác.",
+        "model": "Cisco 2921",
+        "origin": "Quốc tế",
+        "name": "Router Cisco 2900 Series",
+        "estimatedLifespanYears": 10,
+        "commissioned": "2026-09-01",
+        "category": "VHF/UHF",
+        "acceptanceDate": "2026-09-01",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "yearMade": "2026",
+        "assetNo": "10310042001587",
+        "assetCode": "EQ-5694",
+        "nextCalDate": "2027-02-28"
+      },
+      "licenses": [
+        {
+          "startDate": "2026-09-01",
+          "id": "lic-1788232865694",
+          "startNo": "GP-TS-CNS/2025",
+          "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+          "active": true,
+          "endDate": "2029-08-31"
+        }
+      ],
+      "createdAt": "2026-09-01T03:21:05.694Z",
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "id": "eq-1788232865694",
+      "orgRows": [
+        {
+          "unit": "Đội Thông Tin - TT BDKT",
+          "note": "Bàn giao đưa vào khai thác",
+          "status": "Tiếp nhận mới 100%",
+          "handoverDocNo": "BB-NTBG/CNS",
+          "id": "or-1788232865694",
+          "date": "2026-09-01"
+        }
+      ]
+    },
+    {
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "licenses": [],
+      "spec": {
+        "text": "",
+        "channelFreq": "",
+        "output": "",
+        "interface": "",
+        "firmware": "",
+        "range": "",
+        "mgmtIp": "",
+        "gateway": "",
+        "snmpCommunity": "",
+        "subnetMask": "",
+        "vlanId": "",
+        "power": ""
+      },
+      "orgRows": [],
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "createdAt": "2026-09-03T13:05:34.618Z",
+      "id": "eq-1788440734618",
+      "maintenance": [
+        {
+          "measuredParams": "",
+          "result": "Đạt yêu cầu kỹ thuật",
+          "supervisor": "",
+          "person": "",
+          "id": "mt-1788571005213",
+          "date": "2023-09-05",
+          "cycle": "6 tháng",
+          "content": "Kiểm tra các thông số kênh liên lạc thoại,dữ liệu\n- Kiểm tra các kết nối, nguồn cấp\n- Vệ sinh tổng quan thiết bị"
+        }
+      ],
+      "components": [],
+      "docs": [],
+      "org": {
+        "location": "Phòng Thiết bị Trung tâm - AACC HCM",
+        "supervisor": "",
+        "unit": "Đội Thông tin",
+        "phoneContact": "",
+        "companyName": "Công ty Quản lý bay miền Nam",
+        "primaryEngineer": ""
+      },
+      "general": {
+        "status": "Đang khai thác",
+        "estimatedLifespanYears": 10,
+        "nextCalDate": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "model": "ISR4331",
+        "serial": "FDO220A02G",
+        "assetCode": "",
+        "category": "Ghép Kênh",
+        "priority": "Hệ thống dự phòng nóng (Level 2)",
+        "origin": "USA",
+        "name": "Router Cisco 4300 Series ",
+        "assetNo": "A0418063001836",
+        "yearMade": "2018",
+        "warrantyDate": "",
+        "manufacturer": "Cisco",
+        "notes": "Thiết bị đường truyền kênh VNPT HCM-KUL"
+      },
+      "repair": []
+    },
+    {
+      "components": [],
+      "docs": [],
+      "licenses": [],
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "createdAt": "2026-09-04T00:27:52.188Z",
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "orgRows": [],
+      "id": "eq-1788481672188",
+      "spec": {
+        "mgmtIp": "",
+        "interface": "",
+        "snmpCommunity": "",
+        "vlanId": "",
+        "gateway": "",
+        "channelFreq": "",
+        "subnetMask": "",
+        "power": "",
+        "text": "",
+        "firmware": "",
+        "range": "",
+        "output": ""
+      },
+      "maintenance": [],
+      "repair": [],
+      "general": {
+        "commissioned": "",
+        "status": "Đang khai thác",
+        "assetCode": "",
+        "category": "VHF/UHF",
+        "manufacturer": "Park Air",
+        "assetNo": "12335",
+        "notes": "",
+        "serial": "1234567",
+        "estimatedLifespanYears": 10,
+        "warrantyDate": "",
+        "acceptanceDate": "",
+        "nextCalDate": "",
+        "model": "PAE 12354555",
+        "origin": "",
+        "priority": "Hệ thống chính (Level 1)",
+        "name": "Máy phát VHF -127.725 MHz",
+        "yearMade": ""
+      },
+      "org": {
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "location": "Phòng thiết bị trung tâm",
+        "supervisor": "",
+        "unit": "Đội Thông tin"
+      }
+    },
+    {
+      "spec": {
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "vlanId": "",
+        "power": "",
+        "firmware": "",
+        "output": "",
+        "text": "",
+        "snmpCommunity": "",
+        "range": "",
+        "channelFreq": "",
+        "gateway": ""
+      },
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "createdAt": "2026-09-04T00:29:05.370Z",
+      "repair": [],
+      "docs": [],
+      "licenses": [],
+      "general": {
+        "acceptanceDate": "",
+        "commissioned": "",
+        "nextCalDate": "",
+        "category": "VHF/UHF",
+        "status": "Đang khai thác",
+        "yearMade": "",
+        "priority": "Hệ thống chính (Level 1)",
+        "assetNo": "Aa123456789",
+        "name": "Ghép kênh MP4100 CSN",
+        "warrantyDate": "",
+        "origin": "",
+        "manufacturer": "RAD - Israel",
+        "model": "MP41000",
+        "estimatedLifespanYears": 10,
+        "serial": "test 123456",
+        "notes": "",
+        "assetCode": ""
+      },
+      "orgRows": [],
+      "org": {
+        "location": "Phòng thiết bị Thông tin",
+        "phoneContact": "",
+        "supervisor": "",
+        "unit": "Đội Thông tin",
+        "primaryEngineer": ""
+      },
+      "maintenance": [],
+      "id": "eq-1788481745370",
+      "components": [],
+      "updatedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "id": "eq-1788481804558",
+      "maintenance": [],
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "licenses": [],
+      "spec": {
+        "mgmtIp": "",
+        "subnetMask": "",
+        "interface": "",
+        "vlanId": "",
+        "channelFreq": "",
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "snmpCommunity": "",
+        "firmware": "",
+        "gateway": ""
+      },
+      "orgRows": [],
+      "components": [],
+      "docs": [],
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phòng thiết bị đội TT",
+        "supervisor": "",
+        "phoneContact": "",
+        "primaryEngineer": ""
+      },
+      "general": {
+        "model": "MP2100",
+        "category": "VHF/UHF",
+        "status": "Đang khai thác",
+        "estimatedLifespanYears": 10,
+        "yearMade": "",
+        "priority": "Hệ thống chính (Level 1)",
+        "notes": "",
+        "nextCalDate": "",
+        "commissioned": "",
+        "assetNo": "1234567",
+        "name": "Ghép kênh MP2100 - DAN",
+        "origin": "",
+        "serial": "1234567",
+        "warrantyDate": "",
+        "manufacturer": "RAD",
+        "assetCode": "",
+        "acceptanceDate": ""
+      },
+      "createdAt": "2026-09-04T00:30:04.558Z",
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "repair": []
+    },
+    {
+      "components": [
+        {
+          "id": "cp-1788572157955",
+          "no": 1,
+          "name": "VHF Jotron RA-7203",
+          "partNo": "RA-7203",
+          "serial": "1390(2721)",
+          "unit": "Bộ",
+          "qty": 1,
+          "healthStatus": "Tốt",
+          "note": "Rack B6- VHF"
+        }
+      ],
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "org": {
+        "primaryEngineer": "",
+        "unit": "Đôi Tông tin",
+        "companyName": "Công ty Quản lý bay miền Nam",
+        "location": "Rack B6- VHF - P.Thiết bị trung tâm - ACC HCM",
+        "phoneContact": "",
+        "supervisor": "Đội Trưởng"
+      },
+      "orgRows": [],
+      "repair": [],
+      "licenses": [
+        {
+          "id": "lic-1788571831199",
+          "startNo": "5035/GP-CHK",
+          "startDate": "",
+          "content": "Cục hàng không",
+          "endDate": "2024-10-28",
+          "active": false
+        },
+        {
+          "id": "lic-1788571912861",
+          "startNo": "5502/GP-CHK",
+          "startDate": "",
+          "content": "Cục hàng không",
+          "endDate": "2026-10-28",
+          "active": false
+        }
+      ],
+      "general": {
+        "commissioned": "2022-10-28",
+        "assetCode": "",
+        "nextCalDate": "",
+        "assetNo": "Đang cập nhật",
+        "acceptanceDate": "",
+        "status": "Đang khai thác",
+        "notes": "Máy thu RX 120.1 MHz Main",
+        "warrantyDate": "",
+        "category": "VHF/UHF",
+        "manufacturer": "Jotron",
+        "name": "VHF Jotron RA-7203 - RX 120.1 Main",
+        "origin": "Na uy",
+        "estimatedLifespanYears": 10,
+        "yearMade": "2019",
+        "priority": "Hệ thống chính (Level 1)",
+        "serial": "13590(2721)",
+        "model": "RA-7203"
+      },
+      "spec": {
+        "interface": "",
+        "snmpCommunity": "",
+        "gateway": "",
+        "output": "",
+        "firmware": "",
+        "power": "AC: 85-264V 47-63 Hz, DC: 21.6-31.2 V",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "vlanId": "",
+        "channelFreq": "120.1 MHz",
+        "range": "118-136.975 MHz",
+        "text": "Liên lạc không địa, điều chế AM tần số VHF 118-137 MHz, Công nghệ bán dẫn"
+      },
+      "createdAt": "2026-09-04T07:22:20.406Z",
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "id": "eq-1788506540406",
+      "maintenance": [],
+      "docs": [
+        {
+          "id": "doc-1788572251322",
+          "no": 1,
+          "name": "Operator Installtion Manual RA-7203",
+          "qty": 1,
+          "format": "Bản điện tử (PDF/CAD)",
+          "lang": "English",
+          "location": "",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "orgRows": [],
+      "components": [],
+      "licenses": [],
+      "docs": [],
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "createdAt": "2026-09-04T15:14:01.948Z",
+      "general": {
+        "commissioned": "",
+        "nextCalDate": "",
+        "yearMade": "2023",
+        "origin": "",
+        "estimatedLifespanYears": 10,
+        "priority": "Hệ thống chính (Level 1)",
+        "category": "Thiết Bị Khác",
+        "acceptanceDate": "",
+        "serial": "3069",
+        "warrantyDate": "",
+        "name": "Audio Test Set ATS-2",
+        "notes": "",
+        "manufacturer": "",
+        "assetNo": "MN-CC10101300435",
+        "assetCode": "",
+        "status": "Đang khai thác",
+        "model": "ATS-2"
+      },
+      "org": {
+        "primaryEngineer": "",
+        "companyName": "Công ty Quản lý bay miền Nam",
+        "unit": "Đội Thông tin",
+        "location": "Thiết bị đo - Đội TT",
+        "phoneContact": "",
+        "supervisor": "Đội Trưởng"
+      },
+      "maintenance": [],
+      "id": "eq-1788534841948",
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "spec": {
+        "channelFreq": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "vlanId": "",
+        "firmware": "",
+        "text": "",
+        "snmpCommunity": "",
+        "range": "",
+        "power": "",
+        "gateway": "",
+        "output": "",
+        "interface": ""
+      },
+      "repair": []
+    },
+    {
+      "docs": [
+        {
+          "qty": 1,
+          "format": "Bản in giấy",
+          "name": "Riello Multi Sentry Installation & Service Manual",
+          "id": "doc-p1",
+          "lang": "English / Italian",
+          "note": "Kèm sơ đồ đấu nối nguyên lý lực",
+          "no": 1,
+          "location": "Tủ hồ sơ phòng điện nguồn"
+        }
+      ],
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "general": {
+        "priority": "Hệ thống chính (Level 1)",
+        "nextCalDate": "2025-10-10",
+        "serial": " 9333-10-0001/9333-10-0002",
+        "manufacturer": "Sitti S.P.A (Italy)",
+        "yearMade": "2020",
+        "model": "M800IP",
+        "warrantyDate": "2022-10-15",
+        "origin": "Ý (Italy)",
+        "assetNo": "TS-CNS-PWR-004",
+        "acceptanceDate": "2020-10-10",
+        "category": "POWER",
+        "notes": "Cung cấp nguồn điện sạch không gián đoạn cho toàn bộ hệ thống Radar, VHF và máy chủ điều hành bay",
+        "status": "Đang khai thác",
+        "commissioned": "2020-10-15",
+        "assetCode": "UPS-ACC-MST30-A",
+        "estimatedLifespanYears": 12,
+        "name": "VCCS Main"
+      },
+      "orgRows": [
+        {
+          "status": "Hoạt động ổn định ở chế độ Online Double Conversion",
+          "date": "2020-10-15",
+          "unit": "Nghiệm thu đóng điện hòa đồng bộ 2 tổ hợp UPS song song N+1",
+          "handoverDocNo": "BB-NT-UPS-20/CNS",
+          "id": "tr-p1",
+          "note": "Thời gian xả tải giả 100% đạt 45 phút"
+        }
+      ],
+      "licenses": [
+        {
+          "startDate": "2026-09-04",
+          "content": "Cục Hàng Không ",
+          "startNo": "6304/GP-CHK",
+          "active": true,
+          "endDate": "2027-12-19",
+          "id": "lic-1788526478728"
+        }
+      ],
+      "id": "eq-ups-riello-04",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phòng máy - ATCC",
+        "phoneContact": "",
+        "companyName": "Công ty Quản lý bay miền nam",
+        "supervisor": "",
+        "primaryEngineer": ""
+      },
+      "repair": [],
+      "components": [
+        {
+          "no": 1,
+          "serial": "",
+          "unit": "Tủ",
+          "healthStatus": "Tốt",
+          "note": "",
+          "partNo": "",
+          "name": "Tủ chuyển mạch trung tâm, cấu hình chính/dự phòng",
+          "id": "cp-1788526606383",
+          "qty": 2
+        },
+        {
+          "name": "Hệ thống giám sát điều khiển: máy chủ ",
+          "serial": "",
+          "healthStatus": "Tốt",
+          "qty": 2,
+          "unit": "Cái",
+          "no": 2,
+          "note": "",
+          "id": "cp-1788526663576",
+          "partNo": ""
+        }
+      ],
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "maintenance": [
+        {
+          "measuredParams": "Điện áp tổng DC Bus: 542VDC; Dòng nạp bù nhiệt: 2.1A; Nhiệt độ phòng acquy: 22.5°C; Điện áp ngõ ra 3 pha: 230V/230V/231V cân bằng",
+          "person": "KS. Hoàng Văn Long",
+          "cycle": "Hàng quý",
+          "content": "Đo nội trở và điện áp từng bình acquy trong dàn 40 bình, kiểm tra điểm siết ốc cực ắc quy bằng cờ lê lực, đo dòng sạc Float & Boost, thử ngắt nguồn lưới kiểm tra chuyển mạch ắc quy thực tế 15 phút.",
+          "result": "Đạt yêu cầu kỹ thuật",
+          "id": "mt-p1",
+          "date": "2024-05-18",
+          "supervisor": "KS. Vũ Thành Trung"
+        }
+      ],
+      "createdAt": "2024-04-05T10:00:00.000Z",
+      "spec": {
+        "mgmtIp": "192.168.99.10",
+        "vlanId": "VLAN 99 (CNS-FACILITIES)",
+        "interface": "Cổng RS232, USB, Slot cắm card mạng SNMP NetMan 204, Tiếp điểm khô Dry Contact",
+        "gateway": "192.168.99.1",
+        "power": "",
+        "firmware": "DSP Firmware v3.12 / Inverter v2.88",
+        "subnetMask": "255.255.255.0",
+        "snmpCommunity": "riello_ups_net",
+        "output": "Công suất danh định: 30 kVA / 27 kW (Hệ số công suất cos phi 0.9)",
+        "range": "Dải tần vào: 40 - 72 Hz; Tần số ra: 50 Hz ± 0.01% (Free running)",
+        "channelFreq": "Hệ thống gồm 40 bình Acquy khô AGM kín khí 12V-100Ah",
+        "text": "Điều khiển chuyển mạch thoại, kết nối các bàn làm việc (CWP)\nvà máy thu phát VHF, trực thoại, điện thoại phục vụ điều hành bay.\n"
+      }
+    },
+    {
+      "components": [
+        {
+          "id": "cp-1788572157955",
+          "no": 1,
+          "name": "VHF Jotron RA-7203",
+          "partNo": "RA-7203",
+          "serial": "1390(2721)",
+          "unit": "Bộ",
+          "qty": 1,
+          "healthStatus": "Tốt",
+          "note": "Rack B6- VHF"
+        }
+      ],
+      "updatedBy": "Quản Trị Viên (Admin)",
+      "org": {
+        "primaryEngineer": "",
+        "unit": "Đội thông tin",
+        "companyName": "Công ty Quản lý bay miền Nam",
+        "location": "Rack B6- VHF - P.Thiết bị trung tâm - ACC HCM",
+        "phoneContact": "",
+        "supervisor": "Đội Trưởng"
+      },
+      "orgRows": [],
+      "repair": [],
+      "licenses": [
+        {
+          "id": "lic-1788571831199",
+          "startNo": "5035/GP-CHK",
+          "startDate": "",
+          "content": "Cục hàng không",
+          "endDate": "2024-10-28",
+          "active": false
+        },
+        {
+          "id": "lic-1788571912861",
+          "startNo": "5502/GP-CHK",
+          "startDate": "",
+          "content": "Cục hàng không",
+          "endDate": "2026-10-28",
+          "active": false
+        }
+      ],
+      "general": {
+        "commissioned": "",
+        "assetCode": "",
+        "nextCalDate": "",
+        "assetNo": "Đang cập nhật",
+        "acceptanceDate": "",
+        "status": "Đang khai thác",
+        "notes": "Máy thu RX 120.1 MHz Main",
+        "warrantyDate": "",
+        "category": "VHF/UHF",
+        "manufacturer": "Jotron",
+        "name": "VHF Jotron RA-7203 - RX 120.1 Standby",
+        "origin": "Na uy",
+        "estimatedLifespanYears": 10,
+        "yearMade": "2019",
+        "priority": "Hệ thống chính (Level 1)",
+        "serial": "13591 (2722)",
+        "model": "RA-7203"
+      },
+      "spec": {
+        "interface": "",
+        "snmpCommunity": "",
+        "gateway": "",
+        "output": "",
+        "firmware": "",
+        "power": "AC: 85-264V 47-63 Hz, DC: 21.6-31.2 V",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "vlanId": "",
+        "channelFreq": "120.1 MHz",
+        "range": "118-136.975 MHz",
+        "text": "Liên lạc không địa, điều chế AM tần số VHF 118-137 MHz, Công nghệ bán dẫn"
+      },
+      "createdAt": "2026-09-04T07:22:20.406Z",
+      "updatedAt": "2026-09-05T01:34:38.895Z",
+      "id": "eq-1788572334258",
+      "maintenance": [],
+      "docs": [
+        {
+          "id": "doc-1788572251322",
+          "no": 1,
+          "name": "Operator Installtion Manual RA-7203",
+          "qty": 1,
+          "format": "Bản điện tử (PDF/CAD)",
+          "lang": "English",
+          "location": "",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "eq-1788572993551",
+      "createdAt": "2026-09-05T01:49:53.551Z",
+      "updatedAt": "2026-09-05T01:49:53.551Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Rack B6-VHF phòng máy ACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "VHF Jotron RA-7203",
+        "category": "VHF/UHF",
+        "model": "RA-7203",
+        "manufacturer": "Na Uy",
+        "serial": "12420",
+        "assetNo": "A0420080102099",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788573162883",
+      "createdAt": "2026-09-05T01:52:42.883Z",
+      "updatedAt": "2026-09-05T01:52:42.883Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Rack B6-VHF - P.Thiết bị trung tâm- ACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "VHF Jotron RA-7203",
+        "category": "VHF/UHF",
+        "model": "RA-7203",
+        "manufacturer": "Jotron",
+        "serial": "12422",
+        "assetNo": "A0420080102101",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788573210588",
+      "createdAt": "2026-09-05T01:52:42.883Z",
+      "updatedAt": "2026-09-05T01:52:42.883Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Rack B6-VHF - P.Thiết bị trung tâm- ACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "VHF Jotron RA-7203 ",
+        "category": "VHF/UHF",
+        "model": "RA-7203",
+        "manufacturer": "Jotron",
+        "serial": "12419",
+        "assetNo": "A0420080102098",
+        "assetCode": "",
+        "yearMade": "2019",
+        "origin": "Na uy",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": "Tần số  RX-128.175 Main"
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788573517976",
+      "createdAt": "2026-09-05T01:58:37.976Z",
+      "updatedAt": "2026-09-05T01:58:37.976Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Rack B8-VHF, P. thiết bị Trung tâm- AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "VHF Jotron TA-7650 -TX 124.075 Main",
+        "category": "VHF/UHF",
+        "model": "TA-7650",
+        "manufacturer": "Jotron",
+        "serial": "11329",
+        "assetNo": "A0420080102078",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": [],
+      "googleDocUrl": "https://docs.google.com/document/d/1fb1krDkITQ1ysV7m_YbTXAFNySyRUjxh9dc4xY-Q6ag/edit",
+      "googleDocPdfUrl": "https://docs.google.com/document/d/1fb1krDkITQ1ysV7m_YbTXAFNySyRUjxh9dc4xY-Q6ag/export?format=pdf"
+    },
+    {
+      "id": "eq-1788574230244",
+      "createdAt": "2026-09-05T02:10:30.244Z",
+      "updatedAt": "2026-09-05T02:10:30.244Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "P.Thiết bị trung tâm ACCHCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Máy thu VHF S5200 VR - 128.175 Main",
+        "category": "VHF/UHF",
+        "model": "S5200VR",
+        "manufacturer": "R&S",
+        "serial": "100867",
+        "assetNo": "A0424102002421",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788574443391",
+      "createdAt": "2026-09-05T02:14:03.392Z",
+      "updatedAt": "2026-09-05T02:14:03.392Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Rack A.....P.Thiết bị trung tâm-ACCHCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Hệ thống ghép kênh MP4100  - BMT",
+        "category": "VHF/UHF",
+        "model": "MP4100",
+        "manufacturer": "RAD",
+        "serial": "",
+        "assetNo": "A0420080102069",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788574535755",
+      "createdAt": "2026-09-05T02:15:35.755Z",
+      "updatedAt": "2026-09-05T02:15:35.755Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Rack A - Phòng thiết Bị trung tâm AACC-HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Hệ thống ghép kênh MP4100 - BQ2",
+        "category": "VHF/UHF",
+        "model": "MP4100",
+        "manufacturer": "RAD",
+        "serial": "",
+        "assetNo": "A0420080102070",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788574707706",
+      "createdAt": "2026-09-05T02:18:27.706Z",
+      "updatedAt": "2026-09-05T02:19:05.213Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phòng thiết bị trung tâm -AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Hệ thống ghép kênh MP4100 - BQ1",
+        "category": "Ghép Kênh",
+        "model": "MP4100",
+        "manufacturer": "RAD",
+        "serial": "",
+        "assetNo": "A0420080102070",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788574888607",
+      "createdAt": "2026-09-05T02:21:28.608Z",
+      "updatedAt": "2026-09-05T02:21:28.608Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phòng thiết bị Trung tâm- AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Hệ thống ghép kênh MP4100- CSN",
+        "category": "Ghép Kênh",
+        "model": "MP4100",
+        "manufacturer": "RAD",
+        "serial": "",
+        "assetNo": "A0422052002185",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788575150953",
+      "createdAt": "2026-09-05T02:25:50.953Z",
+      "updatedAt": "2026-09-05T02:25:50.953Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "P.Thiết bị Trung tâm- AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Hệ thống RF vệ tinh - Vsat tổng cty",
+        "category": "VIBA",
+        "model": "",
+        "manufacturer": "Comsat, Norsat, avanced",
+        "serial": "",
+        "assetNo": "Đang cập nhật",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788575248724",
+      "createdAt": "2026-09-05T02:27:28.724Z",
+      "updatedAt": "2026-09-05T02:27:28.724Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phòng thiết bị Trung tâm- ACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Thiết bị NMS cho trạm HUB dự phòng",
+        "category": "VHF/UHF",
+        "model": "CEL-NMS",
+        "manufacturer": "Comtech",
+        "serial": "Đang cập nhật",
+        "assetNo": "Đang cập nhật",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788575341948",
+      "createdAt": "2026-09-05T02:29:01.948Z",
+      "updatedAt": "2026-09-05T02:29:01.948Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "P. Thiết bị Trung tâm - AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Hệ thống Modem Vệ tinh",
+        "category": "VIBA",
+        "model": "CEL-240, CEL-230",
+        "manufacturer": "Comtech",
+        "serial": "",
+        "assetNo": "Đang cập nhật",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788575416978",
+      "createdAt": "2026-09-05T02:30:16.978Z",
+      "updatedAt": "2026-09-05T02:30:16.978Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "P.Thiết bị Trung tâm- AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Thiết Bị ghép kênh vệ tinh MP4100",
+        "category": "Ghép Kênh",
+        "model": "MP4100",
+        "manufacturer": "RAD",
+        "serial": "",
+        "assetNo": "Đang cập nhật",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788575612267",
+      "createdAt": "2026-09-05T02:33:32.267Z",
+      "updatedAt": "2026-09-05T02:33:32.267Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phòng thiết bị trung tâm - AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "VHF Jotron RA-7203 RX-133.85 Main",
+        "category": "VHF/UHF",
+        "model": "RA-7203",
+        "manufacturer": "Jotron",
+        "serial": "8006",
+        "assetNo": "Đang cập nhật",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788575710457",
+      "createdAt": "2026-09-05T02:35:10.457Z",
+      "updatedAt": "2026-09-05T02:35:10.457Z",
+      "org": {
+        "unit": "Đội Thông tin",
+        "location": "Phong thiết bị trung tâm- AACC HCM",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "VHF Jotron RA-7203",
+        "category": "VHF/UHF",
+        "model": "RA-7203",
+        "manufacturer": "Jotron",
+        "serial": "8007",
+        "assetNo": "Đang cập nhât",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    },
+    {
+      "id": "eq-1788583243016",
+      "createdAt": "2026-09-05T04:40:43.016Z",
+      "updatedAt": "2026-09-05T04:40:43.016Z",
+      "org": {
+        "unit": "qqq",
+        "location": "",
+        "phoneContact": "",
+        "primaryEngineer": "",
+        "supervisor": ""
+      },
+      "orgRows": [],
+      "general": {
+        "name": "Tes",
+        "category": "VHF/UHF",
+        "model": "",
+        "manufacturer": "",
+        "serial": "qqq",
+        "assetNo": "qq",
+        "assetCode": "",
+        "yearMade": "",
+        "origin": "",
+        "commissioned": "",
+        "acceptanceDate": "",
+        "warrantyDate": "",
+        "nextCalDate": "",
+        "status": "Đang khai thác",
+        "priority": "Hệ thống chính (Level 1)",
+        "estimatedLifespanYears": 10,
+        "notes": ""
+      },
+      "spec": {
+        "text": "",
+        "power": "",
+        "output": "",
+        "range": "",
+        "interface": "",
+        "mgmtIp": "",
+        "subnetMask": "",
+        "gateway": "",
+        "vlanId": "",
+        "firmware": "",
+        "channelFreq": "",
+        "snmpCommunity": ""
+      },
+      "licenses": [],
+      "components": [],
+      "docs": [],
+      "maintenance": [],
+      "repair": []
+    }
+  ],
+  "trash": [
+    {
+      "equipment": {
+        "docs": [
+          {
+            "location": "Tủ tài liệu trạm",
+            "lang": "English / Tiếng Việt",
+            "note": "Kèm đĩa phần mềm",
+            "id": "doc-1",
+            "qty": 1,
+            "format": "Bản in giấy",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "no": 1
+          }
+        ],
+        "general": {
+          "status": "Dự phòng sẵn sàng",
+          "name": "Thiết bi 17",
+          "category": "VHF/UHF",
+          "estimatedLifespanYears": 10,
+          "model": "S5200VR",
+          "priority": "Hệ thống chính (Level 1)",
+          "assetNo": "A0424102002422-COPY",
+          "warrantyDate": "2027-09-01",
+          "nextCalDate": "2027-02-28",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "yearMade": "2026",
+          "manufacturer": "R&S",
+          "assetCode": "EQ-8020",
+          "acceptanceDate": "2026-09-01",
+          "serial": "10086811-COPY",
+          "origin": "Đức",
+          "commissioned": "2026-09-01"
+        },
+        "repair": [
+          {
+            "incidentDescription": "",
+            "date": "2026-09-03 15:43",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "resolvedDate": "2026-09-03 15:43",
+            "status": "Đã xử lý dứt điểm",
+            "rootCause": "",
+            "id": "rp-1788450214354",
+            "replacedParts": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "actionTaken": ""
+          }
+        ],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "components": [
+          {
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "no": 1,
+            "healthStatus": "Tốt",
+            "partNo": "MCU-01",
+            "unit": "Bo mạch",
+            "note": "Slot 1",
+            "qty": 1,
+            "serial": "SN-MCU-4004",
+            "id": "cp-1"
+          },
+          {
+            "unit": "Bộ",
+            "partNo": "PSU-220/48",
+            "note": "Khe cắm nguồn",
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "no": 2,
+            "id": "cp-2",
+            "healthStatus": "Tốt",
+            "qty": 1,
+            "serial": "SN-PSU-5932"
+          },
+          {
+            "note": "",
+            "unit": "Bộ",
+            "id": "cp-1788482726418",
+            "name": "",
+            "serial": "",
+            "partNo": "",
+            "qty": 1,
+            "no": 3,
+            "healthStatus": "Tốt"
+          }
+        ],
+        "orgRows": [],
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "spec": {
+          "power": "220VAC ± 10% / -48VDC",
+          "vlanId": "VLAN 100",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "mgmtIp": "192.168.1.50",
+          "gateway": "192.168.1.1",
+          "range": "Băng thông tiêu chuẩn",
+          "channelFreq": "Kênh khai thác chính",
+          "output": "Chuẩn định mức",
+          "subnetMask": "255.255.255.0",
+          "firmware": "v1.0.0",
+          "snmpCommunity": "public",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành."
+        },
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "id": "eq-1788527241571",
+        "licenses": [
+          {
+            "endDate": "2029-08-31",
+            "startDate": "2026-09-01",
+            "id": "lic-1788232478020",
+            "startNo": "Test 1",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "active": true
+          },
+          {
+            "active": true,
+            "id": "lic-1788448980780",
+            "endDate": "",
+            "startDate": "2026-09-03",
+            "startNo": "Test 2",
+            "content": "Giấy phép hàng không"
+          },
+          {
+            "endDate": "",
+            "startDate": "2026-09-03",
+            "content": "",
+            "id": "lic-1788448983724",
+            "startNo": "",
+            "active": true
+          }
+        ],
+        "org": {
+          "location": "Phòng TBTT-ACC HCM",
+          "phoneContact": "",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "maintenance": [
+          {
+            "cycle": "Nhật ký ca trực",
+            "person": "Kíp Tô Minh Tâm",
+            "date": "2026-09-04",
+            "content": "test",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "id": "log-1788485372751",
+            "result": "Đạt yêu cầu kỹ thuật"
+          },
+          {
+            "date": "2026-09-03",
+            "id": "log-1788450137469",
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "content": ""
+          },
+          {
+            "id": "mt-1",
+            "supervisor": "Trưởng Đài CNS",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "date": "2026-09-01",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "cycle": "Hàng quý"
+          }
+        ]
+      },
+      "deletedAt": "2026-09-05T03:02:42.342Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "docs": [],
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "createdAt": "2026-09-05T00:46:08.653Z",
+        "general": {
+          "acceptanceDate": "",
+          "category": "VHF/UHF",
+          "assetNo": "",
+          "name": "Truong",
+          "status": "Đang khai thác",
+          "warrantyDate": "",
+          "manufacturer": "12333",
+          "yearMade": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "estimatedLifespanYears": 10,
+          "origin": "",
+          "nextCalDate": "",
+          "model": "12345",
+          "notes": "",
+          "serial": "truong",
+          "commissioned": "",
+          "assetCode": ""
+        },
+        "orgRows": [],
+        "licenses": [],
+        "org": {
+          "location": "",
+          "unit": "",
+          "primaryEngineer": "",
+          "phoneContact": "",
+          "supervisor": ""
+        },
+        "maintenance": [],
+        "repair": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "spec": {
+          "interface": "",
+          "snmpCommunity": "",
+          "gateway": "",
+          "output": "",
+          "firmware": "",
+          "power": "",
+          "mgmtIp": "",
+          "subnetMask": "",
+          "vlanId": "",
+          "range": "",
+          "channelFreq": "",
+          "text": ""
+        },
+        "components": [],
+        "id": "eq-1788569168653"
+      },
+      "deletedAt": "2026-09-05T03:02:31.873Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "repair": [],
+        "createdAt": "2026-09-04T13:07:18.320Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "org": {
+          "location": "Phòng Thiêt bị Trung tâm",
+          "primaryEngineer": "",
+          "phoneContact": "",
+          "supervisor": "",
+          "unit": "Đội Thông tin"
+        },
+        "components": [],
+        "docs": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "id": "eq-1788527238320",
+        "orgRows": [],
+        "general": {
+          "assetNo": "12345",
+          "manufacturer": "Test",
+          "warrantyDate": "",
+          "name": "Thiết Bị 14",
+          "status": "Đang khai thác",
+          "estimatedLifespanYears": 10,
+          "acceptanceDate": "",
+          "yearMade": "",
+          "origin": "",
+          "notes": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "nextCalDate": "",
+          "model": "Test",
+          "category": "VHF/UHF",
+          "commissioned": "",
+          "serial": "12345",
+          "assetCode": ""
+        },
+        "maintenance": [],
+        "spec": {
+          "output": "",
+          "range": "",
+          "power": "",
+          "text": "",
+          "interface": "",
+          "gateway": "",
+          "firmware": "",
+          "vlanId": "",
+          "subnetMask": "",
+          "snmpCommunity": "",
+          "channelFreq": "",
+          "mgmtIp": ""
+        },
+        "licenses": []
+      },
+      "deletedAt": "2026-09-05T03:02:26.830Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "repair": [],
+        "maintenance": [],
+        "components": [],
+        "docs": [],
+        "licenses": [],
+        "id": "eq-1788481873664",
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "general": {
+          "assetCode": "",
+          "acceptanceDate": "",
+          "nextCalDate": "",
+          "commissioned": "",
+          "origin": "",
+          "notes": "",
+          "assetNo": "Test",
+          "model": "1234567",
+          "name": "Card MPI/R",
+          "serial": "1234567",
+          "manufacturer": "SITTI",
+          "yearMade": "",
+          "warrantyDate": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "category": "VHF/UHF",
+          "status": "Đang khai thác",
+          "estimatedLifespanYears": 10
+        },
+        "createdAt": "2026-09-04T00:31:13.664Z",
+        "org": {
+          "supervisor": "",
+          "unit": "Đội Thông tin",
+          "phoneContact": "",
+          "primaryEngineer": "",
+          "location": "tủ VTDP đội thông tin"
+        },
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "spec": {
+          "range": "",
+          "vlanId": "",
+          "power": "",
+          "gateway": "",
+          "mgmtIp": "",
+          "text": "",
+          "channelFreq": "",
+          "subnetMask": "",
+          "output": "",
+          "interface": "",
+          "firmware": "",
+          "snmpCommunity": ""
+        },
+        "orgRows": []
+      },
+      "deletedAt": "2026-09-05T03:02:20.360Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "orgRows": [],
+        "components": [],
+        "spec": {
+          "text": "",
+          "firmware": "",
+          "subnetMask": "",
+          "mgmtIp": "",
+          "gateway": "",
+          "vlanId": "",
+          "channelFreq": "",
+          "snmpCommunity": "",
+          "range": "",
+          "interface": "",
+          "power": "",
+          "output": ""
+        },
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "repair": [],
+        "general": {
+          "warrantyDate": "",
+          "nextCalDate": "",
+          "status": "Đang khai thác",
+          "manufacturer": "Test",
+          "assetCode": "",
+          "name": "Thiết bị 13",
+          "estimatedLifespanYears": 10,
+          "commissioned": "",
+          "serial": "12345",
+          "category": "VHF/UHF",
+          "notes": "",
+          "model": "Test",
+          "priority": "Hệ thống chính (Level 1)",
+          "yearMade": "",
+          "acceptanceDate": "",
+          "assetNo": "12345",
+          "origin": ""
+        },
+        "org": {
+          "supervisor": "",
+          "location": "Phòng Thiết Bị Trung Tâm",
+          "primaryEngineer": "",
+          "unit": "Đội Thông Tin",
+          "phoneContact": ""
+        },
+        "id": "eq-1788527162511",
+        "licenses": [],
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "createdAt": "2026-09-04T13:06:02.511Z",
+        "maintenance": [],
+        "docs": []
+      },
+      "deletedAt": "2026-09-05T03:02:12.454Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "spec": {
+          "channelFreq": "",
+          "subnetMask": "",
+          "output": "",
+          "mgmtIp": "",
+          "power": "",
+          "text": "",
+          "gateway": "",
+          "firmware": "",
+          "range": "",
+          "interface": "",
+          "vlanId": "",
+          "snmpCommunity": ""
+        },
+        "general": {
+          "name": "THiết Bị 12",
+          "manufacturer": "12345",
+          "warrantyDate": "",
+          "status": "Đang khai thác",
+          "assetCode": "",
+          "acceptanceDate": "",
+          "assetNo": "123456",
+          "estimatedLifespanYears": 10,
+          "notes": "",
+          "origin": "",
+          "category": "VHF/UHF",
+          "nextCalDate": "",
+          "yearMade": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "commissioned": "",
+          "model": "Test",
+          "serial": "123456"
+        },
+        "org": {
+          "unit": "Đội Thông tin",
+          "location": "Phòng thiết bị -ACC HCM",
+          "supervisor": "",
+          "primaryEngineer": "",
+          "phoneContact": ""
+        },
+        "orgRows": [],
+        "components": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "repair": [],
+        "maintenance": [],
+        "docs": [],
+        "licenses": [],
+        "id": "eq-1788527118746",
+        "createdAt": "2026-09-04T13:05:18.746Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z"
+      },
+      "deletedAt": "2026-09-05T03:02:07.165Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "spec": {
+          "snmpCommunity": "",
+          "range": "",
+          "vlanId": "",
+          "interface": "",
+          "power": "",
+          "text": "",
+          "mgmtIp": "",
+          "output": "",
+          "gateway": "",
+          "subnetMask": "",
+          "firmware": "",
+          "channelFreq": ""
+        },
+        "orgRows": [],
+        "general": {
+          "origin": "",
+          "nextCalDate": "",
+          "commissioned": "",
+          "serial": "12345-COPY",
+          "estimatedLifespanYears": 10,
+          "acceptanceDate": "",
+          "notes": "",
+          "category": "VHF/UHF",
+          "yearMade": "",
+          "assetCode": "",
+          "warrantyDate": "",
+          "model": "Test",
+          "priority": "Hệ thống chính (Level 1)",
+          "manufacturer": "Test",
+          "name": "Thiết Bị 15",
+          "assetNo": "12345-COPY",
+          "status": "Dự phòng sẵn sàng"
+        },
+        "createdAt": "2026-09-04T13:07:18.320Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "components": [],
+        "licenses": [],
+        "docs": [],
+        "repair": [],
+        "maintenance": [],
+        "id": "eq-1788527240044",
+        "org": {
+          "supervisor": "",
+          "unit": "Đội Thông tin",
+          "phoneContact": "",
+          "location": "Phòng Thiêt bị Trung tâm",
+          "primaryEngineer": ""
+        },
+        "updatedBy": "Quản Trị Viên (Admin)"
+      },
+      "deletedAt": "2026-09-05T03:02:01.021Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "id": "eq-1788448344069",
+        "docs": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "licenses": [],
+        "spec": {
+          "range": "",
+          "text": "",
+          "vlanId": "",
+          "interface": "",
+          "mgmtIp": "",
+          "power": "",
+          "firmware": "",
+          "subnetMask": "",
+          "output": "",
+          "gateway": "",
+          "snmpCommunity": "",
+          "channelFreq": ""
+        },
+        "general": {
+          "assetNo": "",
+          "category": "VHF/UHF",
+          "commissioned": "",
+          "nextCalDate": "",
+          "serial": "1",
+          "acceptanceDate": "",
+          "origin": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "yearMade": "",
+          "estimatedLifespanYears": 10,
+          "warrantyDate": "",
+          "name": "dgdyu",
+          "status": "Đang khai thác",
+          "model": "cghdyu",
+          "manufacturer": "bvfhg",
+          "notes": "",
+          "assetCode": ""
+        },
+        "org": {
+          "supervisor": "",
+          "phoneContact": "",
+          "unit": "",
+          "primaryEngineer": "",
+          "location": ""
+        },
+        "orgRows": [],
+        "maintenance": [],
+        "repair": [],
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "components": [],
+        "createdAt": "2026-09-03T15:12:24.069Z"
+      },
+      "deletedAt": "2026-09-05T03:01:52.692Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "licenses": [],
+        "createdAt": "2026-09-04T13:03:54.345Z",
+        "docs": [],
+        "org": {
+          "supervisor": "",
+          "primaryEngineer": "",
+          "unit": "Đội Thông Tin",
+          "location": "Phòng Máy ACCHCM",
+          "phoneContact": ""
+        },
+        "id": "eq-1788527034345",
+        "spec": {
+          "channelFreq": "",
+          "gateway": "",
+          "output": "",
+          "snmpCommunity": "",
+          "text": "",
+          "mgmtIp": "",
+          "interface": "",
+          "power": "",
+          "firmware": "",
+          "range": "",
+          "subnetMask": "",
+          "vlanId": ""
+        },
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "general": {
+          "model": "12345",
+          "manufacturer": "Jotron",
+          "status": "Đang khai thác",
+          "assetCode": "",
+          "notes": "",
+          "assetNo": "AD1234567",
+          "warrantyDate": "",
+          "acceptanceDate": "",
+          "name": "Thiết Bị 11",
+          "origin": "",
+          "category": "VHF/UHF",
+          "estimatedLifespanYears": 10,
+          "yearMade": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "serial": "AD1234567",
+          "nextCalDate": "",
+          "commissioned": ""
+        },
+        "orgRows": [],
+        "maintenance": [],
+        "components": [],
+        "repair": []
+      },
+      "deletedAt": "2026-09-05T03:01:40.182Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "id": "eq-1788527244841",
+        "spec": {
+          "subnetMask": "255.255.255.0",
+          "gateway": "192.168.1.1",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "snmpCommunity": "public",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "output": "Chuẩn định mức",
+          "firmware": "v1.0.0",
+          "mgmtIp": "192.168.1.50",
+          "range": "Băng thông tiêu chuẩn",
+          "channelFreq": "Kênh khai thác chính",
+          "power": "220VAC ± 10% / -48VDC",
+          "vlanId": "VLAN 100"
+        },
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "org": {
+          "location": "Phòng TBTT-ACC HCM",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "phoneContact": "",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "maintenance": [
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "date": "2026-09-04",
+            "id": "log-1788485372751",
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Nhật ký ca trực",
+            "content": "test",
+            "supervisor": "Đội Trưởng đội Thông tin"
+          },
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "id": "log-1788450137469",
+            "content": "",
+            "date": "2026-09-03",
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Bảo dưỡng định kỳ",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS"
+          },
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "id": "mt-1",
+            "supervisor": "Trưởng Đài CNS",
+            "date": "2026-09-01",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "cycle": "Hàng quý",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%"
+          }
+        ],
+        "components": [
+          {
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "qty": 1,
+            "note": "Slot 1",
+            "id": "cp-1",
+            "unit": "Bo mạch",
+            "serial": "SN-MCU-4004",
+            "no": 1,
+            "partNo": "MCU-01",
+            "healthStatus": "Tốt"
+          },
+          {
+            "partNo": "PSU-220/48",
+            "id": "cp-2",
+            "healthStatus": "Tốt",
+            "note": "Khe cắm nguồn",
+            "qty": 1,
+            "unit": "Bộ",
+            "no": 2,
+            "serial": "SN-PSU-5932",
+            "name": "Khối nguồn cung cấp (PSU Module)"
+          },
+          {
+            "no": 3,
+            "partNo": "",
+            "id": "cp-1788482726418",
+            "serial": "",
+            "healthStatus": "Tốt",
+            "unit": "Bộ",
+            "note": "",
+            "name": "",
+            "qty": 1
+          }
+        ],
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "repair": [
+          {
+            "rootCause": "",
+            "replacedParts": "",
+            "date": "2026-09-03 15:43",
+            "resolvedDate": "2026-09-03 15:43",
+            "id": "rp-1788450214354",
+            "status": "Đã xử lý dứt điểm",
+            "incidentDescription": "",
+            "actionTaken": "",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "type": "Sửa chữa khắc phục sự cố"
+          }
+        ],
+        "general": {
+          "assetCode": "VCCS-8020",
+          "nextCalDate": "2027-02-28",
+          "warrantyDate": "2027-09-01",
+          "manufacturer": "R&S",
+          "status": "Đang khai thác",
+          "assetNo": "Test 1234",
+          "acceptanceDate": "2026-09-01",
+          "name": "VCCS",
+          "origin": "Đức",
+          "commissioned": "2026-09-01",
+          "estimatedLifespanYears": 10,
+          "model": "S5200VR",
+          "category": "OTHER",
+          "yearMade": "2026",
+          "serial": "Test 1234",
+          "priority": "Hệ thống chính (Level 1)",
+          "notes": "Thiết bị mới đưa vào khai thác."
+        },
+        "licenses": [
+          {
+            "startNo": "Test 1",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "active": true,
+            "id": "lic-1788232478020",
+            "startDate": "2026-09-01",
+            "endDate": "2029-08-31"
+          },
+          {
+            "content": "Giấy phép hàng không",
+            "startNo": "Test 2",
+            "id": "lic-1788448980780",
+            "startDate": "2026-09-03",
+            "endDate": "",
+            "active": true
+          },
+          {
+            "content": "",
+            "startNo": "",
+            "active": true,
+            "startDate": "2026-09-03",
+            "id": "lic-1788448983724",
+            "endDate": ""
+          }
+        ],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "docs": [
+          {
+            "format": "Bản in giấy",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "location": "Tủ tài liệu trạm",
+            "id": "doc-1",
+            "qty": 1,
+            "lang": "English / Tiếng Việt",
+            "note": "Kèm đĩa phần mềm",
+            "no": 1
+          }
+        ],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "orgRows": []
+      },
+      "deletedAt": "2026-09-05T03:01:32.211Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "docs": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "id": "eq-1788527240770",
+        "org": {
+          "unit": "Đội Thông tin",
+          "supervisor": "",
+          "location": "Phòng Thiêt bị Trung tâm",
+          "phoneContact": "",
+          "primaryEngineer": ""
+        },
+        "orgRows": [],
+        "maintenance": [],
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "components": [],
+        "createdAt": "2026-09-04T13:07:18.320Z",
+        "licenses": [],
+        "spec": {
+          "vlanId": "",
+          "firmware": "",
+          "range": "",
+          "snmpCommunity": "",
+          "text": "",
+          "power": "",
+          "channelFreq": "",
+          "interface": "",
+          "mgmtIp": "",
+          "output": "",
+          "subnetMask": "",
+          "gateway": ""
+        },
+        "repair": [],
+        "general": {
+          "serial": "12345-COPY-COPY",
+          "model": "Test",
+          "manufacturer": "Test",
+          "category": "VHF/UHF",
+          "warrantyDate": "",
+          "priority": "Hệ thống chính (Level 1)",
+          "origin": "",
+          "assetCode": "",
+          "yearMade": "",
+          "acceptanceDate": "",
+          "notes": "",
+          "nextCalDate": "",
+          "status": "Dự phòng sẵn sàng",
+          "commissioned": "",
+          "assetNo": "12345-COPY-COPY",
+          "name": "Thiết Bị 16",
+          "estimatedLifespanYears": 10
+        }
+      },
+      "deletedAt": "2026-09-05T03:01:02.510Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "components": [
+          {
+            "serial": "SN-MCU-4004",
+            "qty": 1,
+            "id": "cp-1",
+            "healthStatus": "Tốt",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "note": "Slot 1",
+            "partNo": "MCU-01",
+            "unit": "Bo mạch",
+            "no": 1
+          },
+          {
+            "note": "Khe cắm nguồn",
+            "partNo": "PSU-220/48",
+            "unit": "Bộ",
+            "id": "cp-2",
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "no": 2,
+            "qty": 1,
+            "serial": "SN-PSU-5932",
+            "healthStatus": "Tốt"
+          },
+          {
+            "unit": "Bộ",
+            "healthStatus": "Tốt",
+            "note": "",
+            "no": 3,
+            "name": "",
+            "serial": "",
+            "id": "cp-1788482726418",
+            "partNo": "",
+            "qty": 1
+          }
+        ],
+        "general": {
+          "status": "Dự phòng sẵn sàng",
+          "acceptanceDate": "2026-09-01",
+          "category": "VHF/UHF",
+          "model": "S5200VR",
+          "priority": "Hệ thống chính (Level 1)",
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "assetCode": "EQ-8020",
+          "yearMade": "2026",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "commissioned": "2026-09-01",
+          "name": "Máy Thu VHF S5200 (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao)",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "manufacturer": "R&S",
+          "origin": "Đức",
+          "nextCalDate": "2027-02-28",
+          "estimatedLifespanYears": 10,
+          "warrantyDate": "2027-09-01"
+        },
+        "docs": [
+          {
+            "note": "Kèm đĩa phần mềm",
+            "lang": "English / Tiếng Việt",
+            "no": 1,
+            "qty": 1,
+            "id": "doc-1",
+            "format": "Bản in giấy",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "location": "Tủ tài liệu trạm"
+          }
+        ],
+        "id": "eq-1788527247634",
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "orgRows": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "spec": {
+          "mgmtIp": "192.168.1.50",
+          "snmpCommunity": "public",
+          "vlanId": "VLAN 100",
+          "channelFreq": "Kênh khai thác chính",
+          "gateway": "192.168.1.1",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "power": "220VAC ± 10% / -48VDC",
+          "firmware": "v1.0.0",
+          "output": "Chuẩn định mức",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "subnetMask": "255.255.255.0",
+          "range": "Băng thông tiêu chuẩn"
+        },
+        "org": {
+          "unit": "Đội Thông Tin - TT BDKT",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "location": "Phòng TBTT-ACC HCM",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "phoneContact": "",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "repair": [
+          {
+            "actionTaken": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "rootCause": "",
+            "incidentDescription": "",
+            "status": "Đã xử lý dứt điểm",
+            "date": "2026-09-03 15:43",
+            "replacedParts": "",
+            "id": "rp-1788450214354",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "resolvedDate": "2026-09-03 15:43"
+          }
+        ],
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "maintenance": [
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "person": "Kíp Tô Minh Tâm",
+            "id": "log-1788485372751",
+            "date": "2026-09-04",
+            "content": "test",
+            "cycle": "Nhật ký ca trực"
+          },
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "person": "Kíp Tô Minh Tâm",
+            "date": "2026-09-03",
+            "cycle": "Bảo dưỡng định kỳ",
+            "content": "",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "id": "log-1788450137469"
+          },
+          {
+            "cycle": "Hàng quý",
+            "id": "mt-1",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "date": "2026-09-01",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "supervisor": "Trưởng Đài CNS",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu."
+          }
+        ],
+        "licenses": [
+          {
+            "active": true,
+            "id": "lic-1788232478020",
+            "endDate": "2029-08-31",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startNo": "Test 1",
+            "startDate": "2026-09-01"
+          },
+          {
+            "content": "Giấy phép hàng không",
+            "startDate": "2026-09-03",
+            "startNo": "Test 2",
+            "endDate": "",
+            "active": true,
+            "id": "lic-1788448980780"
+          },
+          {
+            "startNo": "",
+            "content": "",
+            "id": "lic-1788448983724",
+            "startDate": "2026-09-03",
+            "active": true,
+            "endDate": ""
+          }
+        ],
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit"
+      },
+      "deletedAt": "2026-09-05T03:00:53.838Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "docs": [
+          {
+            "no": 1,
+            "note": "Kèm đĩa phần mềm",
+            "lang": "English / Tiếng Việt",
+            "location": "Tủ tài liệu trạm",
+            "id": "doc-1",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "format": "Bản in giấy",
+            "qty": 1
+          }
+        ],
+        "orgRows": [],
+        "components": [
+          {
+            "note": "Slot 1",
+            "partNo": "MCU-01",
+            "healthStatus": "Tốt",
+            "unit": "Bo mạch",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "id": "cp-1",
+            "qty": 1,
+            "no": 1,
+            "serial": "SN-MCU-4004"
+          },
+          {
+            "qty": 1,
+            "partNo": "PSU-220/48",
+            "id": "cp-2",
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "note": "Khe cắm nguồn",
+            "unit": "Bộ",
+            "healthStatus": "Tốt",
+            "serial": "SN-PSU-5932",
+            "no": 2
+          },
+          {
+            "healthStatus": "Tốt",
+            "unit": "Bộ",
+            "no": 3,
+            "note": "",
+            "serial": "",
+            "name": "",
+            "id": "cp-1788482726418",
+            "partNo": "",
+            "qty": 1
+          }
+        ],
+        "id": "eq-1788527251442",
+        "org": {
+          "supervisor": "Đội Trưởng đội Thông tin",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "phoneContact": "",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "location": "Phòng TBTT-ACC HCM"
+        },
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "general": {
+          "yearMade": "2026",
+          "commissioned": "2026-09-01",
+          "priority": "Hệ thống chính (Level 1)",
+          "estimatedLifespanYears": 10,
+          "status": "Dự phòng sẵn sàng",
+          "category": "VHF/UHF",
+          "assetCode": "EQ-8020",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "name": "Máy Thu VHF S5200 (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao)",
+          "warrantyDate": "2027-09-01",
+          "manufacturer": "R&S",
+          "origin": "Đức",
+          "nextCalDate": "2027-02-28",
+          "acceptanceDate": "2026-09-01",
+          "model": "S5200VR",
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY"
+        },
+        "spec": {
+          "gateway": "192.168.1.1",
+          "range": "Băng thông tiêu chuẩn",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "output": "Chuẩn định mức",
+          "subnetMask": "255.255.255.0",
+          "power": "220VAC ± 10% / -48VDC",
+          "vlanId": "VLAN 100",
+          "snmpCommunity": "public",
+          "firmware": "v1.0.0",
+          "mgmtIp": "192.168.1.50",
+          "channelFreq": "Kênh khai thác chính"
+        },
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "licenses": [
+          {
+            "active": true,
+            "endDate": "2029-08-31",
+            "id": "lic-1788232478020",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startNo": "Test 1",
+            "startDate": "2026-09-01"
+          },
+          {
+            "endDate": "",
+            "id": "lic-1788448980780",
+            "startNo": "Test 2",
+            "startDate": "2026-09-03",
+            "content": "Giấy phép hàng không",
+            "active": true
+          },
+          {
+            "id": "lic-1788448983724",
+            "endDate": "",
+            "active": true,
+            "content": "",
+            "startNo": "",
+            "startDate": "2026-09-03"
+          }
+        ],
+        "repair": [
+          {
+            "actionTaken": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "replacedParts": "",
+            "resolvedDate": "2026-09-03 15:43",
+            "id": "rp-1788450214354",
+            "rootCause": "",
+            "incidentDescription": "",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "date": "2026-09-03 15:43",
+            "status": "Đã xử lý dứt điểm"
+          }
+        ],
+        "maintenance": [
+          {
+            "id": "log-1788485372751",
+            "content": "test",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "cycle": "Nhật ký ca trực",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "person": "Kíp Tô Minh Tâm",
+            "date": "2026-09-04"
+          },
+          {
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm",
+            "content": "",
+            "date": "2026-09-03",
+            "id": "log-1788450137469",
+            "result": "Đạt yêu cầu kỹ thuật"
+          },
+          {
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "cycle": "Hàng quý",
+            "supervisor": "Trưởng Đài CNS",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "date": "2026-09-01",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "id": "mt-1"
+          }
+        ]
+      },
+      "deletedAt": "2026-09-05T03:00:47.254Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "general": {
+          "assetCode": "EQ-8020",
+          "manufacturer": "R&S",
+          "warrantyDate": "2027-09-01",
+          "nextCalDate": "2027-02-28",
+          "status": "Dự phòng sẵn sàng",
+          "name": "Thiết bi 23",
+          "origin": "Đức",
+          "category": "VHF/UHF",
+          "model": "S5200VR",
+          "commissioned": "2026-09-01",
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "acceptanceDate": "2026-09-01",
+          "yearMade": "2026",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "priority": "Hệ thống chính (Level 1)",
+          "estimatedLifespanYears": 10
+        },
+        "components": [
+          {
+            "serial": "SN-MCU-4004",
+            "healthStatus": "Tốt",
+            "no": 1,
+            "qty": 1,
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "id": "cp-1",
+            "unit": "Bo mạch",
+            "partNo": "MCU-01",
+            "note": "Slot 1"
+          },
+          {
+            "serial": "SN-PSU-5932",
+            "no": 2,
+            "qty": 1,
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "unit": "Bộ",
+            "id": "cp-2",
+            "healthStatus": "Tốt",
+            "partNo": "PSU-220/48",
+            "note": "Khe cắm nguồn"
+          },
+          {
+            "partNo": "",
+            "name": "",
+            "qty": 1,
+            "note": "",
+            "unit": "Bộ",
+            "id": "cp-1788482726418",
+            "healthStatus": "Tốt",
+            "no": 3,
+            "serial": ""
+          }
+        ],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "maintenance": [
+          {
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Nhật ký ca trực",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "date": "2026-09-04",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "content": "test",
+            "id": "log-1788485372751"
+          },
+          {
+            "id": "log-1788450137469",
+            "content": "",
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm",
+            "date": "2026-09-03",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS"
+          },
+          {
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "supervisor": "Trưởng Đài CNS",
+            "cycle": "Hàng quý",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "id": "mt-1",
+            "date": "2026-09-01",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu."
+          }
+        ],
+        "docs": [
+          {
+            "id": "doc-1",
+            "format": "Bản in giấy",
+            "location": "Tủ tài liệu trạm",
+            "lang": "English / Tiếng Việt",
+            "note": "Kèm đĩa phần mềm",
+            "no": 1,
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "qty": 1
+          }
+        ],
+        "org": {
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "phoneContact": "",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "location": "Phòng TBTT-ACC HCM",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "orgRows": [],
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "id": "eq-1788527244242",
+        "spec": {
+          "snmpCommunity": "public",
+          "gateway": "192.168.1.1",
+          "subnetMask": "255.255.255.0",
+          "channelFreq": "Kênh khai thác chính",
+          "output": "Chuẩn định mức",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "range": "Băng thông tiêu chuẩn",
+          "mgmtIp": "192.168.1.50",
+          "power": "220VAC ± 10% / -48VDC",
+          "firmware": "v1.0.0",
+          "vlanId": "VLAN 100"
+        },
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "repair": [
+          {
+            "replacedParts": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "actionTaken": "",
+            "status": "Đã xử lý dứt điểm",
+            "id": "rp-1788450214354",
+            "rootCause": "",
+            "incidentDescription": "",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "resolvedDate": "2026-09-03 15:43",
+            "date": "2026-09-03 15:43"
+          }
+        ],
+        "licenses": [
+          {
+            "endDate": "2029-08-31",
+            "id": "lic-1788232478020",
+            "startDate": "2026-09-01",
+            "active": true,
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startNo": "Test 1"
+          },
+          {
+            "startDate": "2026-09-03",
+            "startNo": "Test 2",
+            "content": "Giấy phép hàng không",
+            "active": true,
+            "endDate": "",
+            "id": "lic-1788448980780"
+          },
+          {
+            "endDate": "",
+            "active": true,
+            "startDate": "2026-09-03",
+            "id": "lic-1788448983724",
+            "startNo": "",
+            "content": ""
+          }
+        ],
+        "updatedBy": "Quản Trị Viên (Admin)"
+      },
+      "deletedAt": "2026-09-05T03:00:38.444Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "repair": [
+          {
+            "type": "Sửa chữa khắc phục sự cố",
+            "incidentDescription": "",
+            "rootCause": "",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "actionTaken": "",
+            "replacedParts": "",
+            "date": "2026-09-03 15:43",
+            "status": "Đã xử lý dứt điểm",
+            "resolvedDate": "2026-09-03 15:43",
+            "id": "rp-1788450214354"
+          }
+        ],
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "licenses": [
+          {
+            "id": "lic-1788232478020",
+            "startDate": "2026-09-01",
+            "endDate": "2029-08-31",
+            "active": true,
+            "startNo": "Test 1",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay"
+          },
+          {
+            "endDate": "",
+            "active": true,
+            "startDate": "2026-09-03",
+            "content": "Giấy phép hàng không",
+            "startNo": "Test 2",
+            "id": "lic-1788448980780"
+          },
+          {
+            "endDate": "",
+            "id": "lic-1788448983724",
+            "active": true,
+            "content": "",
+            "startNo": "",
+            "startDate": "2026-09-03"
+          }
+        ],
+        "id": "eq-1788527242658",
+        "org": {
+          "location": "Phòng TBTT-ACC HCM",
+          "phoneContact": "",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "supervisor": "Đội Trưởng đội Thông tin",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "primaryEngineer": "Kíp trực kỹ thuật"
+        },
+        "spec": {
+          "firmware": "v1.0.0",
+          "channelFreq": "Kênh khai thác chính",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "output": "Chuẩn định mức",
+          "mgmtIp": "192.168.1.50",
+          "power": "220VAC ± 10% / -48VDC",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "gateway": "192.168.1.1",
+          "snmpCommunity": "public",
+          "range": "Băng thông tiêu chuẩn",
+          "vlanId": "VLAN 100",
+          "subnetMask": "255.255.255.0"
+        },
+        "general": {
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY-COPY",
+          "model": "S5200VR",
+          "status": "Dự phòng sẵn sàng",
+          "estimatedLifespanYears": 10,
+          "commissioned": "2026-09-01",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "name": "Thiết bi 22",
+          "acceptanceDate": "2026-09-01",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY-COPY",
+          "assetCode": "EQ-8020",
+          "priority": "Hệ thống chính (Level 1)",
+          "yearMade": "2026",
+          "category": "VHF/UHF",
+          "origin": "Đức",
+          "warrantyDate": "2027-09-01",
+          "manufacturer": "R&S",
+          "nextCalDate": "2027-02-28"
+        },
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "docs": [
+          {
+            "note": "Kèm đĩa phần mềm",
+            "lang": "English / Tiếng Việt",
+            "no": 1,
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "format": "Bản in giấy",
+            "location": "Tủ tài liệu trạm",
+            "id": "doc-1",
+            "qty": 1
+          }
+        ],
+        "maintenance": [
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "id": "log-1788485372751",
+            "person": "Kíp Tô Minh Tâm",
+            "content": "test",
+            "date": "2026-09-04",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "cycle": "Nhật ký ca trực"
+          },
+          {
+            "id": "log-1788450137469",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "cycle": "Bảo dưỡng định kỳ",
+            "date": "2026-09-03",
+            "person": "Kíp Tô Minh Tâm",
+            "content": "",
+            "result": "Đạt yêu cầu kỹ thuật"
+          },
+          {
+            "id": "mt-1",
+            "cycle": "Hàng quý",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "date": "2026-09-01",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Trưởng Đài CNS",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu."
+          }
+        ],
+        "components": [
+          {
+            "unit": "Bo mạch",
+            "note": "Slot 1",
+            "healthStatus": "Tốt",
+            "no": 1,
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "partNo": "MCU-01",
+            "id": "cp-1",
+            "serial": "SN-MCU-4004",
+            "qty": 1
+          },
+          {
+            "serial": "SN-PSU-5932",
+            "no": 2,
+            "healthStatus": "Tốt",
+            "qty": 1,
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "unit": "Bộ",
+            "id": "cp-2",
+            "partNo": "PSU-220/48",
+            "note": "Khe cắm nguồn"
+          },
+          {
+            "id": "cp-1788482726418",
+            "healthStatus": "Tốt",
+            "serial": "",
+            "note": "",
+            "qty": 1,
+            "unit": "Bộ",
+            "partNo": "",
+            "no": 3,
+            "name": ""
+          }
+        ],
+        "orgRows": [],
+        "updatedBy": "Quản Trị Viên (Admin)"
+      },
+      "deletedAt": "2026-09-05T03:00:30.069Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "maintenance": [
+          {
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Nhật ký ca trực",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "content": "test",
+            "id": "log-1788485372751",
+            "date": "2026-09-04"
+          },
+          {
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm",
+            "id": "log-1788450137469",
+            "date": "2026-09-03",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "content": ""
+          },
+          {
+            "cycle": "Hàng quý",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "date": "2026-09-01",
+            "supervisor": "Trưởng Đài CNS",
+            "id": "mt-1",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu."
+          }
+        ],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "repair": [
+          {
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "rootCause": "",
+            "replacedParts": "",
+            "status": "Đã xử lý dứt điểm",
+            "incidentDescription": "",
+            "resolvedDate": "2026-09-03 15:43",
+            "actionTaken": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "id": "rp-1788450214354",
+            "date": "2026-09-03 15:43"
+          }
+        ],
+        "components": [
+          {
+            "serial": "SN-MCU-4004",
+            "no": 1,
+            "healthStatus": "Tốt",
+            "unit": "Bo mạch",
+            "note": "Slot 1",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "qty": 1,
+            "partNo": "MCU-01",
+            "id": "cp-1"
+          },
+          {
+            "partNo": "PSU-220/48",
+            "id": "cp-2",
+            "qty": 1,
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "note": "Khe cắm nguồn",
+            "unit": "Bộ",
+            "healthStatus": "Tốt",
+            "no": 2,
+            "serial": "SN-PSU-5932"
+          },
+          {
+            "healthStatus": "Tốt",
+            "no": 3,
+            "serial": "",
+            "qty": 1,
+            "name": "",
+            "partNo": "",
+            "unit": "Bộ",
+            "note": "",
+            "id": "cp-1788482726418"
+          }
+        ],
+        "spec": {
+          "subnetMask": "255.255.255.0",
+          "mgmtIp": "192.168.1.50",
+          "vlanId": "VLAN 100",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "gateway": "192.168.1.1",
+          "channelFreq": "Kênh khai thác chính",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "firmware": "v1.0.0",
+          "range": "Băng thông tiêu chuẩn",
+          "snmpCommunity": "public",
+          "power": "220VAC ± 10% / -48VDC",
+          "output": "Chuẩn định mức"
+        },
+        "id": "eq-1788527242458",
+        "licenses": [
+          {
+            "endDate": "2029-08-31",
+            "active": true,
+            "startNo": "Test 1",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "id": "lic-1788232478020",
+            "startDate": "2026-09-01"
+          },
+          {
+            "endDate": "",
+            "id": "lic-1788448980780",
+            "active": true,
+            "startNo": "Test 2",
+            "startDate": "2026-09-03",
+            "content": "Giấy phép hàng không"
+          },
+          {
+            "startNo": "",
+            "id": "lic-1788448983724",
+            "content": "",
+            "startDate": "2026-09-03",
+            "endDate": "",
+            "active": true
+          }
+        ],
+        "org": {
+          "location": "Phòng TBTT-ACC HCM",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "phoneContact": "",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "orgRows": [],
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "general": {
+          "category": "VHF/UHF",
+          "model": "S5200VR",
+          "acceptanceDate": "2026-09-01",
+          "status": "Dự phòng sẵn sàng",
+          "priority": "Hệ thống chính (Level 1)",
+          "nextCalDate": "2027-02-28",
+          "estimatedLifespanYears": 10,
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "yearMade": "2026",
+          "name": "Thiết bi 21",
+          "commissioned": "2026-09-01",
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY",
+          "manufacturer": "R&S",
+          "origin": "Đức",
+          "assetCode": "EQ-8020",
+          "warrantyDate": "2027-09-01"
+        },
+        "docs": [
+          {
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "format": "Bản in giấy",
+            "no": 1,
+            "note": "Kèm đĩa phần mềm",
+            "location": "Tủ tài liệu trạm",
+            "id": "doc-1",
+            "qty": 1,
+            "lang": "English / Tiếng Việt"
+          }
+        ]
+      },
+      "deletedAt": "2026-09-05T03:00:22.834Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "general": {
+          "priority": "Hệ thống chính (Level 1)",
+          "acceptanceDate": "2026-09-01",
+          "status": "Dự phòng sẵn sàng",
+          "yearMade": "2026",
+          "estimatedLifespanYears": 10,
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY",
+          "assetCode": "EQ-8020",
+          "name": "Thiết bi 20",
+          "manufacturer": "R&S",
+          "warrantyDate": "2027-09-01",
+          "category": "VHF/UHF",
+          "model": "S5200VR",
+          "serial": "10086811-COPY-COPY-COPY-COPY",
+          "nextCalDate": "2027-02-28",
+          "origin": "Đức",
+          "commissioned": "2026-09-01",
+          "notes": "Thiết bị mới đưa vào khai thác."
+        },
+        "maintenance": [
+          {
+            "id": "log-1788485372751",
+            "content": "test",
+            "date": "2026-09-04",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Nhật ký ca trực"
+          },
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "person": "Kíp Tô Minh Tâm",
+            "id": "log-1788450137469",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "content": "",
+            "cycle": "Bảo dưỡng định kỳ",
+            "date": "2026-09-03"
+          },
+          {
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "supervisor": "Trưởng Đài CNS",
+            "cycle": "Hàng quý",
+            "id": "mt-1",
+            "date": "2026-09-01"
+          }
+        ],
+        "repair": [
+          {
+            "replacedParts": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "status": "Đã xử lý dứt điểm",
+            "id": "rp-1788450214354",
+            "resolvedDate": "2026-09-03 15:43",
+            "actionTaken": "",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "incidentDescription": "",
+            "date": "2026-09-03 15:43",
+            "rootCause": ""
+          }
+        ],
+        "id": "eq-1788527242242",
+        "spec": {
+          "firmware": "v1.0.0",
+          "gateway": "192.168.1.1",
+          "channelFreq": "Kênh khai thác chính",
+          "output": "Chuẩn định mức",
+          "snmpCommunity": "public",
+          "mgmtIp": "192.168.1.50",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "power": "220VAC ± 10% / -48VDC",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "subnetMask": "255.255.255.0",
+          "range": "Băng thông tiêu chuẩn",
+          "vlanId": "VLAN 100"
+        },
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "orgRows": [],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "components": [
+          {
+            "partNo": "MCU-01",
+            "id": "cp-1",
+            "note": "Slot 1",
+            "no": 1,
+            "qty": 1,
+            "unit": "Bo mạch",
+            "healthStatus": "Tốt",
+            "serial": "SN-MCU-4004",
+            "name": "Khối xử lý trung tâm (Main Controller)"
+          },
+          {
+            "id": "cp-2",
+            "partNo": "PSU-220/48",
+            "qty": 1,
+            "note": "Khe cắm nguồn",
+            "serial": "SN-PSU-5932",
+            "healthStatus": "Tốt",
+            "unit": "Bộ",
+            "no": 2,
+            "name": "Khối nguồn cung cấp (PSU Module)"
+          },
+          {
+            "partNo": "",
+            "name": "",
+            "healthStatus": "Tốt",
+            "qty": 1,
+            "note": "",
+            "id": "cp-1788482726418",
+            "unit": "Bộ",
+            "no": 3,
+            "serial": ""
+          }
+        ],
+        "docs": [
+          {
+            "format": "Bản in giấy",
+            "id": "doc-1",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "qty": 1,
+            "no": 1,
+            "lang": "English / Tiếng Việt",
+            "location": "Tủ tài liệu trạm",
+            "note": "Kèm đĩa phần mềm"
+          }
+        ],
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "licenses": [
+          {
+            "startNo": "Test 1",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startDate": "2026-09-01",
+            "id": "lic-1788232478020",
+            "active": true,
+            "endDate": "2029-08-31"
+          },
+          {
+            "endDate": "",
+            "startDate": "2026-09-03",
+            "startNo": "Test 2",
+            "content": "Giấy phép hàng không",
+            "active": true,
+            "id": "lic-1788448980780"
+          },
+          {
+            "startNo": "",
+            "content": "",
+            "startDate": "2026-09-03",
+            "active": true,
+            "id": "lic-1788448983724",
+            "endDate": ""
+          }
+        ],
+        "org": {
+          "phoneContact": "",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "location": "Phòng TBTT-ACC HCM",
+          "supervisor": "Đội Trưởng đội Thông tin",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "primaryEngineer": "Kíp trực kỹ thuật"
+        },
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "createdAt": "2026-09-01T03:14:38.019Z"
+      },
+      "deletedAt": "2026-09-05T03:00:18.642Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "repair": [
+          {
+            "rootCause": "",
+            "actionTaken": "",
+            "date": "2026-09-03 15:43",
+            "replacedParts": "",
+            "incidentDescription": "",
+            "id": "rp-1788450214354",
+            "type": "Sửa chữa khắc phục sự cố",
+            "resolvedDate": "2026-09-03 15:43",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "status": "Đã xử lý dứt điểm"
+          }
+        ],
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "components": [
+          {
+            "serial": "SN-MCU-4004",
+            "no": 1,
+            "unit": "Bo mạch",
+            "healthStatus": "Tốt",
+            "note": "Slot 1",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "qty": 1,
+            "partNo": "MCU-01",
+            "id": "cp-1"
+          },
+          {
+            "qty": 1,
+            "healthStatus": "Tốt",
+            "id": "cp-2",
+            "partNo": "PSU-220/48",
+            "serial": "SN-PSU-5932",
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "no": 2,
+            "note": "Khe cắm nguồn",
+            "unit": "Bộ"
+          },
+          {
+            "no": 3,
+            "serial": "",
+            "healthStatus": "Tốt",
+            "unit": "Bộ",
+            "note": "",
+            "partNo": "",
+            "name": "",
+            "id": "cp-1788482726418",
+            "qty": 1
+          }
+        ],
+        "id": "eq-1788527245626",
+        "docs": [
+          {
+            "format": "Bản in giấy",
+            "location": "Tủ tài liệu trạm",
+            "no": 1,
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "qty": 1,
+            "note": "Kèm đĩa phần mềm",
+            "lang": "English / Tiếng Việt",
+            "id": "doc-1"
+          }
+        ],
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "spec": {
+          "firmware": "v1.0.0",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "mgmtIp": "192.168.1.50",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "gateway": "192.168.1.1",
+          "vlanId": "VLAN 100",
+          "range": "Băng thông tiêu chuẩn",
+          "snmpCommunity": "public",
+          "subnetMask": "255.255.255.0",
+          "channelFreq": "Kênh khai thác chính",
+          "output": "Chuẩn định mức",
+          "power": "220VAC ± 10% / -48VDC"
+        },
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "org": {
+          "phoneContact": "",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "location": "Phòng TBTT-ACC HCM",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "orgRows": [],
+        "licenses": [
+          {
+            "endDate": "2029-08-31",
+            "active": true,
+            "startDate": "2026-09-01",
+            "id": "lic-1788232478020",
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startNo": "Test 1"
+          },
+          {
+            "startDate": "2026-09-03",
+            "content": "Giấy phép hàng không",
+            "startNo": "Test 2",
+            "endDate": "",
+            "active": true,
+            "id": "lic-1788448980780"
+          },
+          {
+            "startDate": "2026-09-03",
+            "endDate": "",
+            "active": true,
+            "id": "lic-1788448983724",
+            "startNo": "",
+            "content": ""
+          }
+        ],
+        "general": {
+          "acceptanceDate": "2026-09-01",
+          "model": "S5200VR",
+          "assetCode": "EQ-8020",
+          "commissioned": "2026-09-01",
+          "estimatedLifespanYears": 10,
+          "status": "Dự phòng sẵn sàng",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "name": "Máy Thu VHF S5200 (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao)",
+          "manufacturer": "R&S",
+          "origin": "Đức",
+          "category": "VHF/UHF",
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "warrantyDate": "2027-09-01",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "nextCalDate": "2027-02-28",
+          "yearMade": "2026",
+          "priority": "Hệ thống chính (Level 1)"
+        },
+        "maintenance": [
+          {
+            "cycle": "Nhật ký ca trực",
+            "id": "log-1788485372751",
+            "date": "2026-09-04",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "person": "Kíp Tô Minh Tâm",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "content": "test"
+          },
+          {
+            "date": "2026-09-03",
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "content": "",
+            "id": "log-1788450137469",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS"
+          },
+          {
+            "cycle": "Hàng quý",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "date": "2026-09-01",
+            "supervisor": "Trưởng Đài CNS",
+            "id": "mt-1"
+          }
+        ],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf"
+      },
+      "deletedAt": "2026-09-05T03:00:13.086Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "spec": {
+          "subnetMask": "255.255.255.0",
+          "range": "Băng thông tiêu chuẩn",
+          "vlanId": "VLAN 100",
+          "power": "220VAC ± 10% / -48VDC",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "firmware": "v1.0.0",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "channelFreq": "Kênh khai thác chính",
+          "mgmtIp": "192.168.1.50",
+          "output": "Chuẩn định mức",
+          "snmpCommunity": "public",
+          "gateway": "192.168.1.1"
+        },
+        "id": "eq-1788527242036",
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "repair": [
+          {
+            "date": "2026-09-03 15:43",
+            "replacedParts": "",
+            "resolvedDate": "2026-09-03 15:43",
+            "actionTaken": "",
+            "id": "rp-1788450214354",
+            "status": "Đã xử lý dứt điểm",
+            "type": "Sửa chữa khắc phục sự cố",
+            "incidentDescription": "",
+            "rootCause": "",
+            "person": "Kỹ sư Trực Kỹ thuật"
+          }
+        ],
+        "orgRows": [],
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "maintenance": [
+          {
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Nhật ký ca trực",
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "id": "log-1788485372751",
+            "date": "2026-09-04",
+            "content": "test"
+          },
+          {
+            "content": "",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "id": "log-1788450137469",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Bảo dưỡng định kỳ",
+            "date": "2026-09-03"
+          },
+          {
+            "supervisor": "Trưởng Đài CNS",
+            "id": "mt-1",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "cycle": "Hàng quý",
+            "date": "2026-09-01",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "result": "Đạt yêu cầu kỹ thuật"
+          }
+        ],
+        "licenses": [
+          {
+            "endDate": "2029-08-31",
+            "active": true,
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startNo": "Test 1",
+            "startDate": "2026-09-01",
+            "id": "lic-1788232478020"
+          },
+          {
+            "startDate": "2026-09-03",
+            "startNo": "Test 2",
+            "content": "Giấy phép hàng không",
+            "id": "lic-1788448980780",
+            "active": true,
+            "endDate": ""
+          },
+          {
+            "active": true,
+            "endDate": "",
+            "id": "lic-1788448983724",
+            "content": "",
+            "startDate": "2026-09-03",
+            "startNo": ""
+          }
+        ],
+        "org": {
+          "companyName": "Công ty quản lý bay miền Nam",
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "location": "Phòng TBTT-ACC HCM",
+          "phoneContact": "",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "supervisor": "Đội Trưởng đội Thông tin"
+        },
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "docs": [
+          {
+            "lang": "English / Tiếng Việt",
+            "id": "doc-1",
+            "qty": 1,
+            "note": "Kèm đĩa phần mềm",
+            "location": "Tủ tài liệu trạm",
+            "no": 1,
+            "format": "Bản in giấy",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)"
+          }
+        ],
+        "components": [
+          {
+            "qty": 1,
+            "healthStatus": "Tốt",
+            "id": "cp-1",
+            "partNo": "MCU-01",
+            "serial": "SN-MCU-4004",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "note": "Slot 1",
+            "no": 1,
+            "unit": "Bo mạch"
+          },
+          {
+            "partNo": "PSU-220/48",
+            "qty": 1,
+            "id": "cp-2",
+            "no": 2,
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "serial": "SN-PSU-5932",
+            "note": "Khe cắm nguồn",
+            "unit": "Bộ",
+            "healthStatus": "Tốt"
+          },
+          {
+            "serial": "",
+            "qty": 1,
+            "id": "cp-1788482726418",
+            "name": "",
+            "no": 3,
+            "note": "",
+            "unit": "Bộ",
+            "partNo": "",
+            "healthStatus": "Tốt"
+          }
+        ],
+        "general": {
+          "yearMade": "2026",
+          "assetNo": "A0424102002422-COPY-COPY-COPY",
+          "priority": "Hệ thống chính (Level 1)",
+          "commissioned": "2026-09-01",
+          "category": "VHF/UHF",
+          "status": "Dự phòng sẵn sàng",
+          "estimatedLifespanYears": 10,
+          "acceptanceDate": "2026-09-01",
+          "origin": "Đức",
+          "model": "S5200VR",
+          "nextCalDate": "2027-02-28",
+          "warrantyDate": "2027-09-01",
+          "serial": "10086811-COPY-COPY-COPY",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "manufacturer": "R&S",
+          "name": "Thiết bi 19",
+          "assetCode": "EQ-8020"
+        }
+      },
+      "deletedAt": "2026-09-05T03:00:04.157Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "general": {
+          "name": "Thiết bi 18",
+          "status": "Dự phòng sẵn sàng",
+          "nextCalDate": "2027-02-28",
+          "commissioned": "2026-09-01",
+          "assetNo": "A0424102002422-COPY-COPY",
+          "acceptanceDate": "2026-09-01",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "estimatedLifespanYears": 10,
+          "category": "VHF/UHF",
+          "serial": "10086811-COPY-COPY",
+          "priority": "Hệ thống chính (Level 1)",
+          "yearMade": "2026",
+          "warrantyDate": "2027-09-01",
+          "model": "S5200VR",
+          "assetCode": "EQ-8020",
+          "manufacturer": "R&S",
+          "origin": "Đức"
+        },
+        "maintenance": [
+          {
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "date": "2026-09-04",
+            "person": "Kíp Tô Minh Tâm",
+            "cycle": "Nhật ký ca trực",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "content": "test",
+            "id": "log-1788485372751"
+          },
+          {
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm",
+            "content": "",
+            "id": "log-1788450137469",
+            "date": "2026-09-03",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "result": "Đạt yêu cầu kỹ thuật"
+          },
+          {
+            "result": "Đạt yêu cầu kỹ thuật",
+            "id": "mt-1",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "date": "2026-09-01",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "cycle": "Hàng quý",
+            "supervisor": "Trưởng Đài CNS"
+          }
+        ],
+        "licenses": [
+          {
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "startNo": "Test 1",
+            "active": true,
+            "id": "lic-1788232478020",
+            "startDate": "2026-09-01",
+            "endDate": "2029-08-31"
+          },
+          {
+            "content": "Giấy phép hàng không",
+            "id": "lic-1788448980780",
+            "active": true,
+            "startNo": "Test 2",
+            "startDate": "2026-09-03",
+            "endDate": ""
+          },
+          {
+            "startNo": "",
+            "content": "",
+            "startDate": "2026-09-03",
+            "active": true,
+            "id": "lic-1788448983724",
+            "endDate": ""
+          }
+        ],
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "repair": [
+          {
+            "replacedParts": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "id": "rp-1788450214354",
+            "actionTaken": "",
+            "status": "Đã xử lý dứt điểm",
+            "resolvedDate": "2026-09-03 15:43",
+            "rootCause": "",
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "date": "2026-09-03 15:43",
+            "incidentDescription": ""
+          }
+        ],
+        "docs": [
+          {
+            "no": 1,
+            "note": "Kèm đĩa phần mềm",
+            "lang": "English / Tiếng Việt",
+            "id": "doc-1",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "format": "Bản in giấy",
+            "location": "Tủ tài liệu trạm",
+            "qty": 1
+          }
+        ],
+        "components": [
+          {
+            "partNo": "MCU-01",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "qty": 1,
+            "note": "Slot 1",
+            "id": "cp-1",
+            "unit": "Bo mạch",
+            "no": 1,
+            "healthStatus": "Tốt",
+            "serial": "SN-MCU-4004"
+          },
+          {
+            "no": 2,
+            "healthStatus": "Tốt",
+            "partNo": "PSU-220/48",
+            "unit": "Bộ",
+            "serial": "SN-PSU-5932",
+            "note": "Khe cắm nguồn",
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "qty": 1,
+            "id": "cp-2"
+          },
+          {
+            "no": 3,
+            "healthStatus": "Tốt",
+            "partNo": "",
+            "unit": "Bộ",
+            "serial": "",
+            "note": "",
+            "name": "",
+            "qty": 1,
+            "id": "cp-1788482726418"
+          }
+        ],
+        "id": "eq-1788527241794",
+        "orgRows": [],
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "org": {
+          "primaryEngineer": "Kíp trực kỹ thuật",
+          "location": "Phòng TBTT-ACC HCM",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "supervisor": "Đội Trưởng đội Thông tin",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "phoneContact": ""
+        },
+        "spec": {
+          "firmware": "v1.0.0",
+          "channelFreq": "Kênh khai thác chính",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "gateway": "192.168.1.1",
+          "output": "Chuẩn định mức",
+          "range": "Băng thông tiêu chuẩn",
+          "mgmtIp": "192.168.1.50",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "snmpCommunity": "public",
+          "subnetMask": "255.255.255.0",
+          "vlanId": "VLAN 100",
+          "power": "220VAC ± 10% / -48VDC"
+        }
+      },
+      "deletedAt": "2026-09-05T02:59:57.710Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    },
+    {
+      "equipment": {
+        "maintenance": [
+          {
+            "supervisor": "Đội Trưởng đội Thông tin",
+            "person": "Kíp Tô Minh Tâm",
+            "content": "test",
+            "id": "log-1788485372751",
+            "cycle": "Nhật ký ca trực",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "date": "2026-09-04"
+          },
+          {
+            "content": "",
+            "date": "2026-09-03",
+            "supervisor": "Trưởng Đài / Đội trưởng CNS",
+            "id": "log-1788450137469",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "cycle": "Bảo dưỡng định kỳ",
+            "person": "Kíp Tô Minh Tâm"
+          },
+          {
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "id": "mt-1",
+            "measuredParams": "Thông số kỹ thuật chuẩn đạt 100%",
+            "cycle": "Hàng quý",
+            "result": "Đạt yêu cầu kỹ thuật",
+            "content": "Kiểm tra hoạt động toàn diện, đo thông số nguồn điện và vệ sinh thiết bị ban đầu.",
+            "date": "2026-09-01",
+            "supervisor": "Trưởng Đài CNS"
+          }
+        ],
+        "repair": [
+          {
+            "person": "Kỹ sư Trực Kỹ thuật",
+            "id": "rp-1788450214354",
+            "actionTaken": "",
+            "replacedParts": "",
+            "type": "Sửa chữa khắc phục sự cố",
+            "status": "Đã xử lý dứt điểm",
+            "incidentDescription": "",
+            "rootCause": "",
+            "date": "2026-09-03 15:43",
+            "resolvedDate": "2026-09-03 15:43"
+          }
+        ],
+        "components": [
+          {
+            "healthStatus": "Tốt",
+            "unit": "Bo mạch",
+            "no": 1,
+            "partNo": "MCU-01",
+            "note": "Slot 1",
+            "name": "Khối xử lý trung tâm (Main Controller)",
+            "id": "cp-1",
+            "qty": 1,
+            "serial": "SN-MCU-4004"
+          },
+          {
+            "no": 2,
+            "healthStatus": "Tốt",
+            "serial": "SN-PSU-5932",
+            "unit": "Bộ",
+            "note": "Khe cắm nguồn",
+            "partNo": "PSU-220/48",
+            "name": "Khối nguồn cung cấp (PSU Module)",
+            "qty": 1,
+            "id": "cp-2"
+          },
+          {
+            "serial": "",
+            "no": 3,
+            "unit": "Bộ",
+            "healthStatus": "Tốt",
+            "note": "",
+            "name": "",
+            "qty": 1,
+            "partNo": "",
+            "id": "cp-1788482726418"
+          }
+        ],
+        "googleDocPdfUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/export?format=pdf",
+        "org": {
+          "phoneContact": "",
+          "location": "Phòng TBTT-ACC HCM",
+          "companyName": "Công ty quản lý bay miền Nam",
+          "unit": "Đội Thông Tin - TT BDKT",
+          "supervisor": "Đội Trưởng đội Thông tin",
+          "primaryEngineer": "Kíp trực kỹ thuật"
+        },
+        "docs": [
+          {
+            "id": "doc-1",
+            "name": "User Operation Manual (Hướng dẫn vận hành thiết bị)",
+            "location": "Tủ tài liệu trạm",
+            "no": 1,
+            "qty": 1,
+            "format": "Bản in giấy",
+            "lang": "English / Tiếng Việt",
+            "note": "Kèm đĩa phần mềm"
+          }
+        ],
+        "licenses": [
+          {
+            "content": "Giấy phép sử dụng tần số và cấp phép khai thác bảo đảm bay",
+            "id": "lic-1788232478020",
+            "startNo": "Test 1",
+            "active": true,
+            "endDate": "2029-08-31",
+            "startDate": "2026-09-01"
+          },
+          {
+            "active": true,
+            "endDate": "",
+            "startNo": "Test 2",
+            "id": "lic-1788448980780",
+            "startDate": "2026-09-03",
+            "content": "Giấy phép hàng không"
+          },
+          {
+            "endDate": "",
+            "startDate": "2026-09-03",
+            "active": true,
+            "content": "",
+            "startNo": "",
+            "id": "lic-1788448983724"
+          }
+        ],
+        "googleDocUrl": "https://docs.google.com/document/d/1TOQKG41e39YsOpzMgFyFt_DbcDlw85J32UL_ayMAtRs/edit",
+        "updatedBy": "Quản Trị Viên (Admin)",
+        "general": {
+          "yearMade": "2026",
+          "assetCode": "EQ-8020",
+          "estimatedLifespanYears": 10,
+          "warrantyDate": "2027-09-01",
+          "priority": "Hệ thống chính (Level 1)",
+          "manufacturer": "R&S",
+          "nextCalDate": "2027-02-28",
+          "name": "Máy Thu VHF S5200 (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao) (Bản sao)",
+          "acceptanceDate": "2026-09-01",
+          "status": "Dự phòng sẵn sàng",
+          "category": "VHF/UHF",
+          "assetNo": "A0424102002422-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY",
+          "commissioned": "2026-09-01",
+          "origin": "Đức",
+          "notes": "Thiết bị mới đưa vào khai thác.",
+          "model": "S5200VR",
+          "serial": "10086811-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY-COPY"
+        },
+        "createdAt": "2026-09-01T03:14:38.019Z",
+        "updatedAt": "2026-09-05T01:34:38.895Z",
+        "spec": {
+          "subnetMask": "255.255.255.0",
+          "gateway": "192.168.1.1",
+          "range": "Băng thông tiêu chuẩn",
+          "firmware": "v1.0.0",
+          "text": "Hệ thống Máy Thu VHF S5200 phục vụ đảm bảo hoạt động bay và viễn thông hàng không chuyên ngành.",
+          "output": "Chuẩn định mức",
+          "interface": "VoIP ED-137 / IP / RS232",
+          "power": "220VAC ± 10% / -48VDC",
+          "channelFreq": "Kênh khai thác chính",
+          "snmpCommunity": "public",
+          "vlanId": "VLAN 100",
+          "mgmtIp": "192.168.1.50"
+        },
+        "id": "eq-1788527245282",
+        "orgRows": []
+      },
+      "deletedAt": "2026-09-05T02:59:46.165Z",
+      "deletedBy": "Quản Trị Viên (Admin)"
+    }
+  ]
+}

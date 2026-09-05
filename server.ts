@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = path.join(process.cwd(), 'src', 'data');
 const CLOUD_DB_FILE = path.join(DATA_DIR, 'cns_cloud_equipment_db.json');
 export const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbySB2N2_ekkgKoxNzZjrRmdHaysDntLGXmsS7FH2mp04_WSyCpZh7ExWAWfunwjmnS7PA/exec';
 
