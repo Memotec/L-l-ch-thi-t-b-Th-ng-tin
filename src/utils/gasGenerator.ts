@@ -425,7 +425,7 @@ function saveAllEquipmentsToSheet(equipments) {
   let maintSheet = ss.getSheetByName(SHEET_NAMES.MAINTENANCE);
   if (!maintSheet) maintSheet = ss.insertSheet(SHEET_NAMES.MAINTENANCE);
   maintSheet.clear();
-  const maintHeaders = ['Mã Thiết Bị (ID)', 'Tên Thiết Bị', 'Ngày Thực Hiện', 'Chu Kỳ Bảo Dưỡng', 'Nội Dung Công Việc Đã Làm', 'Thông Số Đo Đạc Thực Tế', 'Kết Luận / Đánh Giá', 'Người Thực Hiện', 'Cán Bộ Kiểm Tra / Giám Sát'];
+  const maintHeaders = ['Mã Thiết Bị (ID)', 'Tên Thiết Bị', 'Từ ngày, đến ngày', 'Chu Kỳ Bảo Dưỡng', 'Nội Dung Công Việc Đã Làm', 'Thông Số Đo Đạc Thực Tế', 'Kết Luận / Đánh Giá', 'Người Thực Hiện', 'Cán Bộ Kiểm Tra / Giám Sát'];
   const maintRows = [maintHeaders];
   equipments.forEach(function(eq) {
     (eq.maintenance || []).forEach(function(m) {
@@ -1388,7 +1388,7 @@ export const generateGasHtml = (): string => {
         <table class="w-full text-xs text-left border-collapse">
           <thead>
             <tr class="bg-slate-100 text-slate-700 font-semibold border-b">
-              <th class="p-2">Ngày TH</th>
+              <th class="p-2">Từ ngày, đến ngày</th>
               <th class="p-2">Chu kỳ</th>
               <th class="p-2">Nội dung công việc</th>
               <th class="p-2">Thông số đo đạc</th>

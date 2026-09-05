@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { sampleEquipments, createEmptyEquipment } from './sampleData';
 import { EquipmentData, AppUser, TrashEquipmentItem } from './types';
 import { authService } from './utils/authService';
@@ -51,8 +51,19 @@ export default function App() {
   const [trashList, setTrashList] = useState<TrashEquipmentItem[]>(() => storageService.loadTrash());
 
   const [currentId, setCurrentId] = useState<string>(() => {
-    return equipments[0]?.id || 'eq-vhf-01';
+    const lastId = storageService.getLastSelectedId();
+    if (lastId && equipments.some(e => e.id === lastId)) {
+      return lastId;
+    }
+    return equipments[0]?.id || 'eq-vccs-main-01';
   });
+
+  // Persist last selected equipment ID whenever currentId changes
+  useEffect(() => {
+    if (currentId) {
+      storageService.saveLastSelectedId(currentId);
+    }
+  }, [currentId]);
 
   // Memoized current active equipment
   const currentEquipment = useMemo(() => {
@@ -74,6 +85,17 @@ export default function App() {
   const [isQrScannerOpen, setIsQrScannerOpen] = useState<boolean>(false);
   const [viewerQrEquipment, setViewerQrEquipment] = useState<EquipmentData | null>(null);
   const [viewerMobileTab, setViewerMobileTab] = useState<ViewerNavTab>('home');
+  const [viewerViewingId, setViewerViewingId] = useState<string | null>(null);
+
+  // Helper to select an equipment and synchronize both admin and viewer views
+  const handleSelectEquipment = useCallback((id: string, tabName?: string) => {
+    if (!id) return;
+    setCurrentId(id);
+    setViewerViewingId(id);
+    if (tabName) {
+      setActiveTab(tabName);
+    }
+  }, []);
 
   // Cross-Device Cloud Sync State
   const [cloudSyncState, setCloudSyncState] = useState<CloudSyncState>(() => cloudSyncService.getState());
@@ -193,12 +215,24 @@ export default function App() {
     window.location.hash = `#eq=${encodeURIComponent(target.id)}&view=pdf`;
   }, [currentEquipment]);
 
+  const lastProcessedUrlRef = useRef<string>('');
+
   // Deep Link Listener for QR Codes (#eq=eq-xxx&view=pdf, ?eq=xxx&view=pdf)
   useEffect(() => {
     const handleUrlChange = () => {
       const hash = window.location.hash || '';
       const search = window.location.search || '';
-      
+      const currentUrlSignature = `${search}||${hash}`;
+
+      if (!hash && !search) {
+        lastProcessedUrlRef.current = '';
+        return;
+      }
+
+      if (lastProcessedUrlRef.current === currentUrlSignature) {
+        return; // Already processed this exact URL/hash signature, skip to avoid loop
+      }
+
       let targetId: string | null = null;
       let isPdfView = false;
       let isDocView = false;
@@ -246,7 +280,9 @@ export default function App() {
         );
 
         if (found) {
+          lastProcessedUrlRef.current = currentUrlSignature;
           setCurrentId(found.id);
+          setViewerViewingId(found.id);
           if (isPdfView) {
             setPdfFullscreenEquipment(found);
             setIsPdfFullscreen(true);
@@ -262,6 +298,7 @@ export default function App() {
           }
         }
       } else if (isPdfView) {
+        lastProcessedUrlRef.current = currentUrlSignature;
         const target = equipments.find(e => e.id === currentId) || equipments[0];
         if (target) {
           setPdfFullscreenEquipment(target);
@@ -277,7 +314,7 @@ export default function App() {
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, [equipments, currentId, showToast]);
+  }, [equipments, showToast]);
 
   // Global Keyboard Shortcut Listener (Ctrl+K or Cmd+K)
   useEffect(() => {
@@ -293,6 +330,7 @@ export default function App() {
 
   // Update current equipment with debounced saving for smooth typing
   const handleUpdateCurrent = useCallback((updated: EquipmentData) => {
+    setCurrentId(updated.id);
     setEquipments(prev => {
       const updatedList = prev.map(e => e.id === updated.id ? updated : e);
       storageService.saveDebounced(updatedList, 300, (timeStr) => {
@@ -739,13 +777,10 @@ export default function App() {
   const handleNavigateToEquipment = useCallback((equipmentId: string, tabName?: string) => {
     const found = equipments.find(e => e.id === equipmentId);
     if (found) {
-      setCurrentId(found.id);
-      if (tabName) {
-        setActiveTab(tabName);
-      }
+      handleSelectEquipment(found.id, tabName);
       showToast(`✓ Đã chuyển đến hồ sơ: ${found.general.name}`);
     }
-  }, [equipments, showToast]);
+  }, [equipments, handleSelectEquipment, showToast]);
 
   // If Full-Screen PDF Mode is active (e.g. from scanning QR Code or direct link)
   if (isPdfFullscreen && (pdfFullscreenEquipment || currentEquipment)) {
@@ -794,12 +829,18 @@ export default function App() {
           onOpenQrScanner={() => setIsQrScannerOpen(true)}
           onOpenPdfModal={(eq) => setPdfModalEquipment(eq)}
           onOpenQrModal={(eq) => setViewerQrEquipment(eq)}
-          selectedEquipmentId={currentId !== equipments[0]?.id ? currentId : undefined}
-          onSelectEquipmentId={(id) => setCurrentId(id)}
+          selectedEquipmentId={viewerViewingId || undefined}
+          onSelectEquipmentId={(id) => {
+            if (id) {
+              handleSelectEquipment(id);
+            } else {
+              setViewerViewingId(null);
+            }
+          }}
           activeTab={viewerMobileTab}
           onSelectTab={(tab) => setViewerMobileTab(tab)}
           onCloseDetail={() => {
-            // Reset hash if closing detail
+            setViewerViewingId(null);
             window.location.hash = '';
           }}
         />
@@ -842,8 +883,7 @@ export default function App() {
               equipments={equipments}
               initialQuery={searchTerm}
               onSelectResult={(equipmentId) => {
-                setCurrentId(equipmentId);
-                // Open detail inside ViewerDashboard by synchronising selectedEquipmentId
+                handleSelectEquipment(equipmentId);
                 showToast(`✓ Đã hiển thị hồ sơ: ${equipments.find(e => e.id === equipmentId)?.general.name || equipmentId}`);
               }}
               onOpenPdfModal={(eq) => setPdfModalEquipment(eq)}
@@ -857,7 +897,7 @@ export default function App() {
               onClose={() => setIsQrScannerOpen(false)}
               equipments={equipments}
               onSelectEquipment={(equipmentId) => {
-                setCurrentId(equipmentId);
+                handleSelectEquipment(equipmentId);
                 setIsQrScannerOpen(false);
                 setViewerMobileTab('home');
                 showToast(`✓ Quét mã thành công! Đang hiển thị hồ sơ thiết bị.`);
@@ -906,7 +946,7 @@ export default function App() {
         activeTab={activeTab}
         currentUser={currentUser}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
-        onSelectEquipment={(id) => setCurrentId(id)}
+        onSelectEquipment={(id) => handleSelectEquipment(id)}
         onSelectTab={(tab) => setActiveTab(tab)}
         onNewEquipment={() => setIsNewModalOpen(true)}
         onCloneEquipment={handleCloneCurrent}
@@ -975,7 +1015,7 @@ export default function App() {
                 allEquipments={equipments}
                 onChange={handleUpdateCurrent}
                 onNavigateTab={(tab) => setActiveTab(tab)}
-                onSelectEquipment={(id) => setCurrentId(id)}
+                onSelectEquipment={(id) => handleSelectEquipment(id)}
                 onNewEquipment={() => setIsNewModalOpen(true)}
                 onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}
                 onDeleteEquipment={handleDeleteCurrent}
@@ -988,7 +1028,7 @@ export default function App() {
               <GeneralTab
                 data={currentEquipment}
                 allEquipments={equipments}
-                onSelectEquipment={(id) => setCurrentId(id)}
+                onSelectEquipment={(id) => handleSelectEquipment(id)}
                 onChange={handleUpdateCurrent}
                 isReadOnly={isReadOnly}
                 onOpenLoginModal={() => setIsLoginModalOpen(true)}
@@ -1058,7 +1098,7 @@ export default function App() {
                 <QrCodeManagerTab
                   currentEquipment={currentEquipment}
                   allEquipments={equipments}
-                  onSelectEquipment={(id) => setCurrentId(id)}
+                  onSelectEquipment={(id) => handleSelectEquipment(id)}
                   onShowToast={showToast}
                   onNavigateTab={(tab) => setActiveTab(tab)}
                   onOpenPdfViewer={(eq) => handleOpenPdfFullScreen(eq)}
@@ -1109,7 +1149,7 @@ export default function App() {
                 <PrintPreviewTab
                   data={currentEquipment}
                   allEquipments={equipments}
-                  onSelectEquipment={(id) => setCurrentId(id)}
+                  onSelectEquipment={(id) => handleSelectEquipment(id)}
                   currentUser={currentUser}
                   onShowToast={showToast}
                 />
@@ -1159,8 +1199,7 @@ export default function App() {
             equipments={equipments}
             initialQuery={searchTerm}
             onSelectResult={(equipmentId, targetTab) => {
-              setCurrentId(equipmentId);
-              setActiveTab(targetTab);
+              handleSelectEquipment(equipmentId, targetTab);
               showToast(`✓ Đã chuyển đến hồ sơ: ${equipments.find(e => e.id === equipmentId)?.general.name || equipmentId}`);
             }}
             onOpenPdfModal={(eq) => handleOpenPdfFullScreen(eq)}

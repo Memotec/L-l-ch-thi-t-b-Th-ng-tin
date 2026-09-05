@@ -143,20 +143,20 @@ export const ViewerEquipmentDetail: React.FC<ViewerEquipmentDetailProps> = ({
       {/* Equipment Header Passport Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0 flex items-start gap-4">
             <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl shrink-0 mt-1">
               {getCategoryIcon(g.category)}
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 whitespace-nowrap">
                   {g.category}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadge(g.status)}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${getStatusBadge(g.status)}`}>
                   {g.status}
                 </span>
                 {g.priority && (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
                     {g.priority}
                   </span>
                 )}
@@ -552,7 +552,7 @@ export const ViewerEquipmentDetail: React.FC<ViewerEquipmentDetailProps> = ({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-100 text-slate-700 uppercase font-semibold">
                     <tr>
-                      <th className="p-3 rounded-l-lg">Ngày Thực Hiện</th>
+                      <th className="p-3 rounded-l-lg">Từ ngày, đến ngày</th>
                       <th className="p-3">Chu Kỳ</th>
                       <th className="p-3">Nội Dung Bảo Dưỡng</th>
                       <th className="p-3">Kết Quả Đánh Giá</th>

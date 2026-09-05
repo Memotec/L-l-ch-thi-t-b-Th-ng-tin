@@ -33,7 +33,7 @@ import {
   EquipmentStatus, 
   EquipmentPriority, 
   LicenseRow, 
-  OrganizationTransferRow, 
+  OrgTransferRow, 
   AppUser 
 } from '../types';
 
@@ -89,7 +89,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
   // Trang 2: Quá trình luân chuyển & bàn giao đơn vị quản lý qua các thời kỳ (orgRows)
   const addOrgRow = () => {
     if (isReadOnly) return;
-    const newRow: OrganizationTransferRow = {
+    const newRow: OrgTransferRow = {
       id: `org-row-${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
       unit: '',
@@ -102,7 +102,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     });
   };
 
-  const updateOrgRow = (index: number, field: keyof OrganizationTransferRow, value: string) => {
+  const updateOrgRow = (index: number, field: keyof OrgTransferRow, value: string) => {
     if (isReadOnly) return;
     const updatedRows = [...(data.orgRows || [])];
     updatedRows[index] = { ...updatedRows[index], [field]: value };
@@ -191,66 +191,44 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Equipment Banner & Admin Status */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl shrink-0 mt-0.5 shadow-2xs">
-              {getCategoryIcon(data.general.category)}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+        {/* Top Controls & Equipment Switcher Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          {/* Equipment Switcher */}
+          {allEquipments && allEquipments.length > 1 && onSelectEquipment ? (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-semibold text-slate-500 whitespace-nowrap hidden md:inline">
+                Sổ lý lịch:
+              </span>
+              <select
+                value={data.id}
+                onChange={(e) => onSelectEquipment(e.target.value)}
+                className="w-full sm:w-80 px-3 py-2 text-xs font-bold bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl cursor-pointer transition-all shadow-2xs truncate"
+                title="Chuyển sang sổ lý lịch thiết bị khác"
+              >
+                {allEquipments.map(eq => (
+                  <option key={eq.id} value={eq.id}>
+                    {eq.general.name} ({eq.general.serial || eq.general.model || eq.general.category})
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">
-                  {data.general.category}
-                </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusBadgeColor(data.general.status)}`}>
-                  {data.general.status || 'Đang khai thác'}
-                </span>
-                {data.general.priority && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                    {data.general.priority}
-                  </span>
-                )}
-              </div>
-              <h1 className="text-lg font-bold text-slate-900 leading-tight">
-                {data.general.name}
-              </h1>
-              <p className="text-xs text-slate-500 font-mono flex flex-wrap items-center gap-2">
-                <span>Model: <b className="text-slate-700">{data.general.model || '---'}</b></span>
-                <span>•</span>
-                <span>Serial: <b className="text-blue-700">{data.general.serial || '---'}</b></span>
-                <span>•</span>
-                <span>Vị trí: <b className="text-slate-700">{data.org.location || data.org.unit || '---'}</b></span>
-              </p>
+          ) : (
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Hồ sơ Sổ Lý Lịch CNS
             </div>
-          </div>
+          )}
 
-          {/* Controls & Equipment Switcher */}
-          <div className="flex flex-wrap items-center gap-2 self-end lg:self-center">
-            {allEquipments && allEquipments.length > 1 && onSelectEquipment && (
-              <div className="relative">
-                <select
-                  value={data.id}
-                  onChange={(e) => onSelectEquipment(e.target.value)}
-                  className="pl-3 pr-8 py-1.5 text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl cursor-pointer transition-all"
-                  title="Chuyển sang sổ lý lịch thiết bị khác"
-                >
-                  {allEquipments.map(eq => (
-                    <option key={eq.id} value={eq.id}>
-                      {eq.general.name} ({eq.general.serial || eq.general.model || eq.general.category})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
             {onOpenPdfModal && (
               <button
                 type="button"
                 onClick={() => onOpenPdfModal(data)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs whitespace-nowrap"
                 title="Xem & Tải tệp PDF Sổ Lý Lịch tiêu chuẩn A4"
               >
-                <Printer className="w-3.5 h-3.5 text-blue-600" />
+                <Printer className="w-4 h-4 text-blue-600" />
                 <span>Xem & Tải Sổ PDF</span>
               </button>
             )}
@@ -259,13 +237,62 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               <button
                 type="button"
                 onClick={onDeleteEquipment}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200 transition-all cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold border border-rose-200 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
                 title="Chuyển sổ lý lịch này vào thùng rác"
               >
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <Trash2 className="w-4 h-4 text-rose-600" />
                 <span>Xóa Sổ</span>
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Main Equipment Title & Badges Header (Full Width) */}
+        <div className="flex items-start gap-3.5 w-full">
+          <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl shrink-0 mt-0.5 shadow-2xs">
+            {getCategoryIcon(data.general.category)}
+          </div>
+
+          <div className="w-full min-w-0 space-y-2">
+            {/* Category & Status Badges */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold whitespace-nowrap">
+                {data.general.category}
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${getStatusBadgeColor(data.general.status)}`}>
+                {data.general.status || 'Đang khai thác'}
+              </span>
+              {data.general.priority && (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
+                  {data.general.priority}
+                </span>
+              )}
+            </div>
+
+            {/* Equipment Name */}
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug tracking-tight">
+              {data.general.name}
+            </h1>
+
+            {/* Specs Summary Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-xs text-slate-600 font-mono">
+              <div>
+                <span className="text-slate-400 block text-[10px] font-sans">Model:</span>
+                <span className="font-bold text-slate-800 truncate block">{data.general.model || '---'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] font-sans">Serial Number:</span>
+                <span className="font-bold text-blue-700 truncate block">{data.general.serial || '---'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] font-sans">Mã Tài Sản:</span>
+                <span className="font-semibold text-slate-800 truncate block">{data.general.assetNo || data.general.assetCode || '---'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] font-sans">Vị Trí / Đơn Vị:</span>
+                <span className="font-semibold text-slate-800 truncate block">{data.org.location || data.org.unit || '---'}</span>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -93,11 +93,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const [updateStatusCheckbox, setUpdateStatusCheckbox] = useState<boolean>(false);
   const [newStatus, setNewStatus] = useState<EquipmentStatus>('Đang khai thác');
   const [quickLogToast, setQuickLogToast] = useState<string | null>(null);
-  const [showRecentLogs, setShowRecentLogs] = useState<boolean>(true);
+  const [showRecentLogs, setShowRecentLogs] = useState<boolean>(false);
   const [editingEquipment, setEditingEquipment] = useState<EquipmentData | null>(null);
 
   const handleOpenQuickLog = useCallback((eqId?: string) => {
     const targetId = eqId || data.id;
+    if (onSelectEquipment && targetId) {
+      onSelectEquipment(targetId);
+    }
     setSelectedEqIdForLog(targetId);
     const target = allEquipments.find(e => e.id === targetId) || data;
     setLogPerson(currentUser?.displayName || target.org.primaryEngineer || 'Kỹ thuật viên ca trực');
@@ -107,7 +110,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     setUpdateStatusCheckbox(false);
     setNewStatus(target.general.status || 'Đang khai thác');
     setIsQuickLogOpen(true);
-  }, [data, allEquipments, currentUser]);
+  }, [data, allEquipments, currentUser, onSelectEquipment]);
 
   const handleSaveQuickLog = useCallback(() => {
     if (!logContent.trim()) {
@@ -778,7 +781,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
                       {!isReadOnly && (
                         <button
-                          onClick={() => setEditingEquipment(eq)}
+                          onClick={() => {
+                            if (onSelectEquipment) onSelectEquipment(eq.id);
+                            setEditingEquipment(eq);
+                          }}
                           className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg border border-amber-200 transition-colors cursor-pointer"
                           title="Sửa nhanh thông tin Sổ lý lịch (Quyền Admin)"
                         >
@@ -925,7 +931,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                             </button>
                             {!isReadOnly && (
                               <button
-                                onClick={() => setEditingEquipment(eq)}
+                                onClick={() => {
+                                  if (onSelectEquipment) onSelectEquipment(eq.id);
+                                  setEditingEquipment(eq);
+                                }}
                                 className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded border border-amber-200 cursor-pointer"
                                 title="Sửa thông tin Sổ lý lịch (Admin)"
                               >

@@ -3,10 +3,35 @@ import { createEmptyEquipment, sampleEquipments } from '../sampleData';
 
 const STORAGE_KEY = 'cns_multi_equipment_data_v2';
 const TRASH_STORAGE_KEY = 'cns_trash_equipment_data_v1';
+const LAST_SELECTED_KEY = 'cns_last_selected_eq_id_v1';
 const TRASH_RETENTION_DAYS = 30;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const storageService = {
+  /**
+   * Reads last selected equipment ID from localStorage
+   */
+  getLastSelectedId(): string | null {
+    try {
+      if (typeof window === 'undefined') return null;
+      return localStorage.getItem(LAST_SELECTED_KEY);
+    } catch (err) {
+      return null;
+    }
+  },
+
+  /**
+   * Saves last selected equipment ID to localStorage
+   */
+  saveLastSelectedId(id: string): void {
+    try {
+      if (typeof window === 'undefined' || !id) return;
+      localStorage.setItem(LAST_SELECTED_KEY, id);
+    } catch (err) {
+      console.error('Failed to save last selected equipment ID:', err);
+    }
+  },
+
   /**
    * Loads equipment data safely from localStorage with fallback to sample equipments
    */

@@ -29,6 +29,8 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
   isReadOnly = false,
   onOpenLoginModal
 }) => {
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [filterCycle, setFilterCycle] = useState<string>('ALL');
   const [filterResult, setFilterResult] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -100,14 +102,18 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
         (mt.supervisor && mt.supervisor.toLowerCase().includes(q)) ||
         (mt.measuredParams && mt.measuredParams.toLowerCase().includes(q)) ||
         (mt.date && mt.date.includes(q));
-      return matchesCycle && matchesResult && matchesSearch;
+      
+      const matchesStartDate = !startDate || (mt.date && mt.date >= startDate);
+      const matchesEndDate = !endDate || (mt.date && mt.date <= endDate);
+
+      return matchesCycle && matchesResult && matchesSearch && matchesStartDate && matchesEndDate;
     });
-  }, [data.maintenance, filterCycle, filterResult, searchTerm]);
+  }, [data.maintenance, filterCycle, filterResult, searchTerm, startDate, endDate]);
 
   // Copy table to clipboard
   const handleCopyTable = () => {
     if (data.maintenance.length === 0) return;
-    const headers = ['Ngày TH', 'Chu kỳ', 'Nội dung bảo dưỡng', 'Thông số đo đạc', 'Kết luận', 'Người thực hiện', 'Người kiểm tra'];
+    const headers = ['Từ ngày, đến ngày', 'Chu kỳ', 'Nội dung bảo dưỡng', 'Thông số đo đạc', 'Kết luận', 'Người thực hiện', 'Người kiểm tra'];
     const rows = data.maintenance.map(m => [
       m.date || '',
       m.cycle || '',
@@ -184,9 +190,9 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
         </div>
 
         {/* Filters and Search toolbar */}
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2 bg-slate-50 rounded-lg border border-slate-200">
-          <div className="flex items-center gap-2 flex-1 max-w-md">
-            <div className="relative flex-1">
+        <div className="mb-4 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 p-2 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -199,6 +205,35 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                 <button
                   onClick={() => setSearchTerm('')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Date Range Filters: Từ ngày - Đến ngày */}
+            <div className="flex items-center gap-1.5 text-xs bg-white px-2 py-1 border border-slate-200 rounded-md">
+              <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span className="text-slate-500 text-[11px]">Từ ngày:</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="text-[11px] bg-transparent focus:outline-none font-mono"
+              />
+              <span className="text-slate-400 text-[11px]">-</span>
+              <span className="text-slate-500 text-[11px]">Đến ngày:</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="text-[11px] bg-transparent focus:outline-none font-mono"
+              />
+              {(startDate || endDate) && (
+                <button
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  className="text-slate-400 hover:text-rose-600 ml-1 cursor-pointer"
+                  title="Xóa bộ lọc ngày"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -241,7 +276,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
           <table className={`w-full text-left border-collapse min-w-[1100px] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
             <thead className="bg-slate-100/90 text-slate-800 border-b border-slate-200 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-2.5 w-36 whitespace-nowrap">Ngày TH</th>
+                <th className="p-2.5 min-w-[150px] whitespace-nowrap">Từ ngày, đến ngày</th>
                 <th className="p-2.5 w-36 whitespace-nowrap">Chu kỳ</th>
                 <th className="p-2.5 min-w-[220px]">Nội dung công việc bảo dưỡng</th>
                 <th className="p-2.5 min-w-[200px]">Thông số kỹ thuật đo đạc</th>
@@ -257,7 +292,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                   <td colSpan={isReadOnly ? 7 : 8} className="p-6 text-center text-slate-500 italic bg-white">
                     {data.maintenance.length === 0 
                       ? 'Chưa có nhật ký bảo dưỡng định kỳ nào được ghi nhận.'
-                      : `Không tìm thấy nhật ký bảo dưỡng nào khớp với bộ lọc "${searchTerm || filterCycle}".`}
+                      : `Không tìm thấy nhật ký bảo dưỡng nào khớp với bộ lọc "${searchTerm || filterCycle || startDate || endDate}".`}
                   </td>
                 </tr>
               ) : (
@@ -265,9 +300,10 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
                   <tr key={`maint-${mt.id || originalIndex}-${originalIndex}`} className="hover:bg-blue-50/30 bg-white transition-colors">
                     <td className="p-2 align-top">
                       <input
-                        type="date"
+                        type="text"
                         disabled={isReadOnly}
-                        value={mt.date}
+                        value={mt.date || ''}
+                        placeholder="Từ ngày, đến ngày..."
                         onChange={(e) => updateMaintenance(originalIndex, 'date', e.target.value)}
                         className={`form-input-standard font-mono ${isCompact ? 'py-0.5' : 'py-1'}`}
                       />
