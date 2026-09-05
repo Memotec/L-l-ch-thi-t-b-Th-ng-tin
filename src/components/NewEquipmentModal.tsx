@@ -8,7 +8,8 @@ import {
   Zap, 
   Server, 
   HardDrive,
-  Layers
+  Layers,
+  Gauge
 } from 'lucide-react';
 import { EquipmentCategory, EquipmentData } from '../types';
 
@@ -23,7 +24,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
   onClose,
   onCreate
 }) => {
-  const [category, setCategory] = useState<EquipmentCategory>('VHF/UHF');
+  const [category, setCategory] = useState<EquipmentCategory>('VHF/ HF');
   const [name, setName] = useState('');
   const [model, setModel] = useState('');
   const [manufacturer, setManufacturer] = useState('');
@@ -129,15 +130,16 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
           {/* Category Select */}
           <div className="space-y-1.5">
             <label className="font-bold text-slate-900 block">Chủng loại thiết bị*</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { id: 'VHF/UHF', label: 'VHF / UHF Radio', icon: Radio },
+                { id: 'VHF/ HF', label: 'VHF/ HF', icon: Radio },
+                { id: 'VIBA/VSAT/Cáp Quang', label: 'VIBA/VSAT/Cáp Quang', icon: Activity },
+                { id: 'Thiết bị đo', label: 'Thiết bị đo', icon: Gauge },
                 { id: 'Ghép Kênh', label: 'Ghép kênh / Router', icon: Layers },
-                { id: 'VIBA', label: 'Viba / Microwave', icon: Activity },
                 { id: 'VOICE', label: 'VCS / Thoại', icon: PhoneCall },
                 { id: 'POWER', label: 'UPS / Nguồn Điện', icon: Zap },
                 { id: 'IT', label: 'NMS / Mạng IT', icon: Server },
-                { id: 'OTHER', label: 'Khác (Thiết bị đo...)', icon: HardDrive }
+                { id: 'OTHER', label: 'Khác', icon: HardDrive }
               ].map((item) => {
                 const Icon = item.icon;
                 return (

@@ -141,7 +141,10 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
   // Filter batch equipments based on Category and Search Term
   const filteredBatchEquipments = useMemo(() => {
     return allEquipments.filter(eq => {
-      const matchesCategory = selectedCategory === 'all' || eq.general.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || 
+        eq.general.category === selectedCategory ||
+        (selectedCategory === 'VHF/ HF' && (eq.general.category === 'VHF/ HF' || eq.general.category === 'VHF/UHF')) ||
+        (selectedCategory === 'VIBA/VSAT/Cáp Quang' && (eq.general.category === 'VIBA/VSAT/Cáp Quang' || eq.general.category === 'VIBA' || eq.general.category === 'VSAT'));
       if (!matchesCategory) return false;
       if (!batchSearchTerm.trim()) return true;
       const term = batchSearchTerm.toLowerCase();
@@ -913,9 +916,10 @@ export const QrCodeManagerTab: React.FC<QrCodeManagerTabProps> = ({
                   className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Tất cả chủng loại ({allEquipments.length})</option>
-                  <option value="VHF/UHF">VHF/UHF</option>
+                  <option value="VHF/ HF">VHF/ HF</option>
+                  <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+                  <option value="Thiết bị đo">Thiết bị đo</option>
                   <option value="Ghép Kênh">Ghép kênh / Router</option>
-                  <option value="VIBA">VIBA & Truyền dẫn</option>
                   <option value="VOICE">VOICE (Tổng đài/Ghi âm)</option>
                   <option value="POWER">Nguồn & Phụ Trợ (POWER)</option>
                   <option value="IT">IT & Mạng Dữ Liệu</option>

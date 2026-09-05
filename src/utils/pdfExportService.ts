@@ -10,6 +10,8 @@ export interface PdfExportProgress {
 
 export interface PdfExportOptions {
   orientation?: 'portrait' | 'landscape';
+  paperSize?: 'A4' | 'A5';
+  format?: 'a4' | 'a5';
   filename?: string;
   marginMm?: number;
   onProgress?: ((progress: PdfExportProgress) => void) | ((current: number, total: number) => void);
@@ -28,7 +30,7 @@ class PdfExportService {
       .replace(/\.pdf$/i, '')
       .replace(/[\/\\?%*:|"<>]/g, '_') + '.pdf';
 
-    // Look for individual A4 page sheets
+    // Look for individual page sheets (A4 or A5)
     let pageElements = Array.from(
       element.querySelectorAll<HTMLElement>('.page-sheet, .page-sheet-landscape')
     );
@@ -37,6 +39,13 @@ class PdfExportService {
     if (pageElements.length === 0) {
       pageElements = [element];
     }
+
+    // Determine if exporting in A5 format
+    const isA5 = options?.paperSize === 'A5' || 
+      options?.format === 'a5' || 
+      element.getAttribute('data-paper-size') === 'A5' ||
+      element.querySelector('[data-paper-size="A5"]') !== null ||
+      pageElements.some(el => el.classList.contains('a5-sheet') || el.style.width === '148mm');
 
     const totalPages = pageElements.length;
     const notifyProgress = (current: number, total: number, message: string) => {
@@ -49,13 +58,13 @@ class PdfExportService {
       }
     };
 
-    notifyProgress(0, totalPages, `Bắt đầu khởi tạo bản in PDF (${totalPages} trang)...`);
+    notifyProgress(0, totalPages, `Bắt đầu khởi tạo bản in PDF ${isA5 ? 'A5' : 'A4'} (${totalPages} trang)...`);
 
     const firstIsLandscape = pageElements[0]?.classList.contains('page-sheet-landscape') || isLandscape;
     const pdf = new jsPDF({
       orientation: firstIsLandscape ? 'landscape' : 'portrait',
       unit: 'mm',
-      format: 'a4',
+      format: isA5 ? 'a5' : 'a4',
       compress: true
     });
 
@@ -64,10 +73,15 @@ class PdfExportService {
       const pageNum = i + 1;
       const isLandscapePage = pageEl.classList.contains('page-sheet-landscape') || 
         (!pageEl.classList.contains('page-sheet') && isLandscape);
-      const pageWidthMm = isLandscapePage ? 297 : 210;
-      const pageHeightMm = isLandscapePage ? 210 : 297;
+      
+      const pageWidthMm = isA5 
+        ? (isLandscapePage ? 210 : 148) 
+        : (isLandscapePage ? 297 : 210);
+      const pageHeightMm = isA5 
+        ? (isLandscapePage ? 148 : 210) 
+        : (isLandscapePage ? 210 : 297);
 
-      notifyProgress(pageNum, totalPages, `Đang kết xuất trang ${pageNum}/${totalPages}...`);
+      notifyProgress(pageNum, totalPages, `Đang kết xuất trang ${pageNum}/${totalPages} (${isA5 ? 'A5' : 'A4'})...`);
 
       // Render page element to high-res canvas (2x scale for 300 DPI crisp typography)
       const canvas = await html2canvas(pageEl, {
@@ -91,13 +105,23 @@ class PdfExportService {
           clonedElement.style.borderRadius = '0';
           clonedElement.style.backgroundColor = '#ffffff';
 
-          // Lock to exact standard A4 size
-          if (isLandscapePage) {
-            clonedElement.style.width = '297mm';
-            clonedElement.style.minHeight = '210mm';
+          // Lock to exact standard size
+          if (isA5) {
+            if (isLandscapePage) {
+              clonedElement.style.width = '210mm';
+              clonedElement.style.minHeight = '148mm';
+            } else {
+              clonedElement.style.width = '148mm';
+              clonedElement.style.minHeight = '210mm';
+            }
           } else {
-            clonedElement.style.width = '210mm';
-            clonedElement.style.minHeight = '297mm';
+            if (isLandscapePage) {
+              clonedElement.style.width = '297mm';
+              clonedElement.style.minHeight = '210mm';
+            } else {
+              clonedElement.style.width = '210mm';
+              clonedElement.style.minHeight = '297mm';
+            }
           }
         }
       });
@@ -105,7 +129,7 @@ class PdfExportService {
       const imgData = canvas.toDataURL('image/jpeg', 0.96);
 
       if (i > 0) {
-        pdf.addPage('a4', isLandscapePage ? 'landscape' : 'portrait');
+        pdf.addPage(isA5 ? 'a5' : 'a4', isLandscapePage ? 'landscape' : 'portrait');
       }
 
       pdf.addImage(
@@ -120,7 +144,7 @@ class PdfExportService {
       );
     }
 
-    notifyProgress(totalPages, totalPages, 'Hoàn tất! Đang lưu file PDF về máy...');
+    notifyProgress(totalPages, totalPages, `Hoàn tất! Đang lưu file PDF ${isA5 ? 'A5' : 'A4'} về máy...`);
 
     pdf.save(filename);
   }

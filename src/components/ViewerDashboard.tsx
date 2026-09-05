@@ -27,7 +27,8 @@ import {
   User, 
   Copy, 
   Check, 
-  ChevronRight, 
+  ChevronRight,
+  Gauge,
   MapPin, 
   Wrench,
   RefreshCw,
@@ -133,8 +134,11 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
       const o = item.org || ({} as any);
 
       // Category filter
-      if (selectedCategory !== 'ALL' && g.category !== selectedCategory) {
-        return false;
+      if (selectedCategory !== 'ALL') {
+        const isMatch = g.category === selectedCategory ||
+          (selectedCategory === 'VHF/ HF' && (g.category === 'VHF/ HF' || g.category === 'VHF/UHF')) ||
+          (selectedCategory === 'VIBA/VSAT/Cáp Quang' && (g.category === 'VIBA/VSAT/Cáp Quang' || g.category === 'VIBA' || g.category === 'VSAT'));
+        if (!isMatch) return false;
       }
 
       // Status filter
@@ -172,9 +176,12 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
 
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
+      case 'VHF/ HF':
       case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-500" />;
       case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-500" />;
+      case 'VIBA/VSAT/Cáp Quang':
       case 'VIBA': return <Activity className="w-4 h-4 text-emerald-500" />;
+      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-500" />;
       case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-500" />;
       case 'POWER': return <Zap className="w-4 h-4 text-yellow-500" />;
       case 'IT': return <Server className="w-4 h-4 text-indigo-500" />;
@@ -201,8 +208,10 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
 
   const categories = [
     { id: 'ALL', label: 'Tất cả' },
-    { id: 'VHF/UHF', label: 'VHF/UHF' },
-    { id: 'VIBA', label: 'Viba / VSAT' },
+    { id: 'VHF/ HF', label: 'VHF/ HF' },
+    { id: 'VIBA/VSAT/Cáp Quang', label: 'VIBA/VSAT/Cáp Quang' },
+    { id: 'Thiết bị đo', label: 'Thiết bị đo' },
+    { id: 'Ghép Kênh', label: 'Ghép kênh' },
     { id: 'VOICE', label: 'Chuyển mạch thoại' },
     { id: 'POWER', label: 'Nguồn điện' },
     { id: 'IT', label: 'Mạng & IT' },

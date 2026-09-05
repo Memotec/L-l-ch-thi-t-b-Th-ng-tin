@@ -5,10 +5,13 @@ export interface TrashEquipmentItem {
 }
 
 export type EquipmentCategory = 
+  | 'VHF/ HF'
   | 'VHF/UHF'
-  | 'Ghép Kênh'
+  | 'VIBA/VSAT/Cáp Quang'
   | 'VIBA' 
   | 'VSAT' 
+  | 'Thiết bị đo'
+  | 'Ghép Kênh'
   | 'VCCS' 
   | 'VOICE' 
   | 'POWER' 

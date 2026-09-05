@@ -25,7 +25,8 @@ import {
   Lock,
   ChevronDown,
   ArrowRight,
-  Printer
+  Printer,
+  Gauge
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -165,10 +166,13 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
 
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
+      case 'VHF/ HF':
       case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-500" />;
       case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-500" />;
+      case 'VIBA/VSAT/Cáp Quang':
       case 'VIBA': return <Activity className="w-4 h-4 text-emerald-500" />;
       case 'VSAT': return <Radio className="w-4 h-4 text-sky-500" />;
+      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-500" />;
       case 'VCCS':
       case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-500" />;
       case 'POWER': return <Zap className="w-4 h-4 text-yellow-500" />;
@@ -355,19 +359,25 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
             <label className="text-xs font-bold text-slate-800">Chủng loại thiết bị CNS *</label>
             <select
               disabled={isReadOnly}
-              value={data.general.category}
+              value={
+                data.general.category === 'VHF/UHF' ? 'VHF/ HF' :
+                (data.general.category === 'VIBA' || data.general.category === 'VSAT') ? 'VIBA/VSAT/Cáp Quang' :
+                data.general.category
+              }
               onChange={(e) => updateGeneral('category', e.target.value as EquipmentCategory)}
               className="form-input-standard font-semibold text-blue-900"
             >
-              <option value="VHF/UHF">VHF/UHF Air-Ground Radio</option>
+              <option value="VHF/ HF">VHF/ HF</option>
+              <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+              <option value="Thiết bị đo">Thiết bị đo</option>
               <option value="Ghép Kênh">Ghép kênh / Router (Mux/Router)</option>
-              <option value="VIBA">Viba / Microwave Viễn thông</option>
-              <option value="VSAT">VSAT Vệ tinh Hàng không</option>
               <option value="VCCS">VCCS / Chuyển mạch thoại</option>
               <option value="VOICE">VOICE / Ghi âm không lưu</option>
               <option value="POWER">Hệ thống Nguồn điện / UPS</option>
               <option value="IT">Mạng IT / Máy chủ CNS</option>
-              <option value="Thiết Bị Khác">Thiết Bị Khác / Máy đo</option>
+              <option value="RADAR_ADS">Ra-đa / Giám sát bay (MSSR, PSR, ADS-B)</option>
+              <option value="NAV">Dẫn đường hàng không (ILS, DVOR, DME)</option>
+              <option value="Thiết Bị Khác">Thiết Bị Khác</option>
             </select>
           </div>
 

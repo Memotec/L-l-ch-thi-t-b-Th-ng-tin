@@ -24,7 +24,8 @@ import {
   Search,
   Trash2,
   Copy,
-  MessageSquare
+  MessageSquare,
+  Gauge
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory, AppUser } from '../types';
 
@@ -72,9 +73,12 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
+      case 'VHF/ HF':
       case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-400" />;
       case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-400" />;
+      case 'VIBA/VSAT/Cáp Quang':
       case 'VIBA': return <Activity className="w-4 h-4 text-emerald-400" />;
+      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-400" />;
       case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-400" />;
       case 'POWER': return <Zap className="w-4 h-4 text-yellow-400" />;
       case 'IT': return <Server className="w-4 h-4 text-indigo-400" />;

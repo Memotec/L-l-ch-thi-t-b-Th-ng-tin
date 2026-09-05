@@ -40,6 +40,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   onOpenGoogleDoc
 }) => {
   const [zoom, setZoom] = useState<number>(85);
+  const [paperSize, setPaperSize] = useState<'A4' | 'A5'>('A4');
   const [qrUrl, setQrUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
@@ -76,17 +77,18 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     try {
       const rawName = equipment.general?.name || equipment.id;
       const safeName = rawName.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_').substring(0, 40);
-      const filename = `So_Ly_Lich_${safeName}.pdf`;
+      const filename = `So_Ly_Lich_${safeName}_${paperSize}.pdf`;
 
       await pdfExportService.exportElementToPdf(docPrintRef.current, {
         filename,
         orientation: 'portrait',
+        paperSize,
         marginMm: 0,
         onProgress: (current, total) => {
           setPdfExportProgress(`Đang tạo trang ${current}/${total}...`);
         }
       });
-      onShowToast('✓ Đã tải file PDF Sổ lý lịch thành công!');
+      onShowToast(`✓ Đã tải file PDF Sổ lý lịch (${paperSize}) thành công!`);
     } catch (err: any) {
       console.error('Lỗi xuất PDF:', err);
       onShowToast('⚠️ Đang mở hộp thoại in trình duyệt để lưu file PDF...');
@@ -111,9 +113,9 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Sổ Lý Lịch Thiết Bị - ${equipment.general.name || equipment.id}</title>
+<title>Sổ Lý Lịch Thiết Bị - ${equipment.general.name || equipment.id} (${paperSize})</title>
 <style>
-@page { size: A4 portrait; margin: 0; }
+@page { size: ${paperSize === 'A5' ? 'A5 portrait' : 'A4 portrait'}; margin: 0; }
 * { box-sizing: border-box; }
 body { 
   margin: 0; 
@@ -125,10 +127,10 @@ body {
   print-color-adjust: exact;
 }
 .page-sheet { 
-  width: 210mm; 
-  min-height: 297mm; 
-  height: 297mm;
-  padding: 14mm 15mm 12mm 18mm; 
+  width: ${paperSize === 'A5' ? '148mm' : '210mm'}; 
+  min-height: ${paperSize === 'A5' ? '210mm' : '297mm'}; 
+  height: ${paperSize === 'A5' ? '210mm' : '297mm'};
+  padding: ${paperSize === 'A5' ? '6mm 8mm 6mm 10mm' : '14mm 15mm 12mm 18mm'}; 
   margin: 0 auto; 
   page-break-after: always; 
   page-break-inside: avoid;
@@ -140,10 +142,10 @@ body {
 .page-sheet:last-child {
   page-break-after: auto;
 }
-.pdf-table { width: 100%; border-collapse: collapse; border: 1.5px solid #000; font-size: 11pt; }
-.pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; }
+.pdf-table { width: 100%; border-collapse: collapse; border: 1.5px solid #000; font-size: ${paperSize === 'A5' ? '8pt' : '11pt'}; }
+.pdf-table th, .pdf-table td { border: 1px solid #000; padding: ${paperSize === 'A5' ? '3px 4px' : '6px 8px'}; vertical-align: middle; }
 .pdf-table th { background: #dfe1e2; font-weight: bold; text-align: center; text-transform: uppercase; }
-.page-num { text-align: center; font-size: 12pt; margin-top: auto; padding-top: 6mm; font-weight: normal; }
+.page-num { text-align: center; font-size: ${paperSize === 'A5' ? '9pt' : '12pt'}; margin-top: auto; padding-top: 6mm; font-weight: normal; }
 </style>
 </head>
 <body>
@@ -155,9 +157,9 @@ body {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `So_Ly_Lich_${(equipment.general.name || equipment.id).replace(/\W/g, '_')}.html`;
+    a.download = `So_Ly_Lich_${(equipment.general.name || equipment.id).replace(/\W/g, '_')}_${paperSize}.html`;
     a.click();
-    onShowToast('✓ Đã tải tệp tài liệu Sổ lý lịch (Chuẩn A4) thành công!');
+    onShowToast(`✓ Đã tải tệp tài liệu Sổ lý lịch (Chuẩn ${paperSize}) thành công!`);
   };
 
   const g = equipment.general || ({} as any);
@@ -218,7 +220,30 @@ body {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {/* Paper Size Selector (A4 vs A5) */}
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg border border-slate-700 p-1 text-xs">
+            <span className="text-[11px] text-slate-400 font-medium px-1">Khổ in:</span>
+            <button
+              onClick={() => setPaperSize('A4')}
+              className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                paperSize === 'A4' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Khổ giấy tiêu chuẩn A4 (210 × 297 mm)"
+            >
+              A4
+            </button>
+            <button
+              onClick={() => setPaperSize('A5')}
+              className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                paperSize === 'A5' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Khổ giấy A5 (148 × 210 mm) - Sổ tay công tác chuẩn form"
+            >
+              A5
+            </button>
+          </div>
+
           {/* Zoom controls */}
           <div className="hidden sm:flex items-center bg-slate-800 rounded-lg border border-slate-700 p-1 text-xs">
             <button
@@ -262,7 +287,7 @@ body {
             onClick={handleDownloadPdf}
             disabled={isExportingPdf}
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
-            title="Tải sổ lý lịch dưới dạng tệp tin PDF (.pdf) chuẩn A4"
+            title={`Tải sổ lý lịch dưới dạng tệp tin PDF (.pdf) chuẩn ${paperSize}`}
           >
             {isExportingPdf ? (
               <>
@@ -272,7 +297,7 @@ body {
             ) : (
               <>
                 <Download className="w-3.5 h-3.5 text-white" />
-                <span>Tải File PDF Chuẩn Form (.pdf)</span>
+                <span>Tải File PDF ({paperSize})</span>
               </>
             )}
           </button>
@@ -280,7 +305,7 @@ body {
           <button
             onClick={handleDownloadPdfHtml}
             className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
-            title="Tải về file HTML Sổ chuẩn A4"
+            title={`Tải về file HTML Sổ chuẩn ${paperSize}`}
           >
             <Download className="w-3.5 h-3.5 text-blue-400" />
             <span>Tải HTML</span>
@@ -292,7 +317,7 @@ body {
             title="Mở hộp thoại in hoặc lưu PDF trình duyệt"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>In A4</span>
+            <span>In ({paperSize})</span>
           </button>
 
           <button
@@ -319,8 +344,9 @@ body {
           <EquipmentLogbookPrintPages
             equipment={equipment}
             coverQrUrl={qrUrl}
-            itemsPerPageMaint={7}
+            itemsPerPageMaint={paperSize === 'A5' ? 4 : 7}
             keyPrefix="modal-pdf"
+            paperSize={paperSize}
           />
         </div>
       </div>

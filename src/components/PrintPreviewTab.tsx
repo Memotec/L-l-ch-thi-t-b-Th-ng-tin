@@ -208,10 +208,10 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
     const isLandscape = isInventory && inventoryOrientation === 'landscape';
     const todayStr = new Date().toISOString().slice(0, 10);
     const title = isInventory 
-      ? `Bao_Cao_Kiem_Ke_Thiet_Bi_CNS_${todayStr}`
+      ? `Bao_Cao_Kiem_Ke_Thiet_Bi_CNS_${paperSize}_${todayStr}`
       : viewMode === 'all_logbooks'
-      ? `Toan_Bo_So_Ly_Lich_CNS_${todayStr}`
-      : `Ly_Lich_Thiet_Bi_${(data.general?.model || data.general?.serial || 'CNS').replace(/\W/g, '_')}`;
+      ? `Toan_Bo_So_Ly_Lich_CNS_${paperSize}_${todayStr}`
+      : `Ly_Lich_Thiet_Bi_${(data.general?.model || data.general?.serial || 'CNS').replace(/\W/g, '_')}_${paperSize}`;
 
     const fullHtml = `<!DOCTYPE html>
 <html lang="vi">
@@ -220,7 +220,10 @@ export const PrintPreviewTab: React.FC<PrintPreviewTabProps> = ({
 <title>${title}</title>
 <style>
 @page { 
-  size: ${isLandscape ? 'A4 landscape' : 'A4 portrait'}; 
+  size: ${paperSize === 'A5' 
+    ? (isLandscape ? 'A5 landscape' : 'A5 portrait') 
+    : (isLandscape ? 'A4 landscape' : 'A4 portrait')
+  }; 
   margin: 0; 
 }
 * { box-sizing: border-box; }
@@ -234,10 +237,10 @@ body {
   print-color-adjust: exact;
 }
 .page-sheet { 
-  width: 210mm; 
-  min-height: 297mm; 
-  height: 297mm;
-  padding: 12mm 15mm 10mm 18mm; 
+  width: ${paperSize === 'A5' ? '148mm' : '210mm'}; 
+  min-height: ${paperSize === 'A5' ? '210mm' : '297mm'}; 
+  height: ${paperSize === 'A5' ? '210mm' : '297mm'};
+  padding: ${paperSize === 'A5' ? '6mm 8mm 6mm 10mm' : '12mm 15mm 10mm 18mm'}; 
   margin: 0 auto; 
   page-break-after: always; 
   page-break-inside: avoid;
@@ -247,10 +250,10 @@ body {
   flex-direction: column;
 }
 .page-sheet-landscape {
-  width: 297mm;
-  min-height: 210mm;
-  height: 210mm;
-  padding: 8mm 12mm 8mm 12mm;
+  width: ${paperSize === 'A5' ? '210mm' : '297mm'};
+  min-height: ${paperSize === 'A5' ? '148mm' : '210mm'};
+  height: ${paperSize === 'A5' ? '148mm' : '210mm'};
+  padding: ${paperSize === 'A5' ? '5mm 8mm 5mm 8mm' : '8mm 12mm 8mm 12mm'};
   margin: 0 auto;
   page-break-after: always;
   page-break-inside: avoid;
@@ -266,11 +269,11 @@ body {
   width: 100%;
   border-collapse: collapse;
   border: 1.5px solid #000;
-  font-size: ${isLandscape ? '9pt' : '11pt'};
+  font-size: ${paperSize === 'A5' ? (isLandscape ? '7.5pt' : '8pt') : (isLandscape ? '9pt' : '11pt')};
 }
 .pdf-table th, .pdf-table td {
   border: 1px solid #000;
-  padding: 5px 6px;
+  padding: ${paperSize === 'A5' ? '3px 4px' : '5px 6px'};
   vertical-align: middle;
 }
 .pdf-table th {
@@ -280,7 +283,7 @@ body {
 }
 .page-num {
   text-align: center;
-  font-size: 11pt;
+  font-size: ${paperSize === 'A5' ? '9pt' : '11pt'};
   margin-top: auto;
   padding-top: 4mm;
   font-weight: normal;
@@ -312,31 +315,32 @@ ${content}
     setIsExportingPdf(true);
     setExportProgress('Đang chuẩn bị trang...');
     try {
-      let filename = 'So_Ly_Lich.pdf';
+      let filename = `So_Ly_Lich_${paperSize}.pdf`;
       let orientation: 'portrait' | 'landscape' = 'portrait';
 
       if (viewMode === 'team_inventory') {
         orientation = inventoryOrientation;
-        filename = `Bang_Kiem_Ke_Thiet_Bi_CNS_${new Date().toISOString().split('T')[0]}.pdf`;
+        filename = `Bang_Kiem_Ke_Thiet_Bi_CNS_${paperSize}_${new Date().toISOString().split('T')[0]}.pdf`;
       } else if (viewMode === 'all_logbooks') {
         orientation = 'portrait';
-        filename = `Gop_Toan_Bo_${effectiveEquipments.length}_So_Ly_Lich.pdf`;
+        filename = `Gop_Toan_Bo_${effectiveEquipments.length}_So_Ly_Lich_${paperSize}.pdf`;
       } else {
         orientation = 'portrait';
         const rawName = data.general?.name || data.id;
         const safeName = rawName.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_').substring(0, 40);
-        filename = `So_Ly_Lich_${safeName}.pdf`;
+        filename = `So_Ly_Lich_${safeName}_${paperSize}.pdf`;
       }
 
       await pdfExportService.exportElementToPdf(printRef.current, {
         filename,
         orientation,
+        paperSize,
         marginMm: 0,
         onProgress: (current, total) => {
           setExportProgress(`Đang tạo trang ${current}/${total}...`);
         }
       });
-      notify('✓ Đã tải file PDF thành công!');
+      notify(`✓ Đã tải file PDF (${paperSize}) thành công!`);
     } catch (err: any) {
       console.error('Lỗi xuất PDF:', err);
       notify('⚠️ Đang mở hộp thoại in trình duyệt để lưu PDF...');
@@ -423,15 +427,15 @@ ${content}
           <div className="text-xs text-slate-400">
             {viewMode === 'team_inventory' ? (
               <span className="text-indigo-300 font-medium">
-                Khổ in {inventoryOrientation === 'landscape' ? 'A4 Ngang (297×210mm)' : 'A4 Dọc (210×297mm)'} • {filteredInventoryEquipments.length} thiết bị hiển thị
+                Khổ in {paperSize} {inventoryOrientation === 'landscape' ? 'Ngang (297×210mm)' : 'Dọc (210×297mm)'} • {filteredInventoryEquipments.length} thiết bị hiển thị
               </span>
             ) : viewMode === 'all_logbooks' ? (
               <span className="text-emerald-300 font-medium">
-                Ghép liên tục 8 trang của {effectiveEquipments.length} thiết bị (~{effectiveEquipments.length * 8} trang A4)
+                Ghép liên tục {paperSize} toàn bộ {effectiveEquipments.length} thiết bị chuẩn quy định Quản lý Kỹ thuật CNS
               </span>
             ) : (
               <span className="text-blue-300 font-medium">
-                Sổ lý lịch 8 trang chuẩn theo quy định Quản lý Kỹ thuật CNS
+                Sổ lý lịch biểu mẫu chuẩn Form ({paperSize}) theo quy định Quản lý Kỹ thuật CNS
               </span>
             )}
           </div>
@@ -639,9 +643,31 @@ ${content}
           /* CONTROLS CHO IN GỘP TOÀN BỘ SỔ LÝ LỊCH */
           /* ========================================================================= */
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs text-slate-300">
+            <div className="flex items-center gap-2 text-xs text-slate-300 flex-wrap">
               <span className="font-semibold text-emerald-400">Chế độ gộp:</span>
-              <span>In nối tiếp toàn bộ {effectiveEquipments.length} sổ lý lịch theo chuẩn Form scan 8 trang/sổ.</span>
+              <span>Nối tiếp toàn bộ {effectiveEquipments.length} sổ theo chuẩn Form scan.</span>
+              {/* Paper Size Selector (A4 vs A5) */}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 p-1 rounded-lg ml-1">
+                <span className="text-[11px] text-slate-400 font-medium px-1">Khổ:</span>
+                <button
+                  onClick={() => setPaperSize('A4')}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                    paperSize === 'A4' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ giấy tiêu chuẩn A4 (210 × 297 mm)"
+                >
+                  A4 (Chuẩn)
+                </button>
+                <button
+                  onClick={() => setPaperSize('A5')}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                    paperSize === 'A5' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ giấy A5 (148 × 210 mm) - Sổ tay công tác cầm tay"
+                >
+                  A5 (Sổ tay)
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
@@ -660,7 +686,7 @@ ${content}
                 onClick={handleDownloadDirectPdf}
                 disabled={isExportingPdf}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
-                title="Tải toàn bộ sổ lý lịch gộp thành một file PDF duy nhất (.pdf)"
+                title={`Tải toàn bộ sổ lý lịch gộp thành một file PDF duy nhất (.pdf) chuẩn ${paperSize}`}
               >
                 {isExportingPdf ? (
                   <>
@@ -670,7 +696,7 @@ ${content}
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5 text-white" />
-                    <span>Tải PDF Gộp (.pdf)</span>
+                    <span>Tải PDF Gộp ({paperSize})</span>
                   </>
                 )}
               </button>
@@ -680,7 +706,7 @@ ${content}
                 className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-xs transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Tải HTML Toàn Bộ Sổ</span>
+                <span>Tải HTML ({paperSize})</span>
               </button>
 
               <button
@@ -688,7 +714,7 @@ ${content}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In A4</span>
+                <span>In Toàn Bộ ({paperSize})</span>
               </button>
             </div>
           </div>
@@ -698,16 +724,46 @@ ${content}
           /* ========================================================================= */
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Paper Size Selector (A4 vs A5) */}
+              <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 p-1 rounded-lg">
+                <span className="text-[11px] text-slate-300 font-medium px-1">Khổ in:</span>
+                <button
+                  onClick={() => {
+                    setPaperSize('A4');
+                    if (itemsPerPageMaint === 4) setItemsPerPageMaint(7);
+                  }}
+                  className={`px-2.5 py-0.5 rounded text-xs font-bold transition-colors cursor-pointer ${
+                    paperSize === 'A4' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ giấy tiêu chuẩn A4 (210 × 297 mm) - Chuẩn form hồ sơ kỹ thuật"
+                >
+                  A4 (Chuẩn)
+                </button>
+                <button
+                  onClick={() => {
+                    setPaperSize('A5');
+                    if (itemsPerPageMaint === 7) setItemsPerPageMaint(4);
+                  }}
+                  className={`px-2.5 py-0.5 rounded text-xs font-bold transition-colors cursor-pointer ${
+                    paperSize === 'A5' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Khổ giấy A5 (148 × 210 mm) - Sổ tay công tác nhỏ gọn chuẩn form"
+                >
+                  A5 (Sổ tay)
+                </button>
+              </div>
+
               <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg">
                 <Settings2 className="w-3.5 h-3.5 text-blue-400" />
-                <span>Dòng bảo dưỡng/trang:</span>
+                <span>Dòng BD/trang:</span>
                 <select
                   value={itemsPerPageMaint}
                   onChange={(e) => setItemsPerPageMaint(Number(e.target.value))}
                   className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-semibold text-white text-xs focus:outline-none cursor-pointer"
                 >
+                  <option value={4}>4 dòng {paperSize === 'A5' ? '(Khuyên dùng A5)' : ''}</option>
                   <option value={5}>5 dòng</option>
-                  <option value={7}>7 dòng (Chuẩn)</option>
+                  <option value={7}>7 dòng {paperSize === 'A4' ? '(Chuẩn A4)' : ''}</option>
                   <option value={9}>9 dòng</option>
                 </select>
               </div>
@@ -766,7 +822,7 @@ ${content}
                 onClick={handleDownloadDirectPdf}
                 disabled={isExportingPdf}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-75 text-white rounded-lg text-xs font-bold shadow-md transition-all cursor-pointer"
-                title="Tải sổ lý lịch thiết bị dưới dạng tệp tin PDF (.pdf) chuẩn A4"
+                title={`Tải sổ lý lịch thiết bị dưới dạng tệp tin PDF (.pdf) chuẩn ${paperSize}`}
               >
                 {isExportingPdf ? (
                   <>
@@ -776,7 +832,7 @@ ${content}
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5 text-white" />
-                    <span>Tải Sổ PDF (.pdf)</span>
+                    <span>Tải Sổ PDF ({paperSize})</span>
                   </>
                 )}
               </button>
@@ -796,7 +852,7 @@ ${content}
                 title="Mở hộp thoại in trình duyệt để in ấn trực tiếp hoặc Lưu thành file PDF (Ctrl+P)"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>In trang ({paperSize})</span>
+                <span>In Sổ ({paperSize})</span>
               </button>
             </div>
           </div>

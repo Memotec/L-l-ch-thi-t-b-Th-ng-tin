@@ -40,7 +40,8 @@ import {
   History,
   MessageSquare,
   FileSpreadsheet,
-  Edit3
+  Edit3,
+  Gauge
 } from 'lucide-react';
 import { EquipmentData, OrgTransferRow, EquipmentCategory, EquipmentStatus, EquipmentPriority, AppUser, MaintenanceRow } from '../types';
 import { PerformerSelect } from './PerformerSelect';
@@ -222,8 +223,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   // Helper icon for equipment categories
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
+      case 'VHF/ HF':
       case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-600" />;
+      case 'VIBA/VSAT/Cáp Quang':
       case 'VIBA': return <HardDrive className="w-4 h-4 text-emerald-600" />;
+      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-600" />;
       case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-600" />;
       case 'POWER': return <Zap className="w-4 h-4 text-yellow-600" />;
       case 'IT': return <Server className="w-4 h-4 text-indigo-600" />;
@@ -284,7 +288,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         eq.org.unit.toLowerCase().includes(filterText.toLowerCase()) ||
         eq.org.location.toLowerCase().includes(filterText.toLowerCase());
 
-      const matchCat = selectedCategory === 'ALL' || eq.general.category === selectedCategory;
+      const matchCat = selectedCategory === 'ALL' || 
+        eq.general.category === selectedCategory ||
+        (selectedCategory === 'VHF/ HF' && (eq.general.category === 'VHF/ HF' || eq.general.category === 'VHF/UHF')) ||
+        (selectedCategory === 'VIBA/VSAT/Cáp Quang' && (eq.general.category === 'VIBA/VSAT/Cáp Quang' || eq.general.category === 'VIBA' || eq.general.category === 'VSAT'));
       const matchStat = selectedStatus === 'ALL' || eq.general.status === selectedStatus;
       const matchPri = selectedPriority === 'ALL' || eq.general.priority === selectedPriority;
 
@@ -610,9 +617,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
             >
               <option value="ALL">-- Tất cả chủng loại --</option>
-              <option value="VHF/UHF">VHF/UHF Air-Ground</option>
+              <option value="VHF/ HF">VHF/ HF</option>
+              <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+              <option value="Thiết bị đo">Thiết bị đo</option>
               <option value="Ghép Kênh">Ghép kênh / Router</option>
-              <option value="VIBA">Viba / Truyền dẫn số</option>
               <option value="VOICE">Chuyển mạch thoại / Ghi âm</option>
               <option value="POWER">Nguồn điện / UPS / Máy nổ</option>
               <option value="IT">Mạng máy tính / Server CNS</option>
@@ -1031,13 +1039,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               <select
                 id="cat-select"
                 disabled={isReadOnly}
-                value={data.general.category}
+                value={
+                  data.general.category === 'VHF/UHF' ? 'VHF/ HF' :
+                  (data.general.category === 'VIBA' || data.general.category === 'VSAT') ? 'VIBA/VSAT/Cáp Quang' :
+                  data.general.category
+                }
                 onChange={(e) => updateGeneral('category', e.target.value as EquipmentCategory)}
                 className="form-input-standard"
               >
-                <option value="VHF/UHF">VHF/UHF Air-Ground Radio (T6T, Jotron, Rohde&Schwarz)</option>
+                <option value="VHF/ HF">VHF/ HF</option>
+                <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+                <option value="Thiết bị đo">Thiết bị đo</option>
                 <option value="Ghép Kênh">Ghép kênh / Router (Mux, Switch/Router chuyên dụng)</option>
-                <option value="VIBA">Viba / Truyền dẫn số (Ceragon, Nokia, SIAE)</option>
                 <option value="VOICE">Hệ thống chuyển mạch thoại / Ghi âm (SITTI, Frequentis, Rohill)</option>
                 <option value="POWER">Hệ thống Nguồn điện (UPS, DC Rectifier, Máy nổ phát điện)</option>
                 <option value="IT">Thiết bị Mạng & Máy chủ (Switch, Router, Server CNS)</option>

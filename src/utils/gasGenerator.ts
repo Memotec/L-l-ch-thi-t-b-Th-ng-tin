@@ -1267,13 +1267,15 @@ export const generateGasHtml = (): string => {
         <div>
           <label class="font-semibold text-slate-700">Chủng loại:</label>
           <select id="inpCategory" onchange="updateCurrent('general', 'category', this.value)" class="w-full p-2 mt-1 border rounded-lg">
-            <option value="VHF/UHF">VHF/UHF</option>
-            <option value="VOR/DME">VOR/DME</option>
-            <option value="ILS">ILS</option>
-            <option value="Radar (PSR/SSR)">Radar (PSR/SSR)</option>
-            <option value="ADS-B">ADS-B</option>
-            <option value="Voice Recorder">Voice Recorder</option>
-            <option value="Nguồn / UPS / Máy phát">Nguồn / UPS / Máy phát</option>
+            <option value="VHF/ HF">VHF/ HF</option>
+            <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+            <option value="Thiết bị đo">Thiết bị đo</option>
+            <option value="Ghép Kênh">Ghép kênh / Router</option>
+            <option value="VOICE">VOICE / Chuyển mạch thoại</option>
+            <option value="POWER">Nguồn / UPS / Máy phát</option>
+            <option value="IT">Mạng IT / Server CNS</option>
+            <option value="RADAR_ADS">Ra-đa / ADS-B</option>
+            <option value="NAV">Dẫn đường (ILS/DVOR/DME)</option>
           </select>
         </div>
         <div>

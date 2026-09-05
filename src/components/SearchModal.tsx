@@ -21,7 +21,8 @@ import {
   Clock, 
   Sparkles,
   ArrowRight,
-  ExternalLink
+  ExternalLink,
+  Gauge
 } from 'lucide-react';
 import { EquipmentData, EquipmentCategory } from '../types';
 
@@ -119,9 +120,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   // Helper category icons
   const getCategoryIcon = (category: EquipmentCategory) => {
     switch (category) {
+      case 'VHF/ HF':
       case 'VHF/UHF': return <Radio className="w-3.5 h-3.5 text-blue-600" />;
       case 'Ghép Kênh': return <Layers className="w-3.5 h-3.5 text-indigo-600" />;
+      case 'VIBA/VSAT/Cáp Quang':
       case 'VIBA': return <HardDrive className="w-3.5 h-3.5 text-emerald-600" />;
+      case 'Thiết bị đo': return <Gauge className="w-3.5 h-3.5 text-amber-600" />;
       case 'VOICE': return <PhoneCall className="w-3.5 h-3.5 text-amber-600" />;
       case 'POWER': return <Zap className="w-3.5 h-3.5 text-yellow-600" />;
       case 'IT': return <Server className="w-3.5 h-3.5 text-purple-600" />;
@@ -437,7 +441,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     }
 
     if (categoryFilter !== 'ALL') {
-      list = list.filter(item => item.equipmentCategory === categoryFilter);
+      list = list.filter(item => {
+        if (item.equipmentCategory === categoryFilter) return true;
+        if (categoryFilter === 'VHF/ HF' && (item.equipmentCategory === 'VHF/ HF' || item.equipmentCategory === 'VHF/UHF')) return true;
+        if (categoryFilter === 'VIBA/VSAT/Cáp Quang' && (item.equipmentCategory === 'VIBA/VSAT/Cáp Quang' || item.equipmentCategory === 'VIBA' || item.equipmentCategory === 'VSAT')) return true;
+        return false;
+      });
     }
 
     if (statusFilter !== 'ALL') {
@@ -655,7 +664,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-slate-800 text-xs">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Chủng loại:</span>
-              {(['ALL', 'VHF/UHF', 'Ghép Kênh', 'VIBA', 'VOICE', 'POWER', 'IT', 'RADAR_ADS', 'NAV'] as EquipmentCategoryFilter[]).map(cat => (
+              {(['ALL', 'VHF/ HF', 'VIBA/VSAT/Cáp Quang', 'Thiết bị đo', 'Ghép Kênh', 'VOICE', 'POWER', 'IT', 'RADAR_ADS', 'NAV'] as EquipmentCategoryFilter[]).map(cat => (
                 <button
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}

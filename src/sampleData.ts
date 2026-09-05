@@ -1,6 +1,6 @@
 import { EquipmentData } from './types';
 
-export function createEmptyEquipment(category = 'VHF/UHF', name = 'Thiết bị kỹ thuật mới'): EquipmentData {
+export function createEmptyEquipment(category = 'VHF/ HF', name = 'Thiết bị kỹ thuật mới'): EquipmentData {
   return {
     id: 'eq-' + Math.random().toString(36).substring(2, 9),
     createdAt: new Date().toISOString(),

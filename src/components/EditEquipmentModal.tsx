@@ -15,7 +15,8 @@ import {
   Clock,
   Layers,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Gauge
 } from 'lucide-react';
 import { 
   EquipmentData, 
@@ -97,16 +98,16 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
     onClose();
   };
 
-  const categories: { id: EquipmentCategory; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'VHF/UHF', label: 'VHF/UHF Radio', icon: Radio },
+  const categories: { id: EquipmentCategory; aliases?: string[]; label: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: 'VHF/ HF', aliases: ['VHF/UHF'], label: 'VHF/ HF', icon: Radio },
+    { id: 'VIBA/VSAT/Cáp Quang', aliases: ['VIBA', 'VSAT'], label: 'VIBA/VSAT/Cáp Quang', icon: Activity },
+    { id: 'Thiết bị đo', aliases: [], label: 'Thiết bị đo', icon: Gauge },
     { id: 'Ghép Kênh', label: 'Ghép kênh / Router', icon: Layers },
-    { id: 'VIBA', label: 'Viba / Microwave', icon: Activity },
-    { id: 'VSAT', label: 'VSAT Vệ Tinh', icon: Radio },
     { id: 'VCCS', label: 'VCCS / Thoại Không Lưu', icon: PhoneCall },
     { id: 'VOICE', label: 'Hệ Thống Thoại / VCS', icon: PhoneCall },
     { id: 'POWER', label: 'Nguồn Điện / UPS', icon: Zap },
     { id: 'IT', label: 'Mạng IT / Server CNS', icon: Server },
-    { id: 'Thiết Bị Khác', label: 'Thiết Bị Đo & Khác', icon: HardDrive }
+    { id: 'Thiết Bị Khác', aliases: ['OTHER'], label: 'Thiết Bị Khác', icon: HardDrive }
   ];
 
   return (
@@ -192,7 +193,7 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {categories.map(cat => {
                     const Icon = cat.icon;
-                    const isSelected = formData.general.category === cat.id;
+                    const isSelected = formData.general.category === cat.id || Boolean(cat.aliases?.includes(formData.general.category));
                     return (
                       <button
                         key={cat.id}
