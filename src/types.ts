@@ -6,20 +6,14 @@ export interface TrashEquipmentItem {
 
 export type EquipmentCategory = 
   | 'VHF/ HF'
-  | 'VHF/UHF'
   | 'VIBA/VSAT/Cáp Quang'
-  | 'VIBA' 
-  | 'VSAT' 
   | 'Thiết bị đo'
   | 'Ghép Kênh'
   | 'VCCS' 
   | 'VOICE' 
-  | 'POWER' 
   | 'IT'  
   | 'OTHER'
   | 'Thiết Bị Khác'
-  | 'RADAR_ADS'
-  | 'NAV';
 
 export type EquipmentStatus = 
   | 'Đang khai thác' 
