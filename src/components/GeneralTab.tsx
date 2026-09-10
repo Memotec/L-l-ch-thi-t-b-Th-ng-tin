@@ -35,7 +35,9 @@ import {
   EquipmentPriority, 
   LicenseRow, 
   OrgTransferRow, 
-  AppUser 
+  AppUser,
+  normalizeEquipmentGroup,
+  EQUIPMENT_GROUPS
 } from '../types';
 
 interface GeneralTabProps {
@@ -165,18 +167,11 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
   const daysUntilCal = getCalibrationCountdown();
 
   const getCategoryIcon = (category: EquipmentCategory) => {
-    switch (category) {
-      case 'VHF/ HF':
-      case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-500" />;
-      case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-500" />;
-      case 'VIBA/VSAT/Cáp Quang':
-      case 'VIBA': return <Activity className="w-4 h-4 text-emerald-500" />;
-      case 'VSAT': return <Radio className="w-4 h-4 text-sky-500" />;
-      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-500" />;
-      case 'VCCS':
-      case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-500" />;
-      case 'POWER': return <Zap className="w-4 h-4 text-yellow-500" />;
-      case 'IT': return <Server className="w-4 h-4 text-purple-500" />;
+    const group = normalizeEquipmentGroup(category);
+    switch (group) {
+      case 'Thiết bị Nhóm 1': return <Radio className="w-4 h-4 text-blue-500" />;
+      case 'Thiết bị Nhóm 2': return <Activity className="w-4 h-4 text-emerald-500" />;
+      case 'Thiết bị Nhóm 3': return <Server className="w-4 h-4 text-indigo-500" />;
       default: return <HardDrive className="w-4 h-4 text-slate-500" />;
     }
   };
@@ -260,9 +255,20 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           <div className="w-full min-w-0 space-y-2">
             {/* Category & Status Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold whitespace-nowrap">
-                {data.general.category}
+              <span className={`px-2.5 py-0.5 rounded-md text-xs font-bold border whitespace-nowrap ${
+                normalizeEquipmentGroup(data.general.category) === 'Thiết bị Nhóm 1'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : normalizeEquipmentGroup(data.general.category) === 'Thiết bị Nhóm 2'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+              }`}>
+                {normalizeEquipmentGroup(data.general.category)}
               </span>
+              {data.general.category && !data.general.category.startsWith('Thiết bị Nhóm') && (
+                <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-xs font-semibold whitespace-nowrap">
+                  {data.general.category}
+                </span>
+              )}
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${getStatusBadgeColor(data.general.status)}`}>
                 {data.general.status || 'Đang khai thác'}
               </span>
@@ -359,25 +365,28 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
             <label className="text-xs font-bold text-slate-800">Chủng loại thiết bị CNS *</label>
             <select
               disabled={isReadOnly}
-              value={
-                data.general.category === 'VHF/UHF' ? 'VHF/ HF' :
-                (data.general.category === 'VIBA' || data.general.category === 'VSAT') ? 'VIBA/VSAT/Cáp Quang' :
-                data.general.category
-              }
+              value={data.general.category}
               onChange={(e) => updateGeneral('category', e.target.value as EquipmentCategory)}
               className="form-input-standard font-semibold text-blue-900"
             >
-              <option value="VHF/ HF">VHF/ HF</option>
-              <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
-              <option value="Thiết bị đo">Thiết bị đo</option>
-              <option value="Ghép Kênh">Ghép kênh / Router (Mux/Router)</option>
-              <option value="VCCS">VCCS / Chuyển mạch thoại</option>
-              <option value="VOICE">VOICE / Ghi âm không lưu</option>
-              <option value="POWER">Hệ thống Nguồn điện / UPS</option>
-              <option value="IT">Mạng IT / Máy chủ CNS</option>
-              <option value="RADAR_ADS">Ra-đa / Giám sát bay (MSSR, PSR, ADS-B)</option>
-              <option value="NAV">Dẫn đường hàng không (ILS, DVOR, DME)</option>
-              <option value="Thiết Bị Khác">Thiết Bị Khác</option>
+              <optgroup label="📂 3 Nhóm Thiết Bị Chính">
+                <option value="Thiết bị Nhóm 1">📂 Thiết bị Nhóm 1 (Thông tin & Giám sát)</option>
+                <option value="Thiết bị Nhóm 2">📂 Thiết bị Nhóm 2 (Truyền dẫn, Nguồn & Đo)</option>
+                <option value="Thiết bị Nhóm 3">📂 Thiết bị Nhóm 3 (Mạng IT & Phụ trợ)</option>
+              </optgroup>
+              <optgroup label="Chủng loại chi tiết">
+                <option value="VHF/ HF">VHF/ HF</option>
+                <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+                <option value="Thiết bị đo">Thiết bị đo</option>
+                <option value="Ghép Kênh">Ghép kênh / Router (Mux/Router)</option>
+                <option value="VCCS">VCCS / Chuyển mạch thoại</option>
+                <option value="VOICE">VOICE / Ghi âm không lưu</option>
+                <option value="POWER">Hệ thống Nguồn điện / UPS</option>
+                <option value="IT">Mạng IT / Máy chủ CNS</option>
+                <option value="RADAR_ADS">Ra-đa / Giám sát bay (MSSR, PSR, ADS-B)</option>
+                <option value="NAV">Dẫn đường hàng không (ILS, DVOR, DME)</option>
+                <option value="Thiết Bị Khác">Thiết Bị Khác</option>
+              </optgroup>
             </select>
           </div>
 

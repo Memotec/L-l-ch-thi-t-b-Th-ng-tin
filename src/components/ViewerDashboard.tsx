@@ -36,7 +36,7 @@ import {
   SlidersHorizontal,
   X
 } from 'lucide-react';
-import { EquipmentData, EquipmentCategory, EquipmentStatus, AppUser } from '../types';
+import { EquipmentData, EquipmentCategory, EquipmentStatus, AppUser, normalizeEquipmentGroup, EQUIPMENT_GROUPS } from '../types';
 import { NotificationBell } from './NotificationBell';
 import { ViewerEquipmentDetail } from './ViewerEquipmentDetail';
 
@@ -135,7 +135,9 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
 
       // Category filter
       if (selectedCategory !== 'ALL') {
-        const isMatch = g.category === selectedCategory ||
+        const itemGroup = normalizeEquipmentGroup(g.category);
+        const isMatch = selectedCategory === itemGroup ||
+          g.category === selectedCategory ||
           (selectedCategory === 'VHF/ HF' && (g.category === 'VHF/ HF' || g.category === 'VHF/UHF')) ||
           (selectedCategory === 'VIBA/VSAT/Cáp Quang' && (g.category === 'VIBA/VSAT/Cáp Quang' || g.category === 'VIBA' || g.category === 'VSAT'));
         if (!isMatch) return false;
@@ -175,18 +177,11 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
   }, []);
 
   const getCategoryIcon = (category: EquipmentCategory) => {
-    switch (category) {
-      case 'VHF/ HF':
-      case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-500" />;
-      case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-500" />;
-      case 'VIBA/VSAT/Cáp Quang':
-      case 'VIBA': return <Activity className="w-4 h-4 text-emerald-500" />;
-      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-500" />;
-      case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-500" />;
-      case 'POWER': return <Zap className="w-4 h-4 text-yellow-500" />;
-      case 'IT': return <Server className="w-4 h-4 text-indigo-500" />;
-      case 'RADAR_ADS': return <Activity className="w-4 h-4 text-cyan-500" />;
-      case 'NAV': return <Radio className="w-4 h-4 text-purple-500" />;
+    const group = normalizeEquipmentGroup(category);
+    switch (group) {
+      case 'Thiết bị Nhóm 1': return <Radio className="w-4 h-4 text-blue-500" />;
+      case 'Thiết bị Nhóm 2': return <Activity className="w-4 h-4 text-emerald-500" />;
+      case 'Thiết bị Nhóm 3': return <Server className="w-4 h-4 text-indigo-500" />;
       default: return <HardDrive className="w-4 h-4 text-slate-500" />;
     }
   };
@@ -208,6 +203,9 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
 
   const categories = [
     { id: 'ALL', label: 'Tất cả' },
+    { id: 'Thiết bị Nhóm 1', label: 'Thiết bị Nhóm 1 (Thông tin & Giám sát)' },
+    { id: 'Thiết bị Nhóm 2', label: 'Thiết bị Nhóm 2 (Truyền dẫn, Nguồn & Đo)' },
+    { id: 'Thiết bị Nhóm 3', label: 'Thiết bị Nhóm 3 (Mạng IT & Phụ trợ)' },
     { id: 'VHF/ HF', label: 'VHF/ HF' },
     { id: 'VIBA/VSAT/Cáp Quang', label: 'VIBA/VSAT/Cáp Quang' },
     { id: 'Thiết bị đo', label: 'Thiết bị đo' },
@@ -596,9 +594,15 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
                   <div className="space-y-3">
                     {/* Header: Category & Status */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-blue-700">
+                      <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                        normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 1'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 2'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      }`}>
                         {getCategoryIcon(g.category)}
-                        <span>{g.category}</span>
+                        <span>{normalizeEquipmentGroup(g.category)}</span>
                       </span>
 
                       <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold border ${getStatusBadgeClass(g.status)}`}>
@@ -729,7 +733,17 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
                             <span className="hover:text-blue-600">{g.name}</span>
                           </div>
                         </td>
-                        <td className="p-3.5 font-semibold text-slate-700">{g.category}</td>
+                        <td className="p-3.5 font-semibold text-slate-700">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10.5px] font-bold border ${
+                            normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 1'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 2'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          }`}>
+                            {normalizeEquipmentGroup(g.category)}
+                          </span>
+                        </td>
                         <td className="p-3.5">
                           <div className="font-semibold text-slate-800">{g.model || '---'}</div>
                           <div className="font-mono text-slate-500 text-[11px]">{g.serial || '---'}</div>

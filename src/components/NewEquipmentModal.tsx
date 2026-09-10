@@ -25,7 +25,7 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
   onClose,
   onCreate
 }) => {
-  const [category, setCategory] = useState<EquipmentCategory>('VHF/ HF');
+  const [category, setCategory] = useState<EquipmentCategory>('Thiết bị Nhóm 1');
   const [name, setName] = useState('');
   const [model, setModel] = useState('');
   const [manufacturer, setManufacturer] = useState('');
@@ -136,34 +136,65 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
               <span>{formError}</span>
             </div>
           )}
-          {/* Category Select */}
+          {/* 3 Equipment Groups Selection */}
           <div className="space-y-1.5">
-            <label className="font-bold text-slate-900 block">Chủng loại thiết bị*</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <label className="font-bold text-slate-900 block flex items-center justify-between">
+              <span>Phân nhóm / Chủng loại thiết bị *</span>
+              <span className="text-[11px] text-blue-600 font-semibold">3 Nhóm Thiết Bị</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {[
-                { id: 'VHF/ HF', label: 'VHF/ HF', icon: Radio },
-                { id: 'VIBA/VSAT/Cáp Quang', label: 'VIBA/VSAT/Cáp Quang', icon: Activity },
-                { id: 'Thiết bị đo', label: 'Thiết bị đo', icon: Gauge },
-                { id: 'Ghép Kênh', label: 'Ghép kênh / Router', icon: Layers },
-                { id: 'VOICE', label: 'VCS / Thoại', icon: PhoneCall },
-                { id: 'POWER', label: 'UPS / Nguồn Điện', icon: Zap },
-                { id: 'IT', label: 'NMS / Mạng IT', icon: Server },
-                { id: 'OTHER', label: 'Khác', icon: HardDrive }
+                { 
+                  id: 'Thiết bị Nhóm 1', 
+                  label: 'Thiết bị Nhóm 1', 
+                  desc: 'Thông tin, Thoại VCS, Ra-đa & Giám sát',
+                  icon: Radio,
+                  badge: 'Nhóm 1'
+                },
+                { 
+                  id: 'Thiết bị Nhóm 2', 
+                  label: 'Thiết bị Nhóm 2', 
+                  desc: 'Truyền dẫn, Ghép kênh, Nguồn UPS & Đo lường',
+                  icon: Activity,
+                  badge: 'Nhóm 2'
+                },
+                { 
+                  id: 'Thiết bị Nhóm 3', 
+                  label: 'Thiết bị Nhóm 3', 
+                  desc: 'Mạng CNTT, Máy chủ Server & Phụ trợ khác',
+                  icon: Server,
+                  badge: 'Nhóm 3'
+                }
               ].map((item) => {
                 const Icon = item.icon;
+                const isSelected = category === item.id;
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setCategory(item.id as EquipmentCategory)}
-                    className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
-                      category === item.id
-                        ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-2xs'
-                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      isSelected
+                        ? 'bg-blue-50/90 border-blue-600 text-blue-950 font-bold shadow-xs ring-1 ring-blue-500/20'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    <Icon className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span className="truncate text-[11px]">{item.label}</span>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Icon className="w-3.5 h-3.5 shrink-0" />
+                        </div>
+                        <span className="text-xs font-bold">{item.label}</span>
+                      </div>
+                      <span className={`text-[9.5px] px-1.5 py-0.5 rounded font-semibold ${
+                        isSelected ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-normal leading-tight">
+                      {item.desc}
+                    </p>
                   </button>
                 );
               })}

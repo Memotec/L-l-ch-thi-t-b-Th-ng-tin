@@ -5,6 +5,9 @@ export interface TrashEquipmentItem {
 }
 
 export type EquipmentCategory = 
+  | 'Thiết bị Nhóm 1'
+  | 'Thiết bị Nhóm 2'
+  | 'Thiết bị Nhóm 3'
   | 'VHF/ HF'
   | 'VIBA/VSAT/Cáp Quang'
   | 'Thiết bị đo'
@@ -14,6 +17,85 @@ export type EquipmentCategory =
   | 'IT'  
   | 'OTHER'
   | 'Thiết Bị Khác'
+
+export type EquipmentGroupType = 'Thiết bị Nhóm 1' | 'Thiết bị Nhóm 2' | 'Thiết bị Nhóm 3';
+
+export interface EquipmentGroupMeta {
+  id: EquipmentGroupType;
+  name: string;
+  code: string;
+  shortLabel: string;
+  description: string;
+  subCategories: string[];
+  badgeColor: string;
+  textColor: string;
+  bgColor: string;
+  borderColor: string;
+  dotColor: string;
+}
+
+export const EQUIPMENT_GROUPS: EquipmentGroupMeta[] = [
+  {
+    id: 'Thiết bị Nhóm 1',
+    name: 'Thiết bị Nhóm 1',
+    code: 'GROUP_1',
+    shortLabel: 'Nhóm 1 (Thông tin & Giám sát)',
+    description: 'Hệ thống thông tin liên lạc, chuyển mạch thoại, dẫn đường & giám sát không lưu (VHF/HF, VCCS, Ra-đa, ADS-B, NAV...)',
+    subCategories: ['VHF/ HF', 'VHF/UHF', 'VOICE', 'VCCS', 'RADAR_ADS', 'NAV'],
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    textColor: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    dotColor: 'bg-blue-500'
+  },
+  {
+    id: 'Thiết bị Nhóm 2',
+    name: 'Thiết bị Nhóm 2',
+    code: 'GROUP_2',
+    shortLabel: 'Nhóm 2 (Truyền dẫn, Nguồn & Đo)',
+    description: 'Hệ thống truyền dẫn viba, cáp quang, ghép kênh, nguồn điện UPS & thiết bị đo kiểm chuẩn (VIBA, VSAT, Cáp quang, Router, POWER, Đo lường...)',
+    subCategories: ['VIBA/VSAT/Cáp Quang', 'VIBA', 'VSAT', 'Ghép Kênh', 'POWER', 'Thiết bị đo'],
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    textColor: 'text-emerald-600',
+    bgColor: 'bg-emerald-50',
+    borderColor: 'border-emerald-200',
+    dotColor: 'bg-emerald-500'
+  },
+  {
+    id: 'Thiết bị Nhóm 3',
+    name: 'Thiết bị Nhóm 3',
+    code: 'GROUP_3',
+    shortLabel: 'Nhóm 3 (Mạng IT & Phụ trợ)',
+    description: 'Hệ thống mạng CNTT, máy chủ Server CNS, phần mềm, thiết bị phụ trợ & chuyên ngành khác (IT, Server, Thiết Bị Khác...)',
+    subCategories: ['IT', 'OTHER', 'Thiết Bị Khác'],
+    badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    textColor: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200',
+    dotColor: 'bg-indigo-500'
+  }
+];
+
+export function normalizeEquipmentGroup(category?: string): EquipmentGroupType {
+  if (!category) return 'Thiết bị Nhóm 1';
+  const c = category.trim();
+  if (c === 'Thiết bị Nhóm 1' || c === 'Nhóm 1' || c === 'Thiết Bị Nhóm 1') return 'Thiết bị Nhóm 1';
+  if (c === 'Thiết bị Nhóm 2' || c === 'Nhóm 2' || c === 'Thiết Bị Nhóm 2') return 'Thiết bị Nhóm 2';
+  if (c === 'Thiết bị Nhóm 3' || c === 'Nhóm 3' || c === 'Thiết Bị Nhóm 3') return 'Thiết bị Nhóm 3';
+
+  // Legacy mappings
+  if (['VHF/ HF', 'VHF/UHF', 'VOICE', 'VCCS', 'RADAR_ADS', 'NAV'].includes(c)) {
+    return 'Thiết bị Nhóm 1';
+  }
+  if (['VIBA/VSAT/Cáp Quang', 'VIBA', 'VSAT', 'Ghép Kênh', 'POWER', 'Thiết bị đo'].includes(c)) {
+    return 'Thiết bị Nhóm 2';
+  }
+  if (['IT', 'OTHER', 'Thiết Bị Khác'].includes(c)) {
+    return 'Thiết bị Nhóm 3';
+  }
+
+  return 'Thiết bị Nhóm 1';
+}
 
 export type EquipmentStatus = 
   | 'Đang khai thác' 
@@ -250,5 +332,23 @@ export interface AppNotification {
   targetEquipmentName?: string;
   targetTab?: string;
   actor?: string;
+}
+
+export interface AutoBackupSnapshot {
+  id: string;
+  timestamp: string;
+  equipmentCount: number;
+  dataSizeFormatted: string;
+  dataSizeBytes: number;
+  triggerType: 'auto_24h' | 'manual' | 'cloud_sync';
+  data: EquipmentData[];
+}
+
+export interface AutoBackupConfig {
+  enabled: boolean;
+  autoDownloadFile: boolean;
+  intervalHours: number;
+  lastBackupTimestamp: number | null;
+  maxSnapshots: number;
 }
 

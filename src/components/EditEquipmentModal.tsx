@@ -104,16 +104,28 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
     onClose();
   };
 
-  const categories: { id: EquipmentCategory; aliases?: string[]; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'VHF/ HF', aliases: ['VHF/UHF'], label: 'VHF/ HF', icon: Radio },
-    { id: 'VIBA/VSAT/Cáp Quang', aliases: ['VIBA', 'VSAT'], label: 'VIBA/VSAT/Cáp Quang', icon: Activity },
-    { id: 'Thiết bị đo', aliases: [], label: 'Thiết bị đo', icon: Gauge },
-    { id: 'Ghép Kênh', label: 'Ghép kênh / Router', icon: Layers },
-    { id: 'VCCS', label: 'VCCS / Thoại Không Lưu', icon: PhoneCall },
-    { id: 'VOICE', label: 'Hệ Thống Thoại / VCS', icon: PhoneCall },
-    { id: 'POWER', label: 'Nguồn Điện / UPS', icon: Zap },
-    { id: 'IT', label: 'Mạng IT / Server CNS', icon: Server },
-    { id: 'Thiết Bị Khác', aliases: ['OTHER'], label: 'Thiết Bị Khác', icon: HardDrive }
+  const categories: { id: EquipmentCategory; aliases?: string[]; label: string; desc: string; icon: React.FC<{ className?: string }> }[] = [
+    { 
+      id: 'Thiết bị Nhóm 1', 
+      aliases: ['VHF/ HF', 'VHF/UHF', 'VOICE', 'VCCS', 'RADAR_ADS', 'NAV'], 
+      label: 'Thiết bị Nhóm 1', 
+      desc: 'Thông tin liên lạc, Thoại VCS, Ra-đa & Giám sát không lưu',
+      icon: Radio 
+    },
+    { 
+      id: 'Thiết bị Nhóm 2', 
+      aliases: ['VIBA/VSAT/Cáp Quang', 'VIBA', 'VSAT', 'Ghép Kênh', 'POWER', 'Thiết bị đo'], 
+      label: 'Thiết bị Nhóm 2', 
+      desc: 'Truyền dẫn Viba/Quang, Ghép kênh, Nguồn UPS & Đo lường',
+      icon: Activity 
+    },
+    { 
+      id: 'Thiết bị Nhóm 3', 
+      aliases: ['IT', 'OTHER', 'Thiết Bị Khác'], 
+      label: 'Thiết bị Nhóm 3', 
+      desc: 'Mạng CNTT, Máy chủ Server CNS & Trang thiết bị phụ trợ khác',
+      icon: Server 
+    }
   ];
 
   return (
@@ -199,10 +211,11 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
           {activeSubTab === 'general' && (
             <div className="space-y-5">
               <div>
-                <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
-                  Chủng loại thiết bị CNS *
+                <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2 flex items-center justify-between">
+                  <span>Phân nhóm / Chủng loại thiết bị CNS *</span>
+                  <span className="text-[11px] text-blue-600 font-semibold normal-case">3 Nhóm Thiết Bị</span>
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {categories.map(cat => {
                     const Icon = cat.icon;
                     const isSelected = formData.general.category === cat.id || Boolean(cat.aliases?.includes(formData.general.category));
@@ -211,14 +224,26 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                         key={cat.id}
                         type="button"
                         onClick={() => updateGeneral('category', cat.id)}
-                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                           isSelected
-                            ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-xs'
-                            : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                            ? 'bg-blue-50/90 border-blue-600 text-blue-950 font-bold shadow-xs ring-1 ring-blue-500/20'
+                            : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-blue-600' : 'text-slate-400'}`} />
-                        <span className="text-xs truncate">{cat.label}</span>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                              <Icon className="w-3.5 h-3.5 shrink-0" />
+                            </div>
+                            <span className="text-xs font-bold">{cat.label}</span>
+                          </div>
+                          {isSelected && (
+                            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                          )}
+                        </div>
+                        <p className="text-[10.5px] text-slate-500 font-normal leading-tight">
+                          {cat.desc}
+                        </p>
                       </button>
                     );
                   })}

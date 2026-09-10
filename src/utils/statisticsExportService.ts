@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
-import { EquipmentData, AppUser } from '../types';
+import { EquipmentData, AppUser, normalizeEquipmentGroup } from '../types';
 
 export interface StatisticsExportSummary {
   totalEquipments: number;
+  byGroup: Record<string, number>;
   byCategory: Record<string, number>;
   byStatus: Record<string, number>;
   byPriority: Record<string, number>;
@@ -22,6 +23,11 @@ class StatisticsExportService {
    * Calculate summary statistics from equipment list
    */
   calculateStatistics(equipments: EquipmentData[]): StatisticsExportSummary {
+    const byGroup: Record<string, number> = {
+      'Thiết bị Nhóm 1': 0,
+      'Thiết bị Nhóm 2': 0,
+      'Thiết bị Nhóm 3': 0
+    };
     const byCategory: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
     const byPriority: Record<string, number> = {};
@@ -38,6 +44,10 @@ class StatisticsExportService {
     const now = new Date();
 
     equipments.forEach(eq => {
+      // Group
+      const grp = normalizeEquipmentGroup(eq.general?.category);
+      byGroup[grp] = (byGroup[grp] || 0) + 1;
+
       // Category
       const cat = eq.general?.category || 'Chưa phân loại';
       byCategory[cat] = (byCategory[cat] || 0) + 1;
@@ -78,6 +88,7 @@ class StatisticsExportService {
 
     return {
       totalEquipments: equipments.length,
+      byGroup,
       byCategory,
       byStatus,
       byPriority,
@@ -123,28 +134,35 @@ class StatisticsExportService {
       ['Tổng số lượt sửa chữa & khắc phục sự cố', stats.totalRepairLogs, 'Nhật ký khắc phục kỹ thuật'],
       ['Tổng số linh kiện & module quản lý', stats.totalComponents, 'Các khối chức năng chi tiết'],
       [''],
-      ['II. PHÂN LOẠI THEO CHỦNG LOẠI THIẾT BỊ', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
+      ['II. PHÂN LOẠI THEO 3 NHÓM THIẾT BỊ CHÍNH', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
+      ...Object.entries(stats.byGroup).map(([grp, count]) => [
+        grp,
+        count,
+        stats.totalEquipments > 0 ? `${((count / stats.totalEquipments) * 100).toFixed(1)}%` : '0%'
+      ]),
+      [''],
+      ['III. PHÂN LOẠI THEO CHỦNG LOẠI CHI TIẾT', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
       ...Object.entries(stats.byCategory).map(([cat, count]) => [
         cat,
         count,
         stats.totalEquipments > 0 ? `${((count / stats.totalEquipments) * 100).toFixed(1)}%` : '0%'
       ]),
       [''],
-      ['III. PHÂN LOẠI THEO TRẠNG THÁI KHAI THÁC', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
+      ['IV. PHÂN LOẠI THEO TRẠNG THÁI KHAI THÁC', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
       ...Object.entries(stats.byStatus).map(([status, count]) => [
         status,
         count,
         stats.totalEquipments > 0 ? `${((count / stats.totalEquipments) * 100).toFixed(1)}%` : '0%'
       ]),
       [''],
-      ['IV. PHÂN CẤP ƯU TIÊN VẬN HÀNH', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
+      ['V. PHÂN CẤP ƯU TIÊN VẬN HÀNH', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
       ...Object.entries(stats.byPriority).map(([prio, count]) => [
         prio,
         count,
         stats.totalEquipments > 0 ? `${((count / stats.totalEquipments) * 100).toFixed(1)}%` : '0%'
       ]),
       [''],
-      ['V. TÌNH TRẠNG HẠN KIỂM CHUẨN / HIỆU CHUẨN', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
+      ['VI. TÌNH TRẠNG HẠN KIỂM CHUẨN / HIỆU CHUẨN', 'SỐ LƯỢNG', 'TỶ LỆ (%)'],
       [
         'Quá hạn kiểm định / hiệu chuẩn (Cần xử lý gấp)',
         stats.dueStatus.overdue,
@@ -179,7 +197,8 @@ class StatisticsExportService {
       'Mã Hệ Thống',
       'Mã Tài Sản',
       'Tên Thiết Bị',
-      'Chủng Loại',
+      'Phân Nhóm Thiết Bị',
+      'Chủng Loại Chi Tiết',
       'Model',
       'Số Serial',
       'Hãng Sản Xuất',
@@ -226,6 +245,7 @@ class StatisticsExportService {
         eq.general?.assetCode || eq.id,
         eq.general?.assetNo || '',
         eq.general?.name || 'Chưa đặt tên',
+        normalizeEquipmentGroup(eq.general?.category),
         eq.general?.category || '',
         eq.general?.model || '',
         eq.general?.serial || '',

@@ -6,6 +6,7 @@ import { googleDriveDocsService } from './utils/googleDriveDocsService';
 import { storageService } from './utils/storageService';
 import { cloudSyncService, CloudSyncState } from './utils/cloudSyncService';
 import { notificationService } from './utils/notificationService';
+import { autoBackupService } from './utils/autoBackupService';
 import { firestoreService } from './firebase';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -244,6 +245,42 @@ export default function App() {
       stopCrossDevice();
     };
   }, []);
+
+  // 24-Hour Automatic Local Safety Backup & JSON Download Cycle
+  useEffect(() => {
+    if (!equipments || equipments.length === 0) return;
+
+    const runAutoBackupCheck = () => {
+      autoBackupService.checkAndRunAutoBackup(equipments, (snapshot, downloaded) => {
+        const timeStr = new Date(snapshot.timestamp).toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const msg = downloaded 
+          ? `✓ [Tự Động Sao Lưu 24H] Đã lưu Snapshot an toàn & Tải tệp JSON (${snapshot.equipmentCount} thiết bị) về máy lúc ${timeStr}!`
+          : `✓ [Tự Động Sao Lưu 24H] Đã lưu Snapshot an toàn (${snapshot.equipmentCount} thiết bị) vào bộ nhớ trình duyệt lúc ${timeStr}!`;
+        
+        showToast(msg);
+        notificationService.notify({
+          title: 'Tự động sao lưu an toàn 24h',
+          message: msg,
+          type: 'info',
+          actor: 'Auto Backup System'
+        });
+      });
+    };
+
+    // Run check after initial app mount
+    const initialTimer = setTimeout(runAutoBackupCheck, 3000);
+
+    // Periodically re-check every 30 minutes in background
+    const periodicInterval = setInterval(runAutoBackupCheck, 30 * 60 * 1000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(periodicInterval);
+    };
+  }, [equipments, showToast]);
 
   // Handler to enter Full-Screen PDF Viewer for any equipment
   const handleOpenPdfFullScreen = useCallback((eq?: EquipmentData) => {
@@ -861,6 +898,34 @@ export default function App() {
     }
   }, [currentUser, trashList, showToast]);
 
+  // Restore from local safety backup snapshot
+  const handleRestoreFromSnapshot = useCallback((snapshotData: EquipmentData[]) => {
+    if (!currentUser.permissions.canImportData) {
+      setIsLoginModalOpen(true);
+      showToast('Cần quyền Quản trị viên (Admin) để khôi phục dữ liệu từ bản sao lưu snapshot.');
+      return;
+    }
+    if (!snapshotData || snapshotData.length === 0) {
+      showToast('⚠️ Bản sao lưu snapshot không có dữ liệu hợp lệ.');
+      return;
+    }
+
+    setEquipments(snapshotData);
+    if (snapshotData.length > 0) {
+      setCurrentId(snapshotData[0].id);
+    }
+    storageService.saveImmediate(snapshotData);
+    cloudSyncService.pushToCloud(snapshotData, trashList, currentUser);
+    showToast(`✓ Đã khôi phục thành công ${snapshotData.length} thiết bị từ bản sao lưu an toàn!`);
+
+    notificationService.notify({
+      title: 'Khôi phục từ bản sao lưu an toàn',
+      message: `Đã khôi phục ${snapshotData.length} thiết bị từ bản sao lưu an toàn trong trình duyệt.`,
+      type: 'restore',
+      actor: currentUser.displayName || 'Quản trị viên'
+    });
+  }, [currentUser, trashList, showToast]);
+
   // Reset to default sample - Trigger Confirm Modal
   const handleResetDefaults = useCallback(() => {
     if (!currentUser.permissions.canResetDatabase) {
@@ -1327,6 +1392,7 @@ export default function App() {
                   onOpenTrash={isAdmin ? handleOpenTrash : undefined}
                   trashCount={isAdmin ? trashList.length : 0}
                   onRestoreFromCloudJson={handleRestoreFromCloudJson}
+                  onRestoreFromSnapshot={handleRestoreFromSnapshot}
                 />
               )}
 

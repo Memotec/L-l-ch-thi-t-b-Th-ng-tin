@@ -29,13 +29,20 @@ import {
   ExternalLink,
   RefreshCw,
   Radio,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Clock,
+  HardDrive,
+  History,
+  FileJson,
+  ShieldAlert,
+  Check
 } from 'lucide-react';
-import { EquipmentData, AppUser } from '../types';
+import { EquipmentData, AppUser, AutoBackupSnapshot, AutoBackupConfig } from '../types';
 import { GoogleWorkspaceTab } from './GoogleWorkspaceTab';
 import { browserNotificationService, BrowserNotifConfig } from '../utils/browserNotificationService';
 import { statisticsExportService } from '../utils/statisticsExportService';
 import { cloudSyncService } from '../utils/cloudSyncService';
+import { autoBackupService } from '../utils/autoBackupService';
 
 interface SettingsTabProps {
   currentEquipment: EquipmentData;
@@ -57,6 +64,7 @@ interface SettingsTabProps {
   onOpenTrash?: () => void;
   trashCount?: number;
   onRestoreFromCloudJson?: () => Promise<void>;
+  onRestoreFromSnapshot?: (data: EquipmentData[]) => void;
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({
@@ -78,7 +86,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   onNavigateTab,
   onOpenTrash,
   trashCount = 0,
-  onRestoreFromCloudJson
+  onRestoreFromCloudJson,
+  onRestoreFromSnapshot
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'database' | 'security' | 'google' | 'organization' | 'qr' | 'notifications'>('database');
   const isAdmin = currentUser.role === 'admin';
@@ -142,6 +151,101 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [autoBackupDrive, setAutoBackupDrive] = useState<boolean>(
     () => localStorage.getItem('cns_auto_backup_drive') === 'true'
   );
+
+  // State for 24h Auto Backup & Browser Storage Safety Copies
+  const [autoBackupConfig, setAutoBackupConfig] = useState<AutoBackupConfig>(() => autoBackupService.getConfig());
+  const [snapshots, setSnapshots] = useState<AutoBackupSnapshot[]>(() => autoBackupService.getSnapshots());
+  const [nextBackupCountdown, setNextBackupCountdown] = useState<string>('');
+
+  // Update backup countdown / status display
+  useEffect(() => {
+    const updateCountdown = () => {
+      const config = autoBackupService.getConfig();
+      setAutoBackupConfig(config);
+      setSnapshots(autoBackupService.getSnapshots());
+
+      if (!config.enabled) {
+        setNextBackupCountdown('Đã tắt tự động sao lưu');
+        return;
+      }
+
+      if (!config.lastBackupTimestamp) {
+        setNextBackupCountdown('Chưa có (sẽ sao lưu trong lần kiểm tra tới)');
+        return;
+      }
+
+      const now = Date.now();
+      const intervalMs = (config.intervalHours || 24) * 60 * 60 * 1000;
+      const nextTime = config.lastBackupTimestamp + intervalMs;
+      const diff = nextTime - now;
+
+      if (diff <= 0) {
+        setNextBackupCountdown('Đang sẵn sàng sao lưu');
+      } else {
+        setNextBackupCountdown(`Còn ${autoBackupService.formatDuration(diff)}`);
+      }
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 60000);
+    return () => clearInterval(timer);
+  }, [activeSubTab]);
+
+  const handleToggleAutoBackup24h = (enabled: boolean) => {
+    const updated = autoBackupService.updateConfig({ enabled });
+    setAutoBackupConfig(updated);
+    onShowToast(enabled ? '✓ Đã BẬT tính năng tự động sao lưu JSON & Snapshot mỗi 24 giờ!' : '✓ Đã TẮT tự động sao lưu 24h.');
+  };
+
+  const handleToggleAutoDownload = (autoDownloadFile: boolean) => {
+    const updated = autoBackupService.updateConfig({ autoDownloadFile });
+    setAutoBackupConfig(updated);
+    onShowToast(autoDownloadFile ? '✓ Đã BẬT tự động tải tệp JSON về máy khi sao lưu 24h!' : '✓ Đã chuyển sang chỉ lưu Snapshot an toàn trong bộ nhớ trình duyệt.');
+  };
+
+  const handleForceBackupNow = () => {
+    if (!allEquipments || allEquipments.length === 0) {
+      onShowToast('⚠️ Danh sách thiết bị trống, không có dữ liệu để sao lưu.');
+      return;
+    }
+    const res = autoBackupService.forceRunBackupNow(allEquipments);
+    if (res.snapshot) {
+      setSnapshots(autoBackupService.getSnapshots());
+      setAutoBackupConfig(autoBackupService.getConfig());
+      onShowToast(`✓ Đã tạo Bản sao lưu Snapshot (${allEquipments.length} thiết bị) và Tải tệp JSON về máy thành công!`);
+    } else {
+      onShowToast('⚠️ Không thể tạo bản sao lưu.');
+    }
+  };
+
+  const handleDownloadSnapshot = (snap: AutoBackupSnapshot) => {
+    autoBackupService.downloadBackupFile(snap.data, `CNS_Snapshot_${snap.id}`);
+    onShowToast(`✓ Đang tải tệp JSON sao lưu thời điểm ${new Date(snap.timestamp).toLocaleString('vi-VN')}...`);
+  };
+
+  const handleRestoreFromSnapshotAction = (snap: AutoBackupSnapshot) => {
+    if (!canImportData) {
+      onOpenLoginModal();
+      onShowToast('Cần quyền Quản trị viên (Admin) để khôi phục dữ liệu từ Snapshot.');
+      return;
+    }
+
+    const dateStr = new Date(snap.timestamp).toLocaleString('vi-VN');
+    if (window.confirm(`XÁC NHẬN KHÔI PHỤC: Bạn có chắc chắn muốn nạp lại dữ liệu gồm ${snap.equipmentCount} thiết bị từ bản sao lưu ngày ${dateStr}? Dữ liệu hiện tại sẽ được cập nhật thay thế.`)) {
+      if (onRestoreFromSnapshot) {
+        onRestoreFromSnapshot(snap.data);
+      } else {
+        onUpdateEquipment(snap.data[0]);
+      }
+    }
+  };
+
+  const handleDeleteSnapshotAction = (snapId: string) => {
+    if (autoBackupService.deleteSnapshot(snapId)) {
+      setSnapshots(autoBackupService.getSnapshots());
+      onShowToast('✓ Đã xóa bản sao lưu an toàn khỏi bộ nhớ trình duyệt.');
+    }
+  };
 
   const handleToggleAutoBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.checked;
@@ -454,6 +558,212 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   <span>Đăng nhập Admin để mở khóa tính năng Nhập JSON</span>
                 </button>
               )}
+            </div>
+
+            {/* 24-HOUR AUTO BACKUP & LOCAL BROWSER STORAGE SAFETY SNAPSHOTS */}
+            <div className="p-5 bg-gradient-to-br from-blue-50/70 via-slate-50 to-indigo-50/60 border border-blue-200 rounded-xl space-y-4 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-blue-600 text-white rounded-lg shadow-xs">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                      <span>Tự Động Sao Lưu JSON 24 Giờ & Snapshot An Toàn Trình Duyệt</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
+                        24H Auto-Safety
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Đảm bảo bạn luôn có bản sao lưu an toàn dự phòng dữ liệu CNS định kỳ mỗi ngày.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleForceBackupNow}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                    title="Thực hiện sao lưu Snapshot và Tải tệp JSON ngay lập tức"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Sao lưu ngay bây giờ</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status and Countdown Badges */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider block">
+                    Trạng Thái 24H
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${autoBackupConfig.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                    <span className="text-xs font-bold text-slate-800">
+                      {autoBackupConfig.enabled ? 'Đang kích hoạt' : 'Đã tạm dừng'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider block">
+                    Sao lưu gần nhất
+                  </span>
+                  <div className="text-xs font-bold text-slate-800 truncate" title={autoBackupConfig.lastBackupTimestamp ? new Date(autoBackupConfig.lastBackupTimestamp).toLocaleString('vi-VN') : 'Chưa có'}>
+                    {autoBackupConfig.lastBackupTimestamp
+                      ? new Date(autoBackupConfig.lastBackupTimestamp).toLocaleString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : 'Chưa thực hiện'}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider block">
+                    Đợt sao lưu kế tiếp
+                  </span>
+                  <div className="text-xs font-bold text-blue-700 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span className="truncate">{nextBackupCountdown || 'Đang tính...'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div className="bg-white/80 p-3.5 rounded-lg border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <label htmlFor="toggle-24h-backup" className="text-xs font-bold text-slate-900 cursor-pointer block">
+                      Tự động kích hoạt chu kỳ sao lưu mỗi 24 giờ
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Tự động kiểm tra và tạo bản snapshot dự phòng an toàn khi sử dụng ứng dụng.
+                    </p>
+                  </div>
+                  <input
+                    id="toggle-24h-backup"
+                    type="checkbox"
+                    checked={autoBackupConfig.enabled}
+                    onChange={(e) => handleToggleAutoBackup24h(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300 cursor-pointer shrink-0"
+                  />
+                </div>
+
+                <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between gap-4">
+                  <div>
+                    <label htmlFor="toggle-auto-download-json" className="text-xs font-semibold text-slate-800 cursor-pointer block">
+                      Tự động tải tệp tin JSON về máy tính khi sao lưu định kỳ 24h
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Tải file <code className="text-blue-600 font-mono bg-blue-50 px-1 py-0.5 rounded text-[10px]">CNS_Auto_Backup_24h_*.json</code> trực tiếp vào thư mục Downloads của trình duyệt.
+                    </p>
+                  </div>
+                  <input
+                    id="toggle-auto-download-json"
+                    type="checkbox"
+                    checked={autoBackupConfig.autoDownloadFile}
+                    onChange={(e) => handleToggleAutoDownload(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300 cursor-pointer shrink-0"
+                  />
+                </div>
+              </div>
+
+              {/* Local Browser Snapshots History List */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Lịch Sử Bản Sao Lưu An Toàn Trong Trình Duyệt ({snapshots.length} bản ghi)</span>
+                  </span>
+                  {snapshots.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Bạn có chắc chắn muốn dọn dẹp tất cả bản sao lưu snapshot cũ trong trình duyệt?')) {
+                          autoBackupService.clearAllSnapshots();
+                          setSnapshots([]);
+                          onShowToast('✓ Đã dọn dẹp lịch sử snapshot.');
+                        }
+                      }}
+                      className="text-[11px] text-rose-600 hover:text-rose-800 hover:underline cursor-pointer font-medium"
+                    >
+                      Dọn sạch lịch sử
+                    </button>
+                  )}
+                </div>
+
+                {snapshots.length === 0 ? (
+                  <div className="p-4 bg-white/60 rounded-lg border border-dashed border-slate-300 text-center text-xs text-slate-500">
+                    Chưa có bản sao lưu nào được lưu trữ. Nhấn <b>"Sao lưu ngay bây giờ"</b> để tạo bản sao lưu snapshot đầu tiên.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {snapshots.map((snap) => (
+                      <div
+                        key={snap.id}
+                        className="p-3 bg-white rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs hover:border-blue-300 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-slate-100 text-slate-600 shrink-0">
+                            <FileJson className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-900">
+                                {new Date(snap.timestamp).toLocaleString('vi-VN')}
+                              </span>
+                              <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${
+                                snap.triggerType === 'auto_24h'
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              }`}>
+                                {snap.triggerType === 'auto_24h' ? 'Tự động 24h' : 'Thủ công'}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">
+                              {snap.equipmentCount} thiết bị • {snap.dataSizeFormatted}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          <button
+                            onClick={() => handleDownloadSnapshot(snap)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition-all cursor-pointer"
+                            title="Tải tệp JSON của bản sao lưu này"
+                          >
+                            <Download className="w-3 h-3 text-blue-600" />
+                            <span>Tải JSON</span>
+                          </button>
+
+                          {canImportData && (
+                            <button
+                              onClick={() => handleRestoreFromSnapshotAction(snap)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-[11px] font-bold transition-all cursor-pointer"
+                              title="Khôi phục dữ liệu hệ thống từ bản sao lưu này"
+                            >
+                              <RotateCcw className="w-3 h-3 text-indigo-600" />
+                              <span>Khôi phục</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleDeleteSnapshotAction(snap.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all cursor-pointer"
+                            title="Xóa bản sao lưu này"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Restore from Cloud Server JSON Backup */}

@@ -43,7 +43,18 @@ import {
   Edit3,
   Gauge
 } from 'lucide-react';
-import { EquipmentData, OrgTransferRow, EquipmentCategory, EquipmentStatus, EquipmentPriority, AppUser, MaintenanceRow } from '../types';
+import { 
+  EquipmentData, 
+  OrgTransferRow, 
+  EquipmentCategory, 
+  EquipmentStatus, 
+  EquipmentPriority, 
+  AppUser, 
+  MaintenanceRow,
+  normalizeEquipmentGroup,
+  EQUIPMENT_GROUPS,
+  EquipmentGroupType
+} from '../types';
 import { PerformerSelect } from './PerformerSelect';
 import { statisticsExportService } from '../utils/statisticsExportService';
 import { EditEquipmentModal } from './EditEquipmentModal';
@@ -222,18 +233,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   // Helper icon for equipment categories
   const getCategoryIcon = (category: EquipmentCategory) => {
-    switch (category) {
-      case 'VHF/ HF':
-      case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-600" />;
-      case 'VIBA/VSAT/Cáp Quang':
-      case 'VIBA': return <HardDrive className="w-4 h-4 text-emerald-600" />;
-      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-600" />;
-      case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-600" />;
-      case 'POWER': return <Zap className="w-4 h-4 text-yellow-600" />;
-      case 'IT': return <Server className="w-4 h-4 text-indigo-600" />;
-      case 'RADAR_ADS': return <Radar className="w-4 h-4 text-rose-600" />;
-      case 'NAV': return <Compass className="w-4 h-4 text-purple-600" />;
-      default: return <Box className="w-4 h-4 text-slate-500" />;
+    const group = normalizeEquipmentGroup(category);
+    switch (group) {
+      case 'Thiết bị Nhóm 1':
+        return <Radio className="w-4 h-4 text-blue-600" />;
+      case 'Thiết bị Nhóm 2':
+        return <Activity className="w-4 h-4 text-emerald-600" />;
+      case 'Thiết bị Nhóm 3':
+        return <Server className="w-4 h-4 text-indigo-600" />;
+      default:
+        return <Box className="w-4 h-4 text-slate-500" />;
     }
   };
 
@@ -276,6 +285,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     }
   };
 
+  // 3 Equipment Groups Counts
+  const groupCounts = useMemo(() => {
+    const counts = {
+      'Thiết bị Nhóm 1': 0,
+      'Thiết bị Nhóm 2': 0,
+      'Thiết bị Nhóm 3': 0
+    };
+    allEquipments.forEach(eq => {
+      const g = normalizeEquipmentGroup(eq.general.category);
+      if (counts[g] !== undefined) {
+        counts[g]++;
+      }
+    });
+    return counts;
+  }, [allEquipments]);
+
   // Filtered equipments list
   const filteredEquipments = useMemo(() => {
     return allEquipments.filter(eq => {
@@ -286,9 +311,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         (eq.general.assetNo && eq.general.assetNo.toLowerCase().includes(filterText.toLowerCase())) ||
         (eq.general.assetCode && eq.general.assetCode.toLowerCase().includes(filterText.toLowerCase())) ||
         eq.org.unit.toLowerCase().includes(filterText.toLowerCase()) ||
-        eq.org.location.toLowerCase().includes(filterText.toLowerCase());
+        eq.org.location.toLowerCase().includes(filterText.toLowerCase()) ||
+        (eq.general.category && eq.general.category.toLowerCase().includes(filterText.toLowerCase()));
 
+      const eqGroup = normalizeEquipmentGroup(eq.general.category);
       const matchCat = selectedCategory === 'ALL' || 
+        selectedCategory === eqGroup ||
         eq.general.category === selectedCategory ||
         (selectedCategory === 'VHF/ HF' && (eq.general.category === 'VHF/ HF' || eq.general.category === 'VHF/UHF')) ||
         (selectedCategory === 'VIBA/VSAT/Cáp Quang' && (eq.general.category === 'VIBA/VSAT/Cáp Quang' || eq.general.category === 'VIBA' || eq.general.category === 'VSAT'));
@@ -587,6 +615,52 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
         </div>
 
+        {/* 3 Equipment Groups Quick Filter Strip */}
+        <div className="px-4 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap mr-1">
+            Phân nhóm:
+          </span>
+          
+          <button
+            onClick={() => setSelectedCategory('ALL')}
+            className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+              selectedCategory === 'ALL'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+            }`}
+          >
+            <span>Tất cả thiết bị</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${selectedCategory === 'ALL' ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-600'}`}>
+              {allEquipments.length}
+            </span>
+          </button>
+
+          {EQUIPMENT_GROUPS.map((grp) => {
+            const count = groupCounts[grp.id] || 0;
+            const isSelected = selectedCategory === grp.id;
+            return (
+              <button
+                key={grp.id}
+                onClick={() => setSelectedCategory(isSelected ? 'ALL' : grp.id)}
+                className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap border ${
+                  isSelected
+                    ? `${grp.badgeColor} ring-2 ring-blue-500 shadow-xs font-bold`
+                    : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200'
+                }`}
+                title={grp.description}
+              >
+                <span className={`w-2 h-2 rounded-full ${grp.dotColor}`}></span>
+                <span>{grp.name}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  isSelected ? 'bg-white/80' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Search & Multi-filter Controls Bar */}
         <div className="p-4 bg-slate-50 border-b border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
           {/* Search Box */}
@@ -614,19 +688,26 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+              className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium"
             >
-              <option value="ALL">-- Tất cả chủng loại --</option>
-              <option value="VHF/ HF">VHF/ HF</option>
-              <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
-              <option value="Thiết bị đo">Thiết bị đo</option>
-              <option value="Ghép Kênh">Ghép kênh / Router</option>
-              <option value="VOICE">Chuyển mạch thoại / Ghi âm</option>
-              <option value="POWER">Nguồn điện / UPS / Máy nổ</option>
-              <option value="IT">Mạng máy tính / Server CNS</option>
-              <option value="RADAR_ADS">Ra-đa / ADS-B / MLAT</option>
-              <option value="NAV">Dẫn đường (ILS/DVOR/DME)</option>
-              <option value="OTHER">Chuyên ngành khác</option>
+              <option value="ALL">-- Tất cả nhóm / chủng loại --</option>
+              <optgroup label="📂 3 Nhóm Thiết Bị Chính">
+                <option value="Thiết bị Nhóm 1">📂 Thiết bị Nhóm 1 (Thông tin & Giám sát)</option>
+                <option value="Thiết bị Nhóm 2">📂 Thiết bị Nhóm 2 (Truyền dẫn, Nguồn & Đo)</option>
+                <option value="Thiết bị Nhóm 3">📂 Thiết bị Nhóm 3 (Mạng IT & Phụ trợ)</option>
+              </optgroup>
+              <optgroup label="Chủng loại chi tiết">
+                <option value="VHF/ HF">VHF/ HF</option>
+                <option value="VIBA/VSAT/Cáp Quang">VIBA/VSAT/Cáp Quang</option>
+                <option value="Thiết bị đo">Thiết bị đo</option>
+                <option value="Ghép Kênh">Ghép kênh / Router</option>
+                <option value="VOICE">Chuyển mạch thoại / Ghi âm</option>
+                <option value="POWER">Nguồn điện / UPS / Máy nổ</option>
+                <option value="IT">Mạng máy tính / Server CNS</option>
+                <option value="RADAR_ADS">Ra-đa / ADS-B / MLAT</option>
+                <option value="NAV">Dẫn đường (ILS/DVOR/DME)</option>
+                <option value="OTHER">Chuyên ngành khác</option>
+              </optgroup>
             </select>
           </div>
 
@@ -653,10 +734,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               onChange={(e) => setSelectedPriority(e.target.value)}
               className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
             >
-              <option value="ALL">-- Tất cả phân nhóm --</option>
-              <option value="Hệ thống chính (Level 1)">Nhóm 1 (Level 1 - Thiết bị chính)</option>
-              <option value="Hệ thống dự phòng nóng (Level 2)">Nhóm 2 (Level 2 - Dự phòng)</option>
-              <option value="Hệ thống phụ trợ (Level 3)">Nhóm 3 (Level 3 - Phụ trợ)</option>
+              <option value="ALL">-- Tất cả cấp độ --</option>
+              <option value="Hệ thống chính (Level 1)">Cấp 1 (Hệ thống chính)</option>
+              <option value="Hệ thống dự phòng nóng (Level 2)">Cấp 2 (Dự phòng nóng)</option>
+              <option value="Hệ thống phụ trợ (Level 3)">Cấp 3 (Phụ trợ)</option>
             </select>
           </div>
         </div>
@@ -712,13 +793,24 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     {/* Top Tag & Status Header */}
                     <div className="p-4 space-y-3">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <div className="p-1.5 rounded-lg bg-slate-100 border border-slate-200">
                             {getCategoryIcon(eq.general.category)}
                           </div>
-                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                            {eq.general.category}
+                          <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-md border ${
+                            normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 1'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 2'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          }`}>
+                            {normalizeEquipmentGroup(eq.general.category)}
                           </span>
+                          {eq.general.category && !eq.general.category.startsWith('Thiết bị Nhóm') && (
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              ({eq.general.category})
+                            </span>
+                          )}
                           {isSelected && (
                             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-600 text-white flex items-center gap-1">
                               <Check className="w-3 h-3 stroke-[3]" />
@@ -912,7 +1004,20 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           </div>
                         </td>
                         <td className="p-3 font-medium text-slate-700">
-                          {eq.general.category}
+                          <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-md border ${
+                            normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 1'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 2'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          }`}>
+                            {normalizeEquipmentGroup(eq.general.category)}
+                          </span>
+                          {eq.general.category && !eq.general.category.startsWith('Thiết bị Nhóm') && (
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {eq.general.category}
+                            </div>
+                          )}
                         </td>
                         <td className="p-3 font-mono">
                           <div className="text-slate-900 font-medium">{eq.general.serial || '---'}</div>

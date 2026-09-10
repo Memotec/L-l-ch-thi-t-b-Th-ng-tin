@@ -27,7 +27,7 @@ import {
   MessageSquare,
   Gauge
 } from 'lucide-react';
-import { EquipmentData, EquipmentCategory, AppUser } from '../types';
+import { EquipmentData, EquipmentCategory, AppUser, normalizeEquipmentGroup, EQUIPMENT_GROUPS } from '../types';
 
 interface SidebarProps {
   equipments: EquipmentData[];
@@ -72,19 +72,16 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   const isAdmin = currentUser.role === 'admin';
 
   const getCategoryIcon = (category: EquipmentCategory) => {
-    switch (category) {
-      case 'VHF/ HF':
-      case 'VHF/UHF': return <Radio className="w-4 h-4 text-blue-400" />;
-      case 'Ghép Kênh': return <Layers className="w-4 h-4 text-indigo-400" />;
-      case 'VIBA/VSAT/Cáp Quang':
-      case 'VIBA': return <Activity className="w-4 h-4 text-emerald-400" />;
-      case 'Thiết bị đo': return <Gauge className="w-4 h-4 text-amber-400" />;
-      case 'VOICE': return <PhoneCall className="w-4 h-4 text-amber-400" />;
-      case 'POWER': return <Zap className="w-4 h-4 text-yellow-400" />;
-      case 'IT': return <Server className="w-4 h-4 text-indigo-400" />;
-      case 'RADAR_ADS': return <Activity className="w-4 h-4 text-cyan-400" />;
-      case 'NAV': return <Radio className="w-4 h-4 text-purple-400" />;
-      default: return <HardDrive className="w-4 h-4 text-slate-400" />;
+    const group = normalizeEquipmentGroup(category);
+    switch (group) {
+      case 'Thiết bị Nhóm 1':
+        return <Radio className="w-4 h-4 text-blue-400" />;
+      case 'Thiết bị Nhóm 2':
+        return <Activity className="w-4 h-4 text-emerald-400" />;
+      case 'Thiết bị Nhóm 3':
+        return <Server className="w-4 h-4 text-indigo-400" />;
+      default:
+        return <HardDrive className="w-4 h-4 text-slate-400" />;
     }
   };
 
@@ -234,11 +231,19 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             onChange={(e) => onSelectEquipment(e.target.value)}
             className="w-full bg-[#0F172A] text-slate-100 text-xs font-medium rounded-lg border border-slate-700 p-2 pr-7 truncate focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
           >
-            {equipments.map(eq => (
-              <option key={eq.id} value={eq.id} className="bg-[#0F172A] text-slate-100">
-                [{eq.general.category}] {eq.general.name || 'Thiết bị'} ({eq.general.serial || eq.id})
-              </option>
-            ))}
+            {EQUIPMENT_GROUPS.map(grp => {
+              const groupEquipments = equipments.filter(e => normalizeEquipmentGroup(e.general.category) === grp.id);
+              if (groupEquipments.length === 0) return null;
+              return (
+                <optgroup key={grp.id} label={`📂 ${grp.name} (${groupEquipments.length})`} className="bg-[#1E293B] text-slate-300 font-bold">
+                  {groupEquipments.map(eq => (
+                    <option key={eq.id} value={eq.id} className="bg-[#0F172A] text-slate-100 font-normal">
+                      {eq.general.name || 'Thiết bị'} ({eq.general.serial || eq.id})
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
           </select>
         </div>
 
@@ -249,15 +254,26 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 {getCategoryIcon(currentEquipment.general.category)}
                 <span className="truncate">{currentEquipment.general.model || 'Model N/A'}</span>
               </span>
-              <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-semibold shrink-0 ${
-                currentEquipment.general.status === 'Đang khai thác' 
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : currentEquipment.general.status === 'Dự phòng sẵn sàng'
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              }`}>
-                {currentEquipment.general.status}
-              </span>
+              <div className="flex items-center gap-1 shrink-0">
+                <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                  normalizeEquipmentGroup(currentEquipment.general.category) === 'Thiết bị Nhóm 1'
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : normalizeEquipmentGroup(currentEquipment.general.category) === 'Thiết bị Nhóm 2'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                }`}>
+                  {normalizeEquipmentGroup(currentEquipment.general.category).replace('Thiết bị ', '')}
+                </span>
+                <span className={`px-1.5 py-0.2 rounded text-[9px] font-semibold ${
+                  currentEquipment.general.status === 'Đang khai thác' 
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : currentEquipment.general.status === 'Dự phòng sẵn sàng'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                }`}>
+                  {currentEquipment.general.status}
+                </span>
+              </div>
             </div>
             <div className="text-slate-400 flex items-center justify-between text-[10px] pt-0.5">
               <span>SN: <b className="font-mono text-slate-200">{currentEquipment.general.serial || '---'}</b></span>
