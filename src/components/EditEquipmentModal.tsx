@@ -104,27 +104,45 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
     onClose();
   };
 
-  const categories: { id: EquipmentCategory; aliases?: string[]; label: string; desc: string; icon: React.FC<{ className?: string }> }[] = [
+  const categories: { 
+    id: EquipmentCategory; 
+    aliases?: string[]; 
+    label: string; 
+    desc: string; 
+    icon: React.FC<{ className?: string }>;
+    selectedClass: string;
+    iconSelectedClass: string;
+    dotColor: string;
+  }[] = [
     { 
       id: 'Thiết bị Nhóm 1', 
       aliases: ['VHF/ HF', 'VHF/UHF', 'VOICE', 'VCCS', 'RADAR_ADS', 'NAV'], 
       label: 'Thiết bị Nhóm 1', 
       desc: 'Thông tin liên lạc, Thoại VCS, Ra-đa & Giám sát không lưu',
-      icon: Radio 
+      icon: Radio,
+      selectedClass: 'bg-blue-50 border-blue-500 text-blue-950 ring-2 ring-blue-500/30',
+      iconSelectedClass: 'bg-blue-600 text-white',
+      dotColor: 'bg-blue-600'
     },
     { 
       id: 'Thiết bị Nhóm 2', 
       aliases: ['VIBA/VSAT/Cáp Quang', 'VIBA', 'VSAT', 'Ghép Kênh', 'POWER', 'Thiết bị đo'], 
       label: 'Thiết bị Nhóm 2', 
       desc: 'Truyền dẫn Viba/Quang, Ghép kênh, Nguồn UPS & Đo lường',
-      icon: Activity 
+      icon: Activity,
+      selectedClass: 'bg-amber-50 border-amber-500 text-amber-950 ring-2 ring-amber-500/30',
+      iconSelectedClass: 'bg-amber-600 text-white',
+      dotColor: 'bg-amber-600'
     },
     { 
       id: 'Thiết bị Nhóm 3', 
       aliases: ['IT', 'OTHER', 'Thiết Bị Khác'], 
       label: 'Thiết bị Nhóm 3', 
       desc: 'Mạng CNTT, Máy chủ Server CNS & Trang thiết bị phụ trợ khác',
-      icon: Server 
+      icon: Server,
+      selectedClass: 'bg-rose-50 border-rose-500 text-rose-950 ring-2 ring-rose-500/30',
+      iconSelectedClass: 'bg-rose-600 text-white',
+      dotColor: 'bg-rose-600'
     }
   ];
 
@@ -226,19 +244,19 @@ export const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                         onClick={() => updateGeneral('category', cat.id)}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                           isSelected
-                            ? 'bg-blue-50/90 border-blue-600 text-blue-950 font-bold shadow-xs ring-1 ring-blue-500/20'
+                            ? `${cat.selectedClass} font-bold shadow-xs`
                             : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                            <div className={`p-1.5 rounded-lg ${isSelected ? cat.iconSelectedClass : 'bg-slate-100 text-slate-600'}`}>
                               <Icon className="w-3.5 h-3.5 shrink-0" />
                             </div>
                             <span className="text-xs font-bold">{cat.label}</span>
                           </div>
                           {isSelected && (
-                            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                            <span className={`w-2 h-2 rounded-full ${cat.dotColor}`}></span>
                           )}
                         </div>
                         <p className="text-[10.5px] text-slate-500 font-normal leading-tight">

@@ -28,7 +28,7 @@ import {
   Sparkles,
   MessageSquare
 } from 'lucide-react';
-import { EquipmentData, EquipmentCategory, EquipmentStatus } from '../types';
+import { EquipmentData, EquipmentCategory, EquipmentStatus, normalizeEquipmentGroup, getEquipmentGroupStyle } from '../types';
 import { NotesTab } from './NotesTab';
 
 interface ViewerEquipmentDetailProps {
@@ -57,18 +57,11 @@ export const ViewerEquipmentDetail: React.FC<ViewerEquipmentDetailProps> = ({
   };
 
   const getCategoryIcon = (category: EquipmentCategory) => {
-    switch (category) {
-      case 'VHF/ HF':
-      case 'VHF/UHF': return <Radio className="w-5 h-5 text-blue-500" />;
-      case 'Ghép Kênh': return <Layers className="w-5 h-5 text-indigo-500" />;
-      case 'VIBA/VSAT/Cáp Quang':
-      case 'VIBA': return <Activity className="w-5 h-5 text-emerald-500" />;
-      case 'Thiết bị đo': return <Gauge className="w-5 h-5 text-amber-500" />;
-      case 'VOICE': return <PhoneCall className="w-5 h-5 text-amber-500" />;
-      case 'POWER': return <Zap className="w-5 h-5 text-yellow-500" />;
-      case 'IT': return <Server className="w-5 h-5 text-indigo-500" />;
-      case 'RADAR_ADS': return <Activity className="w-5 h-5 text-cyan-500" />;
-      case 'NAV': return <Radio className="w-5 h-5 text-purple-500" />;
+    const group = normalizeEquipmentGroup(category);
+    switch (group) {
+      case 'Thiết bị Nhóm 1': return <Radio className="w-5 h-5 text-blue-500" />;
+      case 'Thiết bị Nhóm 2': return <Activity className="w-5 h-5 text-amber-500" />;
+      case 'Thiết bị Nhóm 3': return <Server className="w-5 h-5 text-rose-500" />;
       default: return <HardDrive className="w-5 h-5 text-slate-500" />;
     }
   };
@@ -154,9 +147,14 @@ export const ViewerEquipmentDetail: React.FC<ViewerEquipmentDetailProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 whitespace-nowrap">
-                  {g.category}
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${getEquipmentGroupStyle(g.category)?.lightBadge}`}>
+                  {normalizeEquipmentGroup(g.category)}
                 </span>
+                {g.category && !g.category.startsWith('Thiết bị Nhóm') && (
+                  <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-xs font-semibold whitespace-nowrap">
+                    {g.category}
+                  </span>
+                )}
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap ${getStatusBadge(g.status)}`}>
                   {g.status}
                 </span>

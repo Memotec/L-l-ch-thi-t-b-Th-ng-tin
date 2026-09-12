@@ -9,14 +9,20 @@ export type EquipmentCategory =
   | 'Thiết bị Nhóm 2'
   | 'Thiết bị Nhóm 3'
   | 'VHF/ HF'
+  | 'VHF/UHF'
   | 'VIBA/VSAT/Cáp Quang'
-  | 'Thiết bị đo'
+  | 'VIBA'
+  | 'VSAT'
   | 'Ghép Kênh'
-  | 'VCCS' 
   | 'VOICE' 
+  | 'VCCS' 
+  | 'POWER'
+  | 'Thiết bị đo'
   | 'IT'  
+  | 'RADAR_ADS'
+  | 'NAV'
   | 'OTHER'
-  | 'Thiết Bị Khác'
+  | 'Thiết Bị Khác';
 
 export type EquipmentGroupType = 'Thiết bị Nhóm 1' | 'Thiết bị Nhóm 2' | 'Thiết bị Nhóm 3';
 
@@ -55,11 +61,11 @@ export const EQUIPMENT_GROUPS: EquipmentGroupMeta[] = [
     shortLabel: 'Nhóm 2 (Truyền dẫn, Nguồn & Đo)',
     description: 'Hệ thống truyền dẫn viba, cáp quang, ghép kênh, nguồn điện UPS & thiết bị đo kiểm chuẩn (VIBA, VSAT, Cáp quang, Router, POWER, Đo lường...)',
     subCategories: ['VIBA/VSAT/Cáp Quang', 'VIBA', 'VSAT', 'Ghép Kênh', 'POWER', 'Thiết bị đo'],
-    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    textColor: 'text-emerald-600',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-    dotColor: 'bg-emerald-500'
+    badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+    textColor: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    dotColor: 'bg-amber-500'
   },
   {
     id: 'Thiết bị Nhóm 3',
@@ -68,13 +74,55 @@ export const EQUIPMENT_GROUPS: EquipmentGroupMeta[] = [
     shortLabel: 'Nhóm 3 (Mạng IT & Phụ trợ)',
     description: 'Hệ thống mạng CNTT, máy chủ Server CNS, phần mềm, thiết bị phụ trợ & chuyên ngành khác (IT, Server, Thiết Bị Khác...)',
     subCategories: ['IT', 'OTHER', 'Thiết Bị Khác'],
-    badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    textColor: 'text-indigo-600',
-    bgColor: 'bg-indigo-50',
-    borderColor: 'border-indigo-200',
-    dotColor: 'bg-indigo-500'
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+    textColor: 'text-rose-600',
+    bgColor: 'bg-rose-50',
+    borderColor: 'border-rose-200',
+    dotColor: 'bg-rose-500'
   }
 ];
+
+export function getEquipmentGroupStyle(category?: string) {
+  const grp = normalizeEquipmentGroup(category);
+  switch (grp) {
+    case 'Thiết bị Nhóm 1':
+      return {
+        group: grp,
+        label: 'Nhóm 1',
+        fullLabel: 'Thiết bị Nhóm 1',
+        lightBadge: 'bg-blue-50 text-blue-700 border-blue-200',
+        darkBadge: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+        dot: 'bg-blue-500',
+        text: 'text-blue-600',
+        darkText: 'text-blue-400',
+        colorName: 'Xanh'
+      };
+    case 'Thiết bị Nhóm 2':
+      return {
+        group: grp,
+        label: 'Nhóm 2',
+        fullLabel: 'Thiết bị Nhóm 2',
+        lightBadge: 'bg-amber-50 text-amber-800 border-amber-200',
+        darkBadge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        dot: 'bg-amber-500',
+        text: 'text-amber-600',
+        darkText: 'text-amber-400',
+        colorName: 'Vàng'
+      };
+    case 'Thiết bị Nhóm 3':
+      return {
+        group: grp,
+        label: 'Nhóm 3',
+        fullLabel: 'Thiết bị Nhóm 3',
+        lightBadge: 'bg-rose-50 text-rose-700 border-rose-200',
+        darkBadge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        dot: 'bg-rose-500',
+        text: 'text-rose-600',
+        darkText: 'text-rose-400',
+        colorName: 'Đỏ'
+      };
+  }
+}
 
 export function normalizeEquipmentGroup(category?: string): EquipmentGroupType {
   if (!category) return 'Thiết bị Nhóm 1';

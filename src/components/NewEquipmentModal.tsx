@@ -149,21 +149,30 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
                   label: 'Thiết bị Nhóm 1', 
                   desc: 'Thông tin, Thoại VCS, Ra-đa & Giám sát',
                   icon: Radio,
-                  badge: 'Nhóm 1'
+                  badge: 'Nhóm 1',
+                  selectedClass: 'bg-blue-50 border-blue-500 text-blue-950 ring-2 ring-blue-500/30',
+                  iconSelectedClass: 'bg-blue-600 text-white',
+                  badgeSelectedClass: 'bg-blue-100 text-blue-800'
                 },
                 { 
                   id: 'Thiết bị Nhóm 2', 
                   label: 'Thiết bị Nhóm 2', 
                   desc: 'Truyền dẫn, Ghép kênh, Nguồn UPS & Đo lường',
                   icon: Activity,
-                  badge: 'Nhóm 2'
+                  badge: 'Nhóm 2',
+                  selectedClass: 'bg-amber-50 border-amber-500 text-amber-950 ring-2 ring-amber-500/30',
+                  iconSelectedClass: 'bg-amber-600 text-white',
+                  badgeSelectedClass: 'bg-amber-100 text-amber-800'
                 },
                 { 
                   id: 'Thiết bị Nhóm 3', 
                   label: 'Thiết bị Nhóm 3', 
                   desc: 'Mạng CNTT, Máy chủ Server & Phụ trợ khác',
                   icon: Server,
-                  badge: 'Nhóm 3'
+                  badge: 'Nhóm 3',
+                  selectedClass: 'bg-rose-50 border-rose-500 text-rose-950 ring-2 ring-rose-500/30',
+                  iconSelectedClass: 'bg-rose-600 text-white',
+                  badgeSelectedClass: 'bg-rose-100 text-rose-800'
                 }
               ].map((item) => {
                 const Icon = item.icon;
@@ -175,19 +184,19 @@ export const NewEquipmentModal: React.FC<NewEquipmentModalProps> = ({
                     onClick={() => setCategory(item.id as EquipmentCategory)}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       isSelected
-                        ? 'bg-blue-50/90 border-blue-600 text-blue-950 font-bold shadow-xs ring-1 ring-blue-500/20'
+                        ? `${item.selectedClass} font-bold shadow-xs`
                         : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`p-1.5 rounded-lg ${isSelected ? item.iconSelectedClass : 'bg-slate-100 text-slate-600'}`}>
                           <Icon className="w-3.5 h-3.5 shrink-0" />
                         </div>
                         <span className="text-xs font-bold">{item.label}</span>
                       </div>
                       <span className={`text-[9.5px] px-1.5 py-0.5 rounded font-semibold ${
-                        isSelected ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500'
+                        isSelected ? item.badgeSelectedClass : 'bg-slate-100 text-slate-500'
                       }`}>
                         {item.badge}
                       </span>

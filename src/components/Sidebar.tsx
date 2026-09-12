@@ -27,7 +27,7 @@ import {
   MessageSquare,
   Gauge
 } from 'lucide-react';
-import { EquipmentData, EquipmentCategory, AppUser, normalizeEquipmentGroup, EQUIPMENT_GROUPS } from '../types';
+import { EquipmentData, EquipmentCategory, AppUser, normalizeEquipmentGroup, EQUIPMENT_GROUPS, getEquipmentGroupStyle } from '../types';
 
 interface SidebarProps {
   equipments: EquipmentData[];
@@ -77,9 +77,9 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       case 'Thiết bị Nhóm 1':
         return <Radio className="w-4 h-4 text-blue-400" />;
       case 'Thiết bị Nhóm 2':
-        return <Activity className="w-4 h-4 text-emerald-400" />;
+        return <Activity className="w-4 h-4 text-amber-400" />;
       case 'Thiết bị Nhóm 3':
-        return <Server className="w-4 h-4 text-indigo-400" />;
+        return <Server className="w-4 h-4 text-rose-400" />;
       default:
         return <HardDrive className="w-4 h-4 text-slate-400" />;
     }
@@ -255,14 +255,8 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 <span className="truncate">{currentEquipment.general.model || 'Model N/A'}</span>
               </span>
               <div className="flex items-center gap-1 shrink-0">
-                <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                  normalizeEquipmentGroup(currentEquipment.general.category) === 'Thiết bị Nhóm 1'
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    : normalizeEquipmentGroup(currentEquipment.general.category) === 'Thiết bị Nhóm 2'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                }`}>
-                  {normalizeEquipmentGroup(currentEquipment.general.category).replace('Thiết bị ', '')}
+                <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${getEquipmentGroupStyle(currentEquipment.general.category)?.darkBadge}`}>
+                  {getEquipmentGroupStyle(currentEquipment.general.category)?.label}
                 </span>
                 <span className={`px-1.5 py-0.2 rounded text-[9px] font-semibold ${
                   currentEquipment.general.status === 'Đang khai thác' 

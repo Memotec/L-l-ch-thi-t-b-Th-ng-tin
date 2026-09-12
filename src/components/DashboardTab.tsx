@@ -53,7 +53,8 @@ import {
   MaintenanceRow,
   normalizeEquipmentGroup,
   EQUIPMENT_GROUPS,
-  EquipmentGroupType
+  EquipmentGroupType,
+  getEquipmentGroupStyle
 } from '../types';
 import { PerformerSelect } from './PerformerSelect';
 import { statisticsExportService } from '../utils/statisticsExportService';
@@ -238,9 +239,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       case 'Thiết bị Nhóm 1':
         return <Radio className="w-4 h-4 text-blue-600" />;
       case 'Thiết bị Nhóm 2':
-        return <Activity className="w-4 h-4 text-emerald-600" />;
+        return <Activity className="w-4 h-4 text-amber-600" />;
       case 'Thiết bị Nhóm 3':
-        return <Server className="w-4 h-4 text-indigo-600" />;
+        return <Server className="w-4 h-4 text-rose-600" />;
       default:
         return <Box className="w-4 h-4 text-slate-500" />;
     }
@@ -797,13 +798,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           <div className="p-1.5 rounded-lg bg-slate-100 border border-slate-200">
                             {getCategoryIcon(eq.general.category)}
                           </div>
-                          <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-md border ${
-                            normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 1'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 2'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          }`}>
+                          <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-md border ${getEquipmentGroupStyle(eq.general.category)?.lightBadge}`}>
                             {normalizeEquipmentGroup(eq.general.category)}
                           </span>
                           {eq.general.category && !eq.general.category.startsWith('Thiết bị Nhóm') && (
@@ -1004,13 +999,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           </div>
                         </td>
                         <td className="p-3 font-medium text-slate-700">
-                          <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-md border ${
-                            normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 1'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : normalizeEquipmentGroup(eq.general.category) === 'Thiết bị Nhóm 2'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          }`}>
+                          <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-md border ${getEquipmentGroupStyle(eq.general.category)?.lightBadge}`}>
                             {normalizeEquipmentGroup(eq.general.category)}
                           </span>
                           {eq.general.category && !eq.general.category.startsWith('Thiết bị Nhóm') && (

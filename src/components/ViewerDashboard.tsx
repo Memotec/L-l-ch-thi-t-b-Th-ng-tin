@@ -36,7 +36,7 @@ import {
   SlidersHorizontal,
   X
 } from 'lucide-react';
-import { EquipmentData, EquipmentCategory, EquipmentStatus, AppUser, normalizeEquipmentGroup, EQUIPMENT_GROUPS } from '../types';
+import { EquipmentData, EquipmentCategory, EquipmentStatus, AppUser, normalizeEquipmentGroup, EQUIPMENT_GROUPS, getEquipmentGroupStyle } from '../types';
 import { NotificationBell } from './NotificationBell';
 import { ViewerEquipmentDetail } from './ViewerEquipmentDetail';
 
@@ -180,8 +180,8 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
     const group = normalizeEquipmentGroup(category);
     switch (group) {
       case 'Thiết bị Nhóm 1': return <Radio className="w-4 h-4 text-blue-500" />;
-      case 'Thiết bị Nhóm 2': return <Activity className="w-4 h-4 text-emerald-500" />;
-      case 'Thiết bị Nhóm 3': return <Server className="w-4 h-4 text-indigo-500" />;
+      case 'Thiết bị Nhóm 2': return <Activity className="w-4 h-4 text-amber-500" />;
+      case 'Thiết bị Nhóm 3': return <Server className="w-4 h-4 text-rose-500" />;
       default: return <HardDrive className="w-4 h-4 text-slate-500" />;
     }
   };
@@ -594,13 +594,7 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
                   <div className="space-y-3">
                     {/* Header: Category & Status */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
-                        normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 1'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 2'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                      }`}>
+                      <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${getEquipmentGroupStyle(g.category)?.lightBadge}`}>
                         {getCategoryIcon(g.category)}
                         <span>{normalizeEquipmentGroup(g.category)}</span>
                       </span>
@@ -734,13 +728,7 @@ export const ViewerDashboard: React.FC<ViewerDashboardProps> = ({
                           </div>
                         </td>
                         <td className="p-3.5 font-semibold text-slate-700">
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10.5px] font-bold border ${
-                            normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 1'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : normalizeEquipmentGroup(g.category) === 'Thiết bị Nhóm 2'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          }`}>
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10.5px] font-bold border ${getEquipmentGroupStyle(g.category)?.lightBadge}`}>
                             {normalizeEquipmentGroup(g.category)}
                           </span>
                         </td>

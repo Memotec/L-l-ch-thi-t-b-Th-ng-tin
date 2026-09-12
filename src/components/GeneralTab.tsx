@@ -37,7 +37,8 @@ import {
   OrgTransferRow, 
   AppUser,
   normalizeEquipmentGroup,
-  EQUIPMENT_GROUPS
+  EQUIPMENT_GROUPS,
+  getEquipmentGroupStyle
 } from '../types';
 
 interface GeneralTabProps {
@@ -170,8 +171,8 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
     const group = normalizeEquipmentGroup(category);
     switch (group) {
       case 'Thiết bị Nhóm 1': return <Radio className="w-4 h-4 text-blue-500" />;
-      case 'Thiết bị Nhóm 2': return <Activity className="w-4 h-4 text-emerald-500" />;
-      case 'Thiết bị Nhóm 3': return <Server className="w-4 h-4 text-indigo-500" />;
+      case 'Thiết bị Nhóm 2': return <Activity className="w-4 h-4 text-amber-500" />;
+      case 'Thiết bị Nhóm 3': return <Server className="w-4 h-4 text-rose-500" />;
       default: return <HardDrive className="w-4 h-4 text-slate-500" />;
     }
   };
@@ -255,13 +256,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
           <div className="w-full min-w-0 space-y-2">
             {/* Category & Status Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`px-2.5 py-0.5 rounded-md text-xs font-bold border whitespace-nowrap ${
-                normalizeEquipmentGroup(data.general.category) === 'Thiết bị Nhóm 1'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : normalizeEquipmentGroup(data.general.category) === 'Thiết bị Nhóm 2'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-              }`}>
+              <span className={`px-2.5 py-0.5 rounded-md text-xs font-bold border whitespace-nowrap ${getEquipmentGroupStyle(data.general.category)?.lightBadge}`}>
                 {normalizeEquipmentGroup(data.general.category)}
               </span>
               {data.general.category && !data.general.category.startsWith('Thiết bị Nhóm') && (
